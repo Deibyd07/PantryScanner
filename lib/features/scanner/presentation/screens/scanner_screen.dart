@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 import '../../../../app/router/app_router.dart';
 import '../../domain/usecases/scan_barcode_usecase.dart';
@@ -15,7 +16,8 @@ class ScannerScreen extends StatefulWidget {
   State<ScannerScreen> createState() => _ScannerScreenState();
 }
 
-class _ScannerScreenState extends State<ScannerScreen> {
+class _ScannerScreenState extends State<ScannerScreen>
+  with WidgetsBindingObserver {
   final MobileScannerController _controller = MobileScannerController(
     formats: <BarcodeFormat>[
       BarcodeFormat.ean13,
@@ -30,19 +32,62 @@ class _ScannerScreenState extends State<ScannerScreen> {
   bool _isProcessing = false;
   String? _lastValidCode;
   String? _errorMessage;
+  PermissionStatus? _cameraPermissionStatus;
+  bool _isRequestingPermission = false;
+
+  bool get _hasCameraAccess => _cameraPermissionStatus?.isGranted == true;
+
+  bool get _isPermissionPermanentlyDenied {
+    final PermissionStatus? status = _cameraPermissionStatus;
+    return status?.isPermanentlyDenied == true || status?.isRestricted == true;
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _syncCameraPermissionStatus();
+  }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _resetTimer?.cancel();
     _controller.dispose();
     super.dispose();
   }
 
   @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _syncCameraPermissionStatus();
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Escaner de productos')),
-      body: Stack(
+      appBar: AppBar(
+        title: const Text('Escaner de productos'),
+        actions: <Widget>[
+          TextButton.icon(
+            onPressed: _goToManualInput,
+            icon: const Icon(Icons.edit_note_outlined),
+            label: const Text('Manual'),
+          ),
+        ],
+      ),
+      body: _buildBody(context),
+    );
+  }
+
+  Widget _buildBody(BuildContext context) {
+    if (_cameraPermissionStatus == null) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (_hasCameraAccess) {
+      return Stack(
         children: <Widget>[
           MobileScanner(
             controller: _controller,
@@ -130,8 +175,53 @@ class _ScannerScreenState extends State<ScannerScreen> {
             ),
           ),
         ],
-      ),
+      );
+    }
+
+    return _CameraPermissionPanel(
+      isPermanentlyDenied: _isPermissionPermanentlyDenied,
+      isLoading: _isRequestingPermission,
+      onRequestPermission: _requestCameraPermission,
+      onOpenSettings: _openSettings,
+      onManualInput: _goToManualInput,
     );
+  }
+
+  Future<void> _syncCameraPermissionStatus() async {
+    final PermissionStatus status = await Permission.camera.status;
+    if (!mounted) {
+      return;
+    }
+    setState(() {
+      _cameraPermissionStatus = status;
+    });
+  }
+
+  Future<void> _requestCameraPermission() async {
+    setState(() {
+      _isRequestingPermission = true;
+      _errorMessage = null;
+      _lastValidCode = null;
+    });
+
+    final PermissionStatus status = await Permission.camera.request();
+
+    if (!mounted) {
+      return;
+    }
+
+    setState(() {
+      _cameraPermissionStatus = status;
+      _isRequestingPermission = false;
+    });
+  }
+
+  Future<void> _openSettings() async {
+    await openAppSettings();
+  }
+
+  void _goToManualInput() {
+    context.push(AppRoutes.productForm);
   }
 
   void _handleDetection(BarcodeCapture capture) {
@@ -163,6 +253,114 @@ class _ScannerScreenState extends State<ScannerScreen> {
     _resetTimer = Timer(const Duration(milliseconds: 1200), () {
       _isProcessing = false;
     });
+  }
+}
+
+class _CameraPermissionPanel extends StatelessWidget {
+  const _CameraPermissionPanel({
+    required this.isPermanentlyDenied,
+    required this.isLoading,
+    required this.onRequestPermission,
+    required this.onOpenSettings,
+    required this.onManualInput,
+  });
+
+  final bool isPermanentlyDenied;
+  final bool isLoading;
+  final VoidCallback onRequestPermission;
+  final VoidCallback onOpenSettings;
+  final VoidCallback onManualInput;
+
+  @override
+  Widget build(BuildContext context) {
+    final ThemeData theme = Theme.of(context);
+    final ColorScheme colors = theme.colorScheme;
+
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 420),
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Card(
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Row(
+                    children: <Widget>[
+                      Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          color: colors.primaryContainer,
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          Icons.camera_alt_outlined,
+                          color: colors.onPrimaryContainer,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          isPermanentlyDenied
+                              ? 'Permiso de camara desactivado'
+                              : 'Necesitamos acceso a la camara',
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 14),
+                  Text(
+                    isPermanentlyDenied
+                        ? 'Activa el permiso de camara en la configuracion del sistema para volver a escanear codigos de barras.'
+                        : 'Usamos la camara solo para leer codigos EAN-13 y UPC-A de tus productos. Puedes continuar con ingreso manual si prefieres.',
+                    style: theme.textTheme.bodyMedium,
+                  ),
+                  const SizedBox(height: 16),
+                  if (!isPermanentlyDenied)
+                    SizedBox(
+                      width: double.infinity,
+                      child: FilledButton.icon(
+                        onPressed: isLoading ? null : onRequestPermission,
+                        icon: const Icon(Icons.verified_user_outlined),
+                        label: Text(
+                          isLoading
+                              ? 'Solicitando permiso...'
+                              : 'Permitir camara',
+                        ),
+                      ),
+                    ),
+                  if (isPermanentlyDenied)
+                    SizedBox(
+                      width: double.infinity,
+                      child: FilledButton.icon(
+                        onPressed: onOpenSettings,
+                        icon: const Icon(Icons.settings_outlined),
+                        label: const Text('Abrir configuracion'),
+                      ),
+                    ),
+                  const SizedBox(height: 10),
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      onPressed: onManualInput,
+                      icon: const Icon(Icons.keyboard_alt_outlined),
+                      label: const Text('Ingresar codigo manualmente'),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }
 

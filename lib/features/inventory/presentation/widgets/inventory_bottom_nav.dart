@@ -3,7 +3,9 @@ import 'package:flutter/material.dart';
 import 'inventory_tokens.dart';
 
 class InventoryBottomNav extends StatelessWidget {
-  const InventoryBottomNav({super.key});
+  const InventoryBottomNav({super.key, this.onScanTap});
+
+  final VoidCallback? onScanTap;
 
   @override
   Widget build(BuildContext context) {
@@ -22,13 +24,13 @@ class InventoryBottomNav extends StatelessWidget {
             ),
           ],
         ),
-        child: const Row(
+        child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: <Widget>[
-            _BottomNavIcon(icon: Icons.inventory_2_rounded, active: true),
-            _BottomNavIcon(icon: Icons.photo_camera_outlined),
-            _BottomNavIcon(icon: Icons.restaurant_menu_outlined),
-            _BottomNavIcon(icon: Icons.person_outline_rounded),
+            const _BottomNavIcon(icon: Icons.inventory_2_rounded, active: true),
+            _BottomNavIcon(icon: Icons.photo_camera_outlined, onTap: onScanTap),
+            const _BottomNavIcon(icon: Icons.restaurant_menu_outlined),
+            const _BottomNavIcon(icon: Icons.person_outline_rounded),
           ],
         ),
       ),
@@ -37,10 +39,11 @@ class InventoryBottomNav extends StatelessWidget {
 }
 
 class _BottomNavIcon extends StatelessWidget {
-  const _BottomNavIcon({required this.icon, this.active = false});
+  const _BottomNavIcon({required this.icon, this.active = false, this.onTap});
 
   final IconData icon;
   final bool active;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -54,11 +57,14 @@ class _BottomNavIcon extends StatelessWidget {
             shape: BoxShape.circle,
             color: InventoryTokens.primary,
           ),
-          child: const Icon(Icons.inventory_2_rounded, color: Colors.white),
+          child: Icon(icon, color: Colors.white),
         ),
       );
     }
 
-    return Icon(icon, color: InventoryTokens.textMuted);
+    return IconButton(
+      onPressed: onTap,
+      icon: Icon(icon, color: InventoryTokens.textMuted),
+    );
   }
 }

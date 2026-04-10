@@ -80,7 +80,9 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
         shape: const CircleBorder(),
         child: const Icon(Icons.add, size: 36),
       ),
-      bottomNavigationBar: const InventoryBottomNav(),
+      bottomNavigationBar: InventoryBottomNav(
+        onScanTap: () => context.push(AppRoutes.scanner),
+      ),
       body: Stack(
         children: <Widget>[
           const Positioned.fill(
