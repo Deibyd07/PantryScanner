@@ -6,7 +6,9 @@ import '../../../inventory/domain/entities/inventory_item.dart';
 import '../../../inventory/presentation/providers/inventory_providers.dart';
 
 class ProductFormScreen extends ConsumerStatefulWidget {
-  const ProductFormScreen({super.key});
+  const ProductFormScreen({super.key, this.initialBarcode});
+
+  final String? initialBarcode;
 
   @override
   ConsumerState<ProductFormScreen> createState() => _ProductFormScreenState();
@@ -22,6 +24,14 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
 
   int _quantity = AppConstants.defaultQuantity;
   DateTime? _expiryDate;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.initialBarcode != null && widget.initialBarcode!.isNotEmpty) {
+      _barcodeController.text = widget.initialBarcode!;
+    }
+  }
 
   @override
   void dispose() {

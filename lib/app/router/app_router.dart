@@ -32,7 +32,8 @@ final GoRouter appRouter = GoRouter(
       path: AppRoutes.productForm,
       name: 'product-form',
       builder: (BuildContext context, GoRouterState state) {
-        return const ProductFormScreen();
+        final String? barcode = state.uri.queryParameters['barcode'];
+        return ProductFormScreen(initialBarcode: barcode);
       },
     ),
   ],
