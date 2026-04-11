@@ -12,7 +12,7 @@ class InventoryProductCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final Color tagColor = item.highlight ? InventoryTokens.tertiary : InventoryTokens.secondary;
-    final String tagText = item.highlight ? 'Expiring Soon' : 'Perfectly Fresh';
+    final String tagText = item.highlight ? 'Vence pronto' : 'Muy fresco';
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -138,7 +138,7 @@ class InventoryProductCard extends StatelessWidget {
               ),
               const SizedBox(width: 8),
               Text(
-                '${item.daysLeft} Days'.toUpperCase(),
+                '${item.daysLeft} dias'.toUpperCase(),
                 style: TextStyle(
                   fontSize: 10,
                   fontWeight: FontWeight.w800,

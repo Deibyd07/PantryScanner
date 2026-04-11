@@ -35,7 +35,7 @@ class InventoryInsightsCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
                     Text(
-                      'Smart Insights',
+                      'Resumen inteligente',
                       style: GoogleFonts.epilogue(
                         fontSize: 24,
                         fontWeight: FontWeight.w800,
@@ -44,7 +44,7 @@ class InventoryInsightsCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 2),
                     const Text(
-                      '3 items expiring within 48 hours',
+                      '3 productos vencen en menos de 48 horas',
                       style: TextStyle(
                         color: InventoryTokens.textBody,
                         fontWeight: FontWeight.w600,
@@ -61,7 +61,7 @@ class InventoryInsightsCard extends StatelessWidget {
               Expanded(
                 child: _MetricTile(
                   value: '12%',
-                  label: 'Waste Rate',
+                  label: 'Tasa de desperdicio',
                   color: InventoryTokens.tertiary,
                 ),
               ),
@@ -69,7 +69,7 @@ class InventoryInsightsCard extends StatelessWidget {
               Expanded(
                 child: _MetricTile(
                   value: '84',
-                  label: 'Total Items',
+                  label: 'Total de productos',
                   color: InventoryTokens.secondary,
                 ),
               ),
