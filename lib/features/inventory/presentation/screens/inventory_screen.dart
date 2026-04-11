@@ -23,19 +23,19 @@ class InventoryScreen extends ConsumerStatefulWidget {
 
 class _InventoryScreenState extends ConsumerState<InventoryScreen> {
   final List<String> _chips = <String>[
-    'All Essentials',
-    'Produce',
-    'Dairy & Eggs',
-    'Grains',
-    'Spices',
-    'Proteins',
+    'Todo lo esencial',
+    'Frutas y verduras',
+    'Lacteos y huevos',
+    'Granos',
+    'Especias',
+    'Proteinas',
   ];
 
   final List<PantryCardItem> _items = const <PantryCardItem>[
     PantryCardItem(
-      name: 'Hass Avocados',
-      category: 'Produce',
-      quantity: '2 units',
+      name: 'Aguacates Hass',
+      category: 'Frutas y verduras',
+      quantity: '2 unidades',
       daysLeft: 2,
       progress: 0.85,
       highlight: true,
@@ -43,8 +43,8 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
           'https://images.unsplash.com/photo-1601039641847-7857b994d704?q=80&w=1200&auto=format&fit=crop',
     ),
     PantryCardItem(
-      name: 'Greek Yogurt',
-      category: 'Dairy',
+      name: 'Yogur griego',
+      category: 'Lacteos',
       quantity: '1.5kg',
       daysLeft: 12,
       progress: 0.2,
@@ -53,9 +53,9 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
           'https://images.unsplash.com/photo-1488477181946-6428a0291777?q=80&w=1200&auto=format&fit=crop',
     ),
     PantryCardItem(
-      name: 'Sourdough',
-      category: 'Bakery',
-      quantity: '1 loaf',
+      name: 'Pan de masa madre',
+      category: 'Panaderia',
+      quantity: '1 pieza',
       daysLeft: 4,
       progress: 0.4,
       highlight: false,
@@ -105,7 +105,7 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
                   delegate: SliverChildListDelegate(
                     <Widget>[
                       Text(
-                        'My Pantry',
+                        'Mi despensa',
                         style: GoogleFonts.epilogue(
                           fontSize: 56,
                           fontWeight: FontWeight.w900,
@@ -119,7 +119,7 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
                       const SizedBox(height: 24),
                       TextField(
                         decoration: InputDecoration(
-                          hintText: 'Search your atelier...',
+                          hintText: 'Busca en tu despensa...',
                           hintStyle: TextStyle(
                             color: InventoryTokens.textMuted.withValues(alpha: 0.55),
                           ),
@@ -197,8 +197,8 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
 
     return PantryCardItem(
       name: item.name,
-      category: item.category ?? 'Uncategorized',
-      quantity: '${item.quantity} units',
+      category: item.category ?? 'Sin categoria',
+      quantity: '${item.quantity} unidades',
       daysLeft: daysLeft,
       progress: progress,
       highlight: highlight,
