@@ -1,3 +1,5 @@
+import '../../domain/entities/inventory_item.dart';
+
 class PantryCardItem {
   const PantryCardItem({
     required this.name,
@@ -6,7 +8,7 @@ class PantryCardItem {
     required this.daysLeft,
     required this.progress,
     required this.imageUrl,
-    required this.highlight,
+    required this.status,
   });
 
   final String name;
@@ -14,6 +16,6 @@ class PantryCardItem {
   final String quantity;
   final int daysLeft;
   final double progress;
-  final bool highlight;
   final String imageUrl;
+  final ProductStatus status;
 }
