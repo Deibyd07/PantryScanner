@@ -34,7 +34,6 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
   int _selectedChip = 0;
   String _searchQuery = '';
 
-
   @override
   Widget build(BuildContext context) {
     final AsyncValue<List<InventoryItem>> asyncItems = ref.watch(inventoryItemsProvider);
@@ -88,8 +87,8 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
                       const InventoryInsightsCard(),
                       const SizedBox(height: 24),
                       TextField(
-                        onChanged: (String value) =>
-                            setState(() => _searchQuery = value.toLowerCase()),
+                        onChanged: (String v) =>
+                            setState(() => _searchQuery = v.toLowerCase()),
                         decoration: InputDecoration(
                           hintText: 'Busca en tu despensa...',
                           hintStyle: TextStyle(
@@ -116,10 +115,8 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
                   ),
                 ),
               ),
-              // ── Product list as a proper Sliver (lazy, infinite scroll) ──
               asyncItems.when(
                 data: (List<InventoryItem> rows) {
-                  // Filter by search query
                   final List<InventoryItem> filtered = _searchQuery.isEmpty
                       ? rows
                       : rows
@@ -139,7 +136,7 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
                             Icon(
                               Icons.inventory_2_outlined,
                               size: 64,
-                              color: InventoryTokens.textMuted.withValues(alpha: 0.4),
+                              color: InventoryTokens.textMuted.withValues(alpha: 0.35),
                             ),
                             const SizedBox(height: 16),
                             Text(
@@ -172,15 +169,9 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
                     padding: const EdgeInsets.fromLTRB(24, 0, 24, 140),
                     sliver: SliverList.separated(
                       itemCount: filtered.length,
-                      separatorBuilder: (_, __) => const SizedBox(height: 16),
-                      itemBuilder: (BuildContext context, int index) {
-                        return SizedBox(
-                          height: 320,
-                          child: InventoryProductCard(
-                            item: _toPantryCard(filtered[index]),
-                          ),
-                        );
-                      },
+                      separatorBuilder: (_, __) => const SizedBox(height: 12),
+                      itemBuilder: (BuildContext context, int index) =>
+                          InventoryProductCard(item: _toPantryCard(filtered[index])),
                     ),
                   );
                 },
@@ -188,7 +179,7 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
                   hasScrollBody: false,
                   child: Center(child: CircularProgressIndicator()),
                 ),
-                error: (Object error, StackTrace stackTrace) => SliverFillRemaining(
+                error: (Object err, StackTrace st) => SliverFillRemaining(
                   hasScrollBody: false,
                   child: Center(
                     child: Text(
@@ -210,8 +201,6 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
 
   PantryCardItem _toPantryCard(InventoryItem item) {
     final ProductStatus status = item.status;
-
-    // Days-to-expiry calculation for progress bar
     int daysLeft = 0;
     double progress = 1.0;
 
@@ -219,7 +208,6 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
       daysLeft = item.expiryDate!.difference(DateTime.now()).inDays.clamp(0, 30);
       progress = (daysLeft / 14.0).clamp(0.0, 1.0);
     } else if (status == ProductStatus.normal) {
-      // No expiry — show full green bar
       daysLeft = 30;
       progress = 1.0;
     }
@@ -231,8 +219,7 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
       daysLeft: daysLeft,
       progress: progress,
       status: status,
-      imageUrl: item.imageUrl ??
-          'https://images.unsplash.com/photo-1550989460-0adf9ea622e2?q=80&w=1200&auto=format&fit=crop',
+      imageUrl: item.imageUrl ?? '',
     );
   }
 }

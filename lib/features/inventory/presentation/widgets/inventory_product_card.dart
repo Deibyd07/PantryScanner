@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -12,13 +14,13 @@ extension _StatusStyle on ProductStatus {
   Color get color {
     switch (this) {
       case ProductStatus.expired:
-        return const Color(0xFFD32F2F); // Red
+        return const Color(0xFFD32F2F);
       case ProductStatus.expiringSoon:
-        return const Color(0xFFF57C00); // Orange
+        return const Color(0xFFF57C00);
       case ProductStatus.outOfStock:
-        return const Color(0xFF9E9E9E); // Grey
+        return const Color(0xFF9E9E9E);
       case ProductStatus.normal:
-        return InventoryTokens.secondary; // Green
+        return InventoryTokens.secondary;
     }
   }
 
@@ -50,7 +52,7 @@ extension _StatusStyle on ProductStatus {
 }
 
 // ─────────────────────────────────────────────────────────────
-// Card widget
+// Horizontal product card (image left, info right)
 // ─────────────────────────────────────────────────────────────
 class InventoryProductCard extends StatelessWidget {
   const InventoryProductCard({super.key, required this.item});
@@ -60,173 +62,230 @@ class InventoryProductCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final Color statusColor = item.status.color;
-    final bool isOutOfStock = item.status == ProductStatus.outOfStock;
-    final bool isExpired = item.status == ProductStatus.expired;
-    final double cardOpacity = (isOutOfStock || isExpired) ? 0.65 : 1.0;
+    final bool isDimmed =
+        item.status == ProductStatus.outOfStock || item.status == ProductStatus.expired;
 
     return Opacity(
-      opacity: cardOpacity,
+      opacity: isDimmed ? 0.72 : 1.0,
       child: Container(
-        padding: const EdgeInsets.all(16),
+        height: 120,
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(24),
           border: Border.all(
             color: item.status == ProductStatus.normal
-                ? InventoryTokens.outline.withValues(alpha: 0.2)
-                : statusColor.withValues(alpha: 0.4),
-            width: item.status == ProductStatus.normal ? 1 : 1.5,
+                ? InventoryTokens.outline.withValues(alpha: 0.18)
+                : statusColor.withValues(alpha: 0.35),
+            width: 1.5,
           ),
           boxShadow: <BoxShadow>[
             BoxShadow(
-              color: statusColor.withValues(alpha: 0.08),
-              blurRadius: 30,
-              offset: const Offset(0, 10),
+              color: statusColor.withValues(alpha: 0.07),
+              blurRadius: 18,
+              offset: const Offset(0, 6),
             ),
           ],
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        clipBehavior: Clip.antiAlias,
+        child: Row(
           children: <Widget>[
-            // ── Image with status badge ──
+            // ── Left: product image ──
+            SizedBox(
+              width: 110,
+              child: _ProductImage(item: item, isDimmed: isDimmed),
+            ),
+
+            // ── Right: product info ──
             Expanded(
-              child: Stack(
-                children: <Widget>[
-                  // Product image
-                  Positioned.fill(
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(16),
-                      child: ColorFiltered(
-                        colorFilter: (isOutOfStock || isExpired)
-                            ? const ColorFilter.matrix(<double>[
-                                0.2126, 0.7152, 0.0722, 0, 0,
-                                0.2126, 0.7152, 0.0722, 0, 0,
-                                0.2126, 0.7152, 0.0722, 0, 0,
-                                0,      0,      0,      1, 0,
-                              ])
-                            : const ColorFilter.mode(
-                                Colors.transparent, BlendMode.multiply),
-                        child: Image.network(
-                          item.imageUrl,
-                          fit: BoxFit.cover,
-                          errorBuilder: (BuildContext ctx, Object err, StackTrace? st) {
-                            return ColoredBox(
-                              color: statusColor.withValues(alpha: 0.08),
-                              child: Center(
-                                child: Icon(
-                                  Icons.inventory_2_outlined,
-                                  color: statusColor.withValues(alpha: 0.5),
-                                  size: 36,
-                                ),
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                    ),
-                  ),
-                  // Status badge
-                  Positioned(
-                    top: 10,
-                    right: 10,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: statusColor.withValues(alpha: 0.92),
-                        borderRadius: BorderRadius.circular(999),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: <Widget>[
-                          Icon(item.status.icon, color: Colors.white, size: 10),
-                          const SizedBox(width: 5),
-                          Text(
-                            item.status.label.toUpperCase(),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: <Widget>[
+                    // Category + status badge row
+                    Row(
+                      children: <Widget>[
+                        Expanded(
+                          child: Text(
+                            item.category.toUpperCase(),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                             style: const TextStyle(
-                              color: Colors.white,
                               fontSize: 9,
+                              letterSpacing: 1.1,
                               fontWeight: FontWeight.w800,
-                              letterSpacing: 0.5,
+                              color: InventoryTokens.textMuted,
                             ),
                           ),
-                        ],
+                        ),
+                        const SizedBox(width: 6),
+                        _StatusBadge(status: item.status, statusColor: statusColor),
+                      ],
+                    ),
+
+                    // Product name
+                    Text(
+                      item.name,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: GoogleFonts.epilogue(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w800,
+                        height: 1.1,
+                        letterSpacing: -0.8,
+                        color: InventoryTokens.primary,
                       ),
                     ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 12),
-            // Category label
-            Text(
-              item.category.toUpperCase(),
-              style: const TextStyle(
-                fontSize: 10,
-                letterSpacing: 1.2,
-                fontWeight: FontWeight.w800,
-                color: InventoryTokens.textMuted,
-              ),
-            ),
-            const SizedBox(height: 4),
-            // Name + Quantity row
-            Row(
-              children: <Widget>[
-                Expanded(
-                  child: Text(
-                    item.name,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: GoogleFonts.epilogue(
-                      fontSize: 28,
-                      fontWeight: FontWeight.w800,
-                      height: 1,
-                      letterSpacing: -1.5,
-                      color: InventoryTokens.primary,
+
+                    // Quantity + progress bar row
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        Row(
+                          children: <Widget>[
+                            Icon(
+                              Icons.inventory_2_outlined,
+                              size: 12,
+                              color: InventoryTokens.textMuted,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              item.quantity,
+                              style: const TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color: InventoryTokens.textBody,
+                              ),
+                            ),
+                            const Spacer(),
+                            Text(
+                              item.status == ProductStatus.outOfStock
+                                  ? 'SIN STOCK'
+                                  : item.status == ProductStatus.expired
+                                      ? 'VENCIDO'
+                                      : '${item.daysLeft} DÍAS',
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w800,
+                                color: statusColor,
+                                letterSpacing: 0.6,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 5),
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(100),
+                          child: LinearProgressIndicator(
+                            value: item.progress,
+                            minHeight: 5,
+                            backgroundColor: const Color(0xFFE9E9DD),
+                            color: statusColor,
+                          ),
+                        ),
+                      ],
                     ),
-                  ),
+                  ],
                 ),
-                Text(
-                  item.quantity,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w600,
-                    color: InventoryTokens.textBody,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 10),
-            // Progress bar + days label
-            Row(
-              children: <Widget>[
-                Expanded(
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(100),
-                    child: LinearProgressIndicator(
-                      value: item.progress,
-                      minHeight: 6,
-                      backgroundColor: const Color(0xFFE9E9DD),
-                      color: statusColor,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  item.status == ProductStatus.outOfStock
-                      ? 'SIN STOCK'
-                      : item.status == ProductStatus.expired
-                          ? 'VENCIDO'
-                          : '${item.daysLeft} DÍAS',
-                  style: TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w800,
-                    color: statusColor,
-                    letterSpacing: 0.8,
-                  ),
-                ),
-              ],
+              ),
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────
+// Image sub-widget — handles local file, network URL, or placeholder
+// ─────────────────────────────────────────────────────────────
+class _ProductImage extends StatelessWidget {
+  const _ProductImage({required this.item, required this.isDimmed});
+
+  final PantryCardItem item;
+  final bool isDimmed;
+
+  @override
+  Widget build(BuildContext context) {
+    final Color statusColor = item.status.color;
+
+    Widget imageWidget;
+
+    // Decide source: local file path vs network URL vs placeholder
+    final String url = item.imageUrl;
+    if (url.isNotEmpty && !url.startsWith('http')) {
+      // Local file from image_picker
+      final File file = File(url);
+      imageWidget = Image.file(file, fit: BoxFit.cover, errorBuilder: _placeholder);
+    } else if (url.isNotEmpty) {
+      // Network URL
+      imageWidget = Image.network(url, fit: BoxFit.cover, errorBuilder: _placeholder);
+    } else {
+      imageWidget = _placeholderWidget(statusColor);
+    }
+
+    return ColorFiltered(
+      colorFilter: isDimmed
+          ? const ColorFilter.matrix(<double>[
+              0.2126, 0.7152, 0.0722, 0, 0,
+              0.2126, 0.7152, 0.0722, 0, 0,
+              0.2126, 0.7152, 0.0722, 0, 0,
+              0,      0,      0,      1, 0,
+            ])
+          : const ColorFilter.mode(Colors.transparent, BlendMode.multiply),
+      child: SizedBox.expand(child: imageWidget),
+    );
+  }
+
+  Widget _placeholder(BuildContext ctx, Object err, StackTrace? st) =>
+      _placeholderWidget(item.status.color);
+
+  Widget _placeholderWidget(Color color) => ColoredBox(
+        color: color.withOpacity(0.07),
+        child: Center(
+          child: Icon(
+            Icons.inventory_2_outlined,
+            color: color.withOpacity(0.4),
+            size: 30,
+          ),
+        ),
+      );
+}
+
+// ─────────────────────────────────────────────────────────────
+// Compact status badge
+// ─────────────────────────────────────────────────────────────
+class _StatusBadge extends StatelessWidget {
+  const _StatusBadge({required this.status, required this.statusColor});
+
+  final ProductStatus status;
+  final Color statusColor;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: statusColor.withOpacity(0.12),
+        borderRadius: BorderRadius.circular(99),
+        border: Border.all(color: statusColor.withOpacity(0.35)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: <Widget>[
+          Icon(status.icon, size: 9, color: statusColor),
+          const SizedBox(width: 3),
+          Text(
+            status.label.toUpperCase(),
+            style: TextStyle(
+              color: statusColor,
+              fontSize: 8,
+              fontWeight: FontWeight.w800,
+              letterSpacing: 0.4,
+            ),
+          ),
+        ],
       ),
     );
   }
