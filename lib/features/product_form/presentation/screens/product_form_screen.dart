@@ -1,5 +1,8 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/constants/app_constants.dart';
@@ -65,6 +68,7 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen>
   int _quantity = AppConstants.defaultQuantity; // default = 1
   DateTime? _expiryDate;
   String? _selectedCategory;
+  String? _selectedImagePath; // New: local path of picked image
 
   // Categories state
   final List<Map<String, dynamic>> _categories = <Map<String, dynamic>>[
@@ -105,6 +109,93 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen>
     _notesController.dispose();
     _headerAnim.dispose();
     super.dispose();
+  }
+
+  // ───── Image picker ─────
+  Future<void> _pickImage(ImageSource source) async {
+    Navigator.of(context).pop(); // close bottom sheet
+    try {
+      final XFile? picked = await ImagePicker().pickImage(
+        source: source,
+        imageQuality: 80,
+        maxWidth: 1024,
+      );
+      if (picked != null) {
+        setState(() => _selectedImagePath = picked.path);
+      }
+    } catch (_) {
+      // Silently ignore if camera/gallery is unavailable (e.g. web)
+    }
+  }
+
+  void _showImageSourceSheet(BuildContext context, ColorScheme colors) {
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: colors.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      builder: (_) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: colors.outlineVariant,
+                    borderRadius: BorderRadius.circular(99),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+              Text(
+                'Agregar foto del producto',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  color: colors.onSurface,
+                ),
+              ),
+              const SizedBox(height: 16),
+              _ImageSourceTile(
+                icon: Icons.camera_alt_rounded,
+                label: 'Tomar foto',
+                subtitle: 'Abre la cámara del dispositivo',
+                colors: colors,
+                onTap: () => _pickImage(ImageSource.camera),
+              ),
+              const SizedBox(height: 10),
+              _ImageSourceTile(
+                icon: Icons.photo_library_rounded,
+                label: 'Subir desde galería',
+                subtitle: 'Elige una imagen guardada',
+                colors: colors,
+                onTap: () => _pickImage(ImageSource.gallery),
+              ),
+              if (_selectedImagePath != null) ...<Widget>[
+                const SizedBox(height: 10),
+                _ImageSourceTile(
+                  icon: Icons.delete_outline_rounded,
+                  label: 'Quitar foto',
+                  subtitle: 'Elimina la imagen seleccionada',
+                  colors: colors,
+                  isDestructive: true,
+                  onTap: () {
+                    Navigator.of(context).pop();
+                    setState(() => _selectedImagePath = null);
+                  },
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   // ───── Build ─────
@@ -167,7 +258,13 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen>
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: <Widget>[
+                    // ── Section: Foto del producto ──
+                    _SectionHeader(title: 'Foto del producto', icon: Icons.photo_camera_outlined),
+                    const SizedBox(height: 12),
+                    _buildImagePicker(colors),
+
                     // ── Section: Información básica ──
+                    const SizedBox(height: 24),
                     _SectionHeader(title: 'Información básica', icon: Icons.info_outline_rounded),
                     const SizedBox(height: 12),
                     _buildNameField(colors),
@@ -238,6 +335,99 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen>
   }
 
   // ───── Field builders ─────
+
+  // ───── Image picker widget ─────
+  Widget _buildImagePicker(ColorScheme colors) {
+    final bool hasImage = _selectedImagePath != null;
+    return GestureDetector(
+      onTap: () => _showImageSourceSheet(context, colors),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 250),
+        height: 180,
+        decoration: BoxDecoration(
+          color: hasImage ? Colors.transparent : colors.surfaceContainerHighest,
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(
+            color: hasImage ? colors.primary.withOpacity(0.5) : colors.outlineVariant,
+            width: hasImage ? 2 : 1.5,
+          ),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: hasImage
+            ? Stack(
+                fit: StackFit.expand,
+                children: <Widget>[
+                  Image.file(
+                    File(_selectedImagePath!),
+                    fit: BoxFit.cover,
+                  ),
+                  // Edit overlay
+                  Positioned(
+                    bottom: 10,
+                    right: 10,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withOpacity(0.55),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: <Widget>[
+                          Icon(Icons.edit_rounded, color: Colors.white, size: 14),
+                          SizedBox(width: 6),
+                          Text(
+                            'Cambiar foto',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              )
+            : Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: <Widget>[
+                  Container(
+                    width: 60,
+                    height: 60,
+                    decoration: BoxDecoration(
+                      color: colors.primary.withOpacity(0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Icons.add_a_photo_rounded,
+                      color: colors.primary,
+                      size: 28,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    'Agregar foto',
+                    style: TextStyle(
+                      color: colors.primary,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 15,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Cámara o galería • Opcional',
+                    style: TextStyle(
+                      color: colors.onSurfaceVariant,
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
+      ),
+    );
+  }
 
   Widget _buildNameField(ColorScheme colors) {
     return TextFormField(
@@ -633,7 +823,7 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen>
       category: _selectedCategory,
       quantity: _quantity,
       expiryDate: _expiryDate,
-      imageUrl: null,
+      imageUrl: _selectedImagePath,
       notes: _notesController.text.trim().isEmpty ? null : _notesController.text.trim(),
       createdAt: DateTime.now(),
     );
@@ -736,6 +926,83 @@ class _QuantityButton extends StatelessWidget {
           icon,
           size: 20,
           color: enabled ? colors.onPrimary : colors.onSurfaceVariant.withOpacity(0.4),
+        ),
+      ),
+    );
+  }
+}
+
+// ───────────────────────────────────────────────
+// Image source tile for the bottom sheet
+// ───────────────────────────────────────────────
+class _ImageSourceTile extends StatelessWidget {
+  const _ImageSourceTile({
+    required this.icon,
+    required this.label,
+    required this.subtitle,
+    required this.colors,
+    required this.onTap,
+    this.isDestructive = false,
+  });
+
+  final IconData icon;
+  final String label;
+  final String subtitle;
+  final ColorScheme colors;
+  final VoidCallback onTap;
+  final bool isDestructive;
+
+  @override
+  Widget build(BuildContext context) {
+    final Color tileColor = isDestructive ? colors.errorContainer : colors.surfaceContainerHighest;
+    final Color iconColor = isDestructive ? colors.error : colors.primary;
+    final Color labelColor = isDestructive ? colors.error : colors.onSurface;
+
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          color: tileColor,
+          borderRadius: BorderRadius.circular(18),
+        ),
+        child: Row(
+          children: <Widget>[
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: iconColor.withOpacity(0.12),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, color: iconColor, size: 22),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    label,
+                    style: TextStyle(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 14,
+                      color: labelColor,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: colors.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(Icons.chevron_right_rounded, color: colors.onSurfaceVariant, size: 20),
+          ],
         ),
       ),
     );
