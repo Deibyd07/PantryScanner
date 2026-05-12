@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -215,9 +216,14 @@ class _ProductImage extends StatelessWidget {
     // Decide source: local file path vs network URL vs placeholder
     final String url = item.imageUrl;
     if (url.isNotEmpty && !url.startsWith('http')) {
-      // Local file from image_picker
-      final File file = File(url);
-      imageWidget = Image.file(file, fit: BoxFit.cover, errorBuilder: _placeholder);
+      if (kIsWeb) {
+        // Local file from image_picker on web is actually a blob URL
+        imageWidget = Image.network(url, fit: BoxFit.cover, errorBuilder: _placeholder);
+      } else {
+        // Local file from image_picker
+        final File file = File(url);
+        imageWidget = Image.file(file, fit: BoxFit.cover, errorBuilder: _placeholder);
+      }
     } else if (url.isNotEmpty) {
       // Network URL
       imageWidget = Image.network(url, fit: BoxFit.cover, errorBuilder: _placeholder);

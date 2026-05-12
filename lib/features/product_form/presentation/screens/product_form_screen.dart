@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
@@ -114,6 +115,8 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen>
   // ───── Image picker ─────
   Future<void> _pickImage(ImageSource source) async {
     Navigator.of(context).pop(); // close bottom sheet
+
+    // Mobile & Web: use image_picker
     try {
       final XFile? picked = await ImagePicker().pickImage(
         source: source,
@@ -123,8 +126,15 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen>
       if (picked != null) {
         setState(() => _selectedImagePath = picked.path);
       }
-    } catch (_) {
-      // Silently ignore if camera/gallery is unavailable (e.g. web)
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error al abrir cámara/galería: $e'),
+            backgroundColor: Theme.of(context).colorScheme.error,
+          ),
+        );
+      }
     }
   }
 
@@ -162,21 +172,44 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen>
                 ),
               ),
               const SizedBox(height: 16),
-              _ImageSourceTile(
-                icon: Icons.camera_alt_rounded,
-                label: 'Tomar foto',
-                subtitle: 'Abre la cámara del dispositivo',
-                colors: colors,
-                onTap: () => _pickImage(ImageSource.camera),
-              ),
-              const SizedBox(height: 10),
+              if (!kIsWeb) ...<Widget>[
+                _ImageSourceTile(
+                  icon: Icons.camera_alt_rounded,
+                  label: 'Tomar foto',
+                  subtitle: 'Abre la cámara del dispositivo',
+                  colors: colors,
+                  onTap: () => _pickImage(ImageSource.camera),
+                ),
+                const SizedBox(height: 10),
+              ],
               _ImageSourceTile(
                 icon: Icons.photo_library_rounded,
-                label: 'Subir desde galería',
-                subtitle: 'Elige una imagen guardada',
+                label: kIsWeb ? 'Subir imagen' : 'Subir desde galería',
+                subtitle: kIsWeb
+                    ? 'Elige una imagen de tu computador'
+                    : 'Elige una imagen guardada',
                 colors: colors,
                 onTap: () => _pickImage(ImageSource.gallery),
               ),
+              if (kIsWeb) ...<Widget>[
+                const SizedBox(height: 12),
+                Row(
+                  children: <Widget>[
+                    Icon(Icons.info_outline_rounded,
+                        size: 14, color: colors.onSurfaceVariant),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        'La cámara solo está disponible en la app móvil.',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: colors.onSurfaceVariant,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
               if (_selectedImagePath != null) ...<Widget>[
                 const SizedBox(height: 10),
                 _ImageSourceTile(
@@ -357,10 +390,16 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen>
             ? Stack(
                 fit: StackFit.expand,
                 children: <Widget>[
-                  Image.file(
-                    File(_selectedImagePath!),
-                    fit: BoxFit.cover,
-                  ),
+                  if (kIsWeb)
+                    Image.network(
+                      _selectedImagePath!,
+                      fit: BoxFit.cover,
+                    )
+                  else
+                    Image.file(
+                      File(_selectedImagePath!),
+                      fit: BoxFit.cover,
+                    ),
                   // Edit overlay
                   Positioned(
                     bottom: 10,
