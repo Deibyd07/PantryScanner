@@ -3,11 +3,12 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../data/repositories/sqlite_inventory_repository.dart';
 import '../../domain/entities/inventory_item.dart';
 import '../../domain/repositories/inventory_repository.dart';
+import '../../domain/usecases/delete_inventory_item_usecase.dart';
 import '../../domain/usecases/save_inventory_item_usecase.dart';
 import '../../domain/usecases/watch_inventory_items_usecase.dart';
-import '../../data/repositories/sqlite_inventory_repository.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // WEB DEMO — InMemory singleton repository
@@ -85,7 +86,11 @@ class _InMemoryInventoryRepository implements InventoryRepository {
 
   @override
   Future<int> saveItem(InventoryItem item) async {
-    final int newId = (_items.isEmpty ? 0 : _items.last.id) + 1;
+    // If item.id != 0 it is a restore-after-undo: keep the original id.
+    final bool isRestore = item.id != 0;
+    final int newId = isRestore
+        ? item.id
+        : (_items.isEmpty ? 1 : _items.map((e) => e.id).reduce((a, b) => a > b ? a : b) + 1);
     _items.add(InventoryItem(
       id: newId,
       barcode: item.barcode,
@@ -145,6 +150,11 @@ final Provider<WatchInventoryItemsUseCase> watchInventoryItemsUseCaseProvider =
 final Provider<SaveInventoryItemUseCase> saveInventoryItemUseCaseProvider =
     Provider<SaveInventoryItemUseCase>((ref) {
   return SaveInventoryItemUseCase(ref.watch(inventoryRepositoryProvider));
+});
+
+final Provider<DeleteInventoryItemUseCase> deleteInventoryItemUseCaseProvider =
+    Provider<DeleteInventoryItemUseCase>((ref) {
+  return DeleteInventoryItemUseCase(ref.watch(inventoryRepositoryProvider));
 });
 
 final StreamProvider<List<InventoryItem>> inventoryItemsProvider =

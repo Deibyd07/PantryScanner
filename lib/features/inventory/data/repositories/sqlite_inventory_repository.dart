@@ -96,8 +96,12 @@ class SqliteInventoryRepository implements InventoryRepository {
     );
   }
 
+  /// Builds a row map for SQLite.
+  /// If [item.id] > 0 (i.e. it is a restore after undo), the id is included
+  /// so that ConflictAlgorithm.replace reinstates the original row with the
+  /// same primary key, keeping references consistent.
   static Map<String, dynamic> _toRow(InventoryItem item) {
-    return <String, dynamic>{
+    final Map<String, dynamic> row = <String, dynamic>{
       'barcode': item.barcode,
       'name': item.name,
       'brand': item.brand,
@@ -108,6 +112,9 @@ class SqliteInventoryRepository implements InventoryRepository {
       'notes': item.notes,
       'created_at': item.createdAt.millisecondsSinceEpoch,
     };
+    // Only include the id when restoring an existing item (id != 0).
+    if (item.id != 0) row['id'] = item.id;
+    return row;
   }
 
   // ── InventoryRepository ───────────────────────────────────────────────────
@@ -120,7 +127,7 @@ class SqliteInventoryRepository implements InventoryRepository {
 
   @override
   Future<int> saveItem(InventoryItem item) async {
-    final id = await _database.insert(
+    final int id = await _database.insert(
       'inventory_items',
       _toRow(item),
       conflictAlgorithm: ConflictAlgorithm.replace,
