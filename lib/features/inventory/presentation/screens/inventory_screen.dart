@@ -170,8 +170,100 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
                     sliver: SliverList.separated(
                       itemCount: filtered.length,
                       separatorBuilder: (_, __) => const SizedBox(height: 12),
-                      itemBuilder: (BuildContext context, int index) =>
-                          InventoryProductCard(item: _toPantryCard(filtered[index])),
+                      itemBuilder: (BuildContext context, int index) {
+                        final InventoryItem item = filtered[index];
+                        return Dismissible(
+                          key: ValueKey<int>(item.id),
+                          direction: DismissDirection.endToStart,
+                          // ── Red background revealed on swipe ───────────
+                          background: Container(
+                            alignment: Alignment.centerRight,
+                            padding: const EdgeInsets.only(right: 24),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFE53935),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: const Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: <Widget>[
+                                Icon(Icons.delete_outline,
+                                    color: Colors.white, size: 28),
+                                SizedBox(height: 4),
+                                Text(
+                                  'Eliminar',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          // ── Confirmation dialog ────────────────────────
+                          confirmDismiss: (_) async {
+                            return await showDialog<bool>(
+                              context: context,
+                              builder: (BuildContext ctx) => AlertDialog(
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                title: const Text('Eliminar producto'),
+                                content: Text(
+                                  '¿Seguro que quieres eliminar "${item.name}" de tu despensa?',
+                                ),
+                                actions: <Widget>[
+                                  TextButton(
+                                    onPressed: () => Navigator.of(ctx).pop(false),
+                                    child: const Text('Cancelar'),
+                                  ),
+                                  FilledButton(
+                                    style: FilledButton.styleFrom(
+                                      backgroundColor: const Color(0xFFE53935),
+                                    ),
+                                    onPressed: () => Navigator.of(ctx).pop(true),
+                                    child: const Text('Eliminar'),
+                                  ),
+                                ],
+                              ),
+                            ) ??
+                                false;
+                          },
+                          // ── On confirmed: delete + Undo snackbar ───────
+                          onDismissed: (_) {
+                            ref
+                                .read(deleteInventoryItemUseCaseProvider)
+                                .call(item.id);
+
+                            ScaffoldMessenger.of(context)
+                              ..hideCurrentSnackBar()
+                              ..showSnackBar(
+                                SnackBar(
+                                  duration: const Duration(seconds: 5),
+                                  behavior: SnackBarBehavior.floating,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  content: Text(
+                                    '"${item.name}" eliminado',
+                                    style: const TextStyle(
+                                        fontWeight: FontWeight.w600),
+                                  ),
+                                  action: SnackBarAction(
+                                    label: 'Deshacer',
+                                    onPressed: () {
+                                      ref
+                                          .read(saveInventoryItemUseCaseProvider)
+                                          .call(item);
+                                    },
+                                  ),
+                                ),
+                              );
+                          },
+                          child: InventoryProductCard(
+                              item: _toPantryCard(filtered[index])),
+                        );
+                      },
                     ),
                   );
                 },
