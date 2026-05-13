@@ -2,7 +2,7 @@
 
 > **Equipo de Desarrollo**  
 > **Fecha de entrega:** 11 de abril de 2026  
-> **Asignatura / Campus:** _[Completar nombre de la asignatura]_
+> **Asignatura / Campus:** _[Desarrollo de aplicaciones moviles]_
 
 ---
 
