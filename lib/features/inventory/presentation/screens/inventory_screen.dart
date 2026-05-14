@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../app/router/app_router.dart';
+import '../../../../core/presentation/widgets/offline_banner.dart';
 import '../../domain/entities/inventory_item.dart';
 import '../models/pantry_card_item.dart';
 import '../providers/inventory_providers.dart';
@@ -285,6 +286,13 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
                 ),
               ),
             ],
+          ),
+          // ── Offline indicator ─────────────────────────────────────────────
+          const Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: OfflineBanner(),
           ),
         ],
       ),
