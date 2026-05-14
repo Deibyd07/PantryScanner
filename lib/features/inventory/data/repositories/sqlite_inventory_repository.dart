@@ -34,7 +34,7 @@ class SqliteInventoryRepository implements InventoryRepository {
 
     _db = await openDatabase(
       dbPath,
-      version: 1,
+      version: 2,
       onCreate: (db, version) async {
         await db.execute('''
           CREATE TABLE inventory_items (
@@ -50,6 +50,31 @@ class SqliteInventoryRepository implements InventoryRepository {
             created_at  INTEGER NOT NULL
           )
         ''');
+        await db.execute('''
+          CREATE TABLE product_cache (
+            barcode    TEXT PRIMARY KEY,
+            name       TEXT NOT NULL,
+            brand      TEXT,
+            category   TEXT,
+            image_url  TEXT,
+            updated_at INTEGER NOT NULL
+          )
+        ''');
+      },
+      onUpgrade: (db, oldVersion, newVersion) async {
+        if (oldVersion < 2) {
+          // Migration v1 → v2: add product cache table
+          await db.execute('''
+            CREATE TABLE IF NOT EXISTS product_cache (
+              barcode    TEXT PRIMARY KEY,
+              brand      TEXT,
+              category   TEXT,
+              image_url  TEXT,
+              updated_at INTEGER NOT NULL,
+              name       TEXT NOT NULL DEFAULT ''
+            )
+          ''');
+        }
       },
     );
   }
@@ -77,6 +102,38 @@ class SqliteInventoryRepository implements InventoryRepository {
       orderBy: 'created_at DESC',
     );
     return rows.map(_fromRow).toList();
+  }
+
+  // ── Cache helpers ─────────────────────────────────────────────────────────
+
+  /// Looks up a barcode in the local product_cache table.
+  /// Returns null if the barcode hasn't been cached yet.
+  Future<Map<String, dynamic>?> lookupCache(String barcode) async {
+    if (barcode.isEmpty) return null;
+    final List<Map<String, dynamic>> rows = await _database.query(
+      'product_cache',
+      where: 'barcode = ?',
+      whereArgs: <dynamic>[barcode],
+      limit: 1,
+    );
+    return rows.isEmpty ? null : rows.first;
+  }
+
+  /// Upserts a product into the cache so it can be auto-filled offline.
+  Future<void> _cacheProduct(InventoryItem item) async {
+    if (item.barcode.isEmpty) return;
+    await _database.insert(
+      'product_cache',
+      <String, dynamic>{
+        'barcode': item.barcode,
+        'name': item.name,
+        'brand': item.brand,
+        'category': item.category,
+        'image_url': item.imageUrl,
+        'updated_at': DateTime.now().millisecondsSinceEpoch,
+      },
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
   }
 
   static InventoryItem _fromRow(Map<String, dynamic> row) {
@@ -126,12 +183,26 @@ class SqliteInventoryRepository implements InventoryRepository {
   }
 
   @override
+  Future<InventoryItem?> getItemByBarcode(String barcode) async {
+    if (barcode.isEmpty) return null;
+    final List<Map<String, dynamic>> rows = await _database.query(
+      'inventory_items',
+      where: 'barcode = ?',
+      whereArgs: <dynamic>[barcode],
+      limit: 1,
+    );
+    return rows.isEmpty ? null : _fromRow(rows.first);
+  }
+
+  @override
   Future<int> saveItem(InventoryItem item) async {
     final int id = await _database.insert(
       'inventory_items',
       _toRow(item),
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
+    // Cache product metadata for offline auto-fill
+    await _cacheProduct(item);
     await _emit();
     return id;
   }
