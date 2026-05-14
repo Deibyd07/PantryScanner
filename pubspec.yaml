@@ -25,6 +25,7 @@ dependencies:
 
   # Networking
   dio: ^5.7.0
+  connectivity_plus: ^6.1.4
 
   # Scanner / device features
   mobile_scanner: ^5.2.3

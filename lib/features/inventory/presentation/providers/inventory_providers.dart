@@ -85,13 +85,27 @@ class _InMemoryInventoryRepository implements InventoryRepository {
   }
 
   @override
+  Future<InventoryItem?> getItemByBarcode(String barcode) async {
+    if (barcode.isEmpty) return null;
+    try {
+      return _items.firstWhere((i) => i.barcode == barcode);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  @override
   Future<int> saveItem(InventoryItem item) async {
-    // If item.id != 0 it is a restore-after-undo: keep the original id.
-    final bool isRestore = item.id != 0;
-    final int newId = isRestore
+    // If item.id != 0, try to find existing item to update.
+    final int existingIndex = item.id != 0
+        ? _items.indexWhere((i) => i.id == item.id)
+        : -1;
+
+    final int newId = existingIndex >= 0
         ? item.id
         : (_items.isEmpty ? 1 : _items.map((e) => e.id).reduce((a, b) => a > b ? a : b) + 1);
-    _items.add(InventoryItem(
+
+    final InventoryItem newItem = InventoryItem(
       id: newId,
       barcode: item.barcode,
       name: item.name,
@@ -102,7 +116,14 @@ class _InMemoryInventoryRepository implements InventoryRepository {
       imageUrl: item.imageUrl,
       notes: item.notes,
       createdAt: item.createdAt,
-    ));
+    );
+
+    if (existingIndex >= 0) {
+      _items[existingIndex] = newItem;
+    } else {
+      _items.add(newItem);
+    }
+
     _emit();
     return newId;
   }
@@ -160,4 +181,25 @@ final Provider<DeleteInventoryItemUseCase> deleteInventoryItemUseCaseProvider =
 final StreamProvider<List<InventoryItem>> inventoryItemsProvider =
     StreamProvider<List<InventoryItem>>((ref) {
   return ref.watch(watchInventoryItemsUseCaseProvider).call();
+});
+
+/// Returns the full existing InventoryItem if found by barcode.
+final AutoDisposeFutureProviderFamily<InventoryItem?, String>
+    itemByBarcodeProvider = FutureProvider.autoDispose
+        .family<InventoryItem?, String>((ref, barcode) async {
+  if (barcode.isEmpty) return null;
+  return ref.read(inventoryRepositoryProvider).getItemByBarcode(barcode);
+});
+
+/// Returns cached product metadata for [barcode], or null if not cached.
+/// Only works on mobile (SQLite). Returns null on web.
+final AutoDisposeFutureProviderFamily<Map<String, dynamic>?, String>
+    productCacheProvider = FutureProvider.autoDispose
+        .family<Map<String, dynamic>?, String>((ref, barcode) async {
+  if (kIsWeb) return null;
+  final InventoryRepository repo = ref.read(inventoryRepositoryProvider);
+  if (repo is SqliteInventoryRepository) {
+    return repo.lookupCache(barcode);
+  }
+  return null;
 });

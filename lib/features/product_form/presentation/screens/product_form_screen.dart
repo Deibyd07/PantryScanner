@@ -7,6 +7,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/constants/app_constants.dart';
+import '../../../../core/presentation/widgets/offline_banner.dart';
 import '../../../inventory/domain/entities/inventory_item.dart';
 import '../../../inventory/presentation/providers/inventory_providers.dart';
 
@@ -66,6 +67,7 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen>
   final TextEditingController _notesController = TextEditingController();
 
   // Field values
+  int _existingId = 0; // If != 0, we are updating an existing product
   int _quantity = AppConstants.defaultQuantity; // default = 1
   DateTime? _expiryDate;
   String? _selectedCategory;
@@ -93,6 +95,10 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen>
     super.initState();
     if (widget.initialBarcode != null && widget.initialBarcode!.isNotEmpty) {
       _barcodeController.text = widget.initialBarcode!;
+      // Try to auto-fill from local cache (works offline)
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _tryAutofillFromCache(widget.initialBarcode!);
+      });
     }
 
     _headerAnim = AnimationController(
@@ -101,6 +107,45 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen>
     )..forward();
 
     _fadeIn = CurvedAnimation(parent: _headerAnim, curve: Curves.easeOut);
+  }
+
+  /// Looks up the local SQLite cache or inventory for [barcode] and auto-fills
+  /// the form fields. If it's already in the inventory, we load its full state
+  /// so saving will update it instead of duplicating.
+  Future<void> _tryAutofillFromCache(String barcode) async {
+    // 1. Try to find the existing full item in the inventory
+    final InventoryItem? existingItem =
+        await ref.read(itemByBarcodeProvider(barcode).future);
+    
+    if (existingItem != null && mounted) {
+      setState(() {
+        _existingId = existingItem.id;
+        _nameController.text = existingItem.name;
+        _selectedCategory = existingItem.category;
+        _quantity = existingItem.quantity;
+        _expiryDate = existingItem.expiryDate;
+        _selectedImagePath = existingItem.imageUrl;
+        if (existingItem.notes != null) {
+          _notesController.text = existingItem.notes!;
+        }
+      });
+      return;
+    }
+
+    // 2. If not in inventory, try to auto-fill metadata from the cache
+    final Map<String, dynamic>? cached =
+        await ref.read(productCacheProvider(barcode).future);
+    if (cached == null || !mounted) return;
+    setState(() {
+      final String cachedName = cached['name'] as String? ?? '';
+      if (cachedName.isNotEmpty && _nameController.text.isEmpty) {
+        _nameController.text = cachedName;
+      }
+      final String? cachedCategory = cached['category'] as String?;
+      if (cachedCategory != null && _selectedCategory == null) {
+        _selectedCategory = cachedCategory;
+      }
+    });
   }
 
   @override
@@ -239,8 +284,10 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen>
 
     return Scaffold(
       backgroundColor: colors.surface,
-      body: CustomScrollView(
-        slivers: <Widget>[
+      body: Stack(
+        children: <Widget>[
+          CustomScrollView(
+            slivers: <Widget>[
           // ── Floating App Bar ──
           SliverAppBar(
             pinned: true,
@@ -361,6 +408,15 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen>
                 ),
               ),
             ),
+          ),
+        ],
+          ),
+          // ── Offline indicator ───────────────────────────────────────────
+          const Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: OfflineBanner(),
           ),
         ],
       ),
@@ -855,7 +911,7 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen>
         : _barcodeController.text.trim();
 
     final InventoryItem item = InventoryItem(
-      id: 0,
+      id: _existingId,
       barcode: barcode,
       name: _nameController.text.trim(),
       brand: null,

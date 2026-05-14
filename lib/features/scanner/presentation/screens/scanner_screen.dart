@@ -2,21 +2,23 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 import '../../../../app/router/app_router.dart';
+import '../../../../core/presentation/widgets/offline_banner.dart';
 import '../../domain/usecases/scan_barcode_usecase.dart';
 
-class ScannerScreen extends StatefulWidget {
+class ScannerScreen extends ConsumerStatefulWidget {
   const ScannerScreen({super.key});
 
   @override
-  State<ScannerScreen> createState() => _ScannerScreenState();
+  ConsumerState<ScannerScreen> createState() => _ScannerScreenState();
 }
 
-class _ScannerScreenState extends State<ScannerScreen>
+class _ScannerScreenState extends ConsumerState<ScannerScreen>
   with WidgetsBindingObserver {
   final MobileScannerController _controller = MobileScannerController(
     formats: <BarcodeFormat>[
@@ -173,6 +175,13 @@ class _ScannerScreenState extends State<ScannerScreen>
                 ),
               ],
             ),
+          ),
+          // ── Offline indicator ─────────────────────────────────────────────
+          const Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: OfflineBanner(),
           ),
         ],
       );
