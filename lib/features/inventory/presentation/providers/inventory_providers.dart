@@ -9,6 +9,7 @@ import '../../domain/repositories/inventory_repository.dart';
 import '../../domain/usecases/delete_inventory_item_usecase.dart';
 import '../../domain/usecases/save_inventory_item_usecase.dart';
 import '../../domain/usecases/watch_inventory_items_usecase.dart';
+import '../../../../core/sync/inventory_sync_service.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // WEB DEMO — InMemory singleton repository
@@ -23,6 +24,7 @@ class _InMemoryInventoryRepository implements InventoryRepository {
     _items.addAll(<InventoryItem>[
       InventoryItem(
         id: 1,
+        syncId: '',
         barcode: '12345',
         name: 'Aguacates Hass',
         brand: 'Generico',
@@ -32,9 +34,11 @@ class _InMemoryInventoryRepository implements InventoryRepository {
         imageUrl:
             'https://images.unsplash.com/photo-1601039641847-7857b994d704?q=80&w=800',
         createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
       ),
       InventoryItem(
         id: 2,
+        syncId: '',
         barcode: '67890',
         name: 'Yogur griego',
         brand: 'Alpina',
@@ -44,9 +48,11 @@ class _InMemoryInventoryRepository implements InventoryRepository {
         imageUrl:
             'https://images.unsplash.com/photo-1488477181946-6428a0291777?q=80&w=800',
         createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
       ),
       InventoryItem(
         id: 3,
+        syncId: '',
         barcode: '11111',
         name: 'Arroz integral',
         brand: null,
@@ -56,9 +62,11 @@ class _InMemoryInventoryRepository implements InventoryRepository {
         imageUrl:
             'https://images.unsplash.com/photo-1586201375761-83865001e31c?q=80&w=800',
         createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
       ),
       InventoryItem(
         id: 4,
+        syncId: '',
         barcode: '22222',
         name: 'Leche entera',
         brand: 'Parmalat',
@@ -68,6 +76,7 @@ class _InMemoryInventoryRepository implements InventoryRepository {
         imageUrl:
             'https://images.unsplash.com/photo-1563636619-e9143da7973b?q=80&w=800',
         createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
       ),
     ]);
   }
@@ -107,6 +116,7 @@ class _InMemoryInventoryRepository implements InventoryRepository {
 
     final InventoryItem newItem = InventoryItem(
       id: newId,
+      syncId: item.syncId,
       barcode: item.barcode,
       name: item.name,
       brand: item.brand,
@@ -116,6 +126,7 @@ class _InMemoryInventoryRepository implements InventoryRepository {
       imageUrl: item.imageUrl,
       notes: item.notes,
       createdAt: item.createdAt,
+      updatedAt: DateTime.now(),
     );
 
     if (existingIndex >= 0) {
@@ -200,6 +211,18 @@ final AutoDisposeFutureProviderFamily<Map<String, dynamic>?, String>
   final InventoryRepository repo = ref.read(inventoryRepositoryProvider);
   if (repo is SqliteInventoryRepository) {
     return repo.lookupCache(barcode);
+  }
+  return null;
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Sync Service Provider
+// ─────────────────────────────────────────────────────────────────────────────
+final inventorySyncServiceProvider = Provider<InventorySyncService?>((ref) {
+  if (kIsWeb) return null;
+  final repo = ref.watch(inventoryRepositoryProvider);
+  if (repo is SqliteInventoryRepository) {
+    return InventorySyncService(ref, repo);
   }
   return null;
 });

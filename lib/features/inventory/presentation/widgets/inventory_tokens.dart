@@ -12,3 +12,33 @@ class InventoryTokens {
   static const Color textMuted = Color(0xFF72796E);
   static const Color textBody = Color(0xFF42493E);
 }
+      offset: const Offset(0, 1),
+    ),
+    BoxShadow(
+      color: const Color(0xFF1C1917).withValues(alpha: 0.02),
+      blurRadius: 15,
+      offset: const Offset(0, 4),
+    ),
+  ];
+
+  static List<BoxShadow> get elevMed => <BoxShadow>[
+    BoxShadow(
+      color: const Color(0xFF1C1917).withValues(alpha: 0.06),
+      blurRadius: 12,
+      offset: const Offset(0, 4),
+    ),
+    BoxShadow(
+      color: const Color(0xFF1C1917).withValues(alpha: 0.03),
+      blurRadius: 24,
+      offset: const Offset(0, 8),
+    ),
+  ];
+
+  static List<BoxShadow> get elevBrand => <BoxShadow>[
+    BoxShadow(
+      color: brand.withValues(alpha: 0.30),
+      blurRadius: 20,
+      offset: const Offset(0, 8),
+    ),
+  ];
+}
