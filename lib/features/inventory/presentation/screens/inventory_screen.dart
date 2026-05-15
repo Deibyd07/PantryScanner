@@ -27,12 +27,15 @@ class InventoryScreen extends ConsumerStatefulWidget {
 
 class _InventoryScreenState extends ConsumerState<InventoryScreen> {
   final List<String> _chips = <String>[
-    'Todo lo esencial',
+    'Todos',
+    'Lácteos',
+    'Carnes',
     'Frutas y verduras',
-    'Lácteos y huevos',
-    'Granos',
-    'Especias',
-    'Proteínas',
+    'Enlatados',
+    'Bebidas',
+    'Snacks',
+    'Cereales',
+    'Condimentos',
   ];
 
   int _selectedChip = 0;
@@ -210,6 +213,20 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
                                 fontSize: 13,
                               ),
                             ),
+                            if (_searchQuery.isEmpty) ...<Widget>[
+                              const SizedBox(height: 24),
+                              FilledButton.icon(
+                                onPressed: () => context.push(AppRoutes.scanner),
+                                style: FilledButton.styleFrom(
+                                  backgroundColor: InventoryTokens.primary,
+                                  foregroundColor: Colors.white,
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 24, vertical: 12),
+                                ),
+                                icon: const Icon(Icons.qr_code_scanner_rounded),
+                                label: const Text('Escanear mi primer producto'),
+                              ),
+                            ],
                           ],
                         ),
                       ),

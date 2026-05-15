@@ -1,6 +1,6 @@
 # PantryScanner — Historias de Usuario & Sub-issues Técnicas
 
-> **Total: 24 HU · 89 sub-issues · 6 épicas · 168 story points**
+> **Total: 25 HU · 96 sub-issues · 6 épicas · 181 story points**
 
 ---
 
@@ -514,6 +514,39 @@ Como usuario, quiero usar la app sin conexión a internet, para escanear product
 
 ---
 
+### HU-25 · Autenticación y Login de usuario
+
+**Descripción:**
+Como usuario, quiero registrarme e iniciar sesión en la app mediante correo/contraseña o con mi cuenta de Google (Gmail), para que mis datos estén vinculados a mi cuenta y pueda acceder a ellos de forma segura desde cualquier dispositivo.
+
+**Criterios de aceptación:**
+- Pantalla de login con opciones: correo/contraseña y Google Sign-In
+- Pantalla de registro con campos: nombre, correo y contraseña
+- Validación de formato de correo electrónico
+- Validación de contraseña (mínimo 8 caracteres, al menos 1 mayúscula y 1 número)
+- Inicio de sesión con cuenta de Google funcional (OAuth 2.0)
+- Se muestra indicador de carga durante autenticación
+- Mensajes de error claros (credenciales inválidas, cuenta ya existente, error de red)
+- Persistencia de sesión (no pide login cada vez que abre la app)
+- Opción de cerrar sesión desde configuración
+- Opción de recuperar contraseña por correo
+
+**Puntos:** 13 · **Prioridad:** High · **Sprint:** Sprint 2 · **Etiquetas:** `mvp` `auth` `firebase` `google-signin`
+
+**Sub-issues:**
+
+| ID | Tipo | Título | Descripción |
+|---|---|---|---|
+| SUB-25.1 | `Backend` | Configurar Firebase Authentication en el proyecto | Integrar Firebase Auth SDK, configurar `google-services.json` / `GoogleService-Info.plist` y habilitar proveedores Email/Password y Google en la consola de Firebase. |
+| SUB-25.2 | `Frontend` | Crear pantalla de Login | Diseñar la UI de inicio de sesión con campos de correo y contraseña, botón "Iniciar sesión", enlace "¿Olvidaste tu contraseña?", enlace "Crear cuenta" y botón "Continuar con Google". |
+| SUB-25.3 | `Frontend` | Crear pantalla de Registro | Formulario con campos: nombre completo, correo electrónico, contraseña y confirmar contraseña, con validaciones en tiempo real y botón de registro. |
+| SUB-25.4 | `Backend` | Implementar caso de uso: registro con email/contraseña | Lógica para crear usuario en Firebase Auth, validar campos, manejar errores (email ya registrado, contraseña débil) y retornar resultado. |
+| SUB-25.5 | `Backend` | Implementar caso de uso: login con email/contraseña | Lógica para autenticar usuario con Firebase Auth, manejar errores (credenciales inválidas, cuenta deshabilitada) y persistir token de sesión. |
+| SUB-25.6 | `Backend` | Implementar caso de uso: login con Google Sign-In | Integrar el flujo de Google Sign-In (OAuth 2.0) con Firebase Auth, obtener credenciales de Google y vincularlas al usuario de Firebase. |
+| SUB-25.7 | `Frontend` | Implementar flujo de recuperación de contraseña | Pantalla con campo de correo que envía email de restablecimiento vía Firebase Auth, con mensaje de confirmación al usuario. |
+
+---
+
 ### HU-21 · Respaldo y restauración de datos
 
 **Descripción:**
@@ -616,4 +649,4 @@ Como usuario nuevo sin productos, quiero ver mensajes útiles cuando no hay dato
 
 ---
 
-> **24 HU · 89 Sub-issues · 6 Épicas · 168 Story Points**
+> **25 HU · 96 Sub-issues · 6 Épicas · 181 Story Points**
