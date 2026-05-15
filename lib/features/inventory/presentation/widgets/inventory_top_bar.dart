@@ -18,7 +18,7 @@ class InventoryTopBar extends ConsumerWidget {
     return SliverAppBar(
       floating: true,
       pinned: true,
-      backgroundColor: InventoryTokens.bg.withValues(alpha: 0.85),
+      backgroundColor: const Color(0xFFFFF8F7).withValues(alpha: 0.95),
       surfaceTintColor: Colors.transparent,
       titleSpacing: 0,
       title: Row(
@@ -179,71 +179,6 @@ class InventoryTopBar extends ConsumerWidget {
           color: Colors.white,
           fontWeight: FontWeight.w700,
           fontSize: 14,
-        ),
-      ),
-    );
-  }
-}
-  final dynamic user;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 50,
-      height: 50,
-      padding: const EdgeInsets.all(2.5),
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        gradient: const LinearGradient(
-          colors: <Color>[
-            InventoryTokens.brand,
-            InventoryTokens.accent,
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        boxShadow: <BoxShadow>[
-          BoxShadow(
-            color: InventoryTokens.brand.withValues(alpha: 0.25),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Container(
-        decoration: const BoxDecoration(
-          shape: BoxShape.circle,
-          color: InventoryTokens.bg,
-        ),
-        padding: const EdgeInsets.all(2),
-        child: ClipOval(
-          child: user?.photoUrl != null
-              ? Image.network(
-                  user.photoUrl!,
-                  fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) => _fallback(),
-                )
-              : _fallback(),
-        ),
-      ),
-    );
-  }
-
-  Widget _fallback() {
-    final String initial = user != null ? (user.initials ?? '?') : '?';
-    return Container(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          colors: <Color>[InventoryTokens.brand, InventoryTokens.brandDark],
-        ),
-      ),
-      alignment: Alignment.center,
-      child: Text(
-        initial,
-        style: GoogleFonts.epilogue(
-          color: Colors.white,
-          fontWeight: FontWeight.w800,
-          fontSize: 18,
         ),
       ),
     );
