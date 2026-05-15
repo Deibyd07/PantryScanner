@@ -8,18 +8,22 @@ enum ProductStatus {
 class InventoryItem {
   const InventoryItem({
     required this.id,
+    required this.syncId,
     required this.barcode,
     required this.name,
     required this.brand,
     required this.category,
     required this.quantity,
     required this.createdAt,
+    required this.updatedAt,
+    this.isDeleted = false,
     this.expiryDate,
     this.imageUrl,
     this.notes,
   });
 
   final int id;
+  final String syncId;
   final String barcode;
   final String name;
   final String? brand;
@@ -29,6 +33,8 @@ class InventoryItem {
   final String? imageUrl;
   final String? notes;
   final DateTime createdAt;
+  final DateTime updatedAt;
+  final bool isDeleted;
 
   ProductStatus get status {
     if (quantity <= 0) {
