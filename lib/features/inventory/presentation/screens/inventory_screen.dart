@@ -102,6 +102,7 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
                       const SizedBox(height: 24),
                       TextField(
                         controller: _searchCtrl,
+                        style: const TextStyle(color: InventoryTokens.textBody),
                         onChanged: (String value) {
                           // Cancel previous timer and start a new 300 ms one
                           _debounce?.cancel();
@@ -121,8 +122,9 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
                           // ── Clear (X) button — only shown when field has text ──
                           suffixIcon: _searchCtrl.text.isNotEmpty
                               ? IconButton(
-                                  icon: const Icon(Icons.close_rounded),
+                                  icon: const Icon(Icons.close_rounded, size: 20),
                                   tooltip: 'Limpiar búsqueda',
+                                  color: InventoryTokens.primary,
                                   onPressed: () {
                                     _searchCtrl.clear();
                                     setState(() => _searchQuery = '');
