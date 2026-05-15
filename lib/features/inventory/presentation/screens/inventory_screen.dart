@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -35,6 +37,26 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
 
   int _selectedChip = 0;
   String _searchQuery = '';
+
+  // ── HU-07: search with debounce ────────────────────────────────────────────
+  final TextEditingController _searchCtrl = TextEditingController();
+  Timer? _debounce;
+
+  @override
+  void initState() {
+    super.initState();
+    _searchCtrl.addListener(() {
+      // Rebuild suffix icon reactively when text changes
+      setState(() {});
+    });
+  }
+
+  @override
+  void dispose() {
+    _debounce?.cancel();
+    _searchCtrl.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -79,19 +101,52 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
                       const InventoryInsightsCard(),
                       const SizedBox(height: 24),
                       TextField(
-                        onChanged: (String v) =>
-                            setState(() => _searchQuery = v.toLowerCase()),
+                        controller: _searchCtrl,
+                        onChanged: (String value) {
+                          // Cancel previous timer and start a new 300 ms one
+                          _debounce?.cancel();
+                          _debounce = Timer(
+                            const Duration(milliseconds: 300),
+                            () => setState(
+                              () => _searchQuery = value.trim().toLowerCase(),
+                            ),
+                          );
+                        },
                         decoration: InputDecoration(
                           hintText: 'Busca en tu despensa...',
                           hintStyle: TextStyle(
                             color: InventoryTokens.textMuted.withValues(alpha: 0.55),
                           ),
                           prefixIcon: const Icon(Icons.search),
+                          // ── Clear (X) button — only shown when field has text ──
+                          suffixIcon: _searchCtrl.text.isNotEmpty
+                              ? IconButton(
+                                  icon: const Icon(Icons.close_rounded),
+                                  tooltip: 'Limpiar búsqueda',
+                                  onPressed: () {
+                                    _searchCtrl.clear();
+                                    setState(() => _searchQuery = '');
+                                  },
+                                )
+                              : null,
                           filled: true,
-                          fillColor: const Color(0xFFF5F4E8),
+                          fillColor: const Color(0xFFFFEDEB),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(100),
                             borderSide: BorderSide.none,
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(100),
+                            borderSide: BorderSide(
+                              color: InventoryTokens.outline.withValues(alpha: 0.4),
+                            ),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(100),
+                            borderSide: BorderSide(
+                              color: InventoryTokens.primary,
+                              width: 1.5,
+                            ),
                           ),
                         ),
                       ),
@@ -109,11 +164,13 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
               ),
               asyncItems.when(
                 data: (List<InventoryItem> rows) {
+                  // ── Filter: name, brand, category (case-insensitive) ────
                   final List<InventoryItem> filtered = _searchQuery.isEmpty
                       ? rows
                       : rows
                           .where((InventoryItem e) =>
                               e.name.toLowerCase().contains(_searchQuery) ||
+                              (e.brand ?? '').toLowerCase().contains(_searchQuery) ||
                               (e.category ?? '').toLowerCase().contains(_searchQuery))
                           .toList();
 
@@ -145,7 +202,7 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
                             Text(
                               _searchQuery.isEmpty
                                   ? 'Agrega tu primer producto escaneando un código'
-                                  : 'Intenta con otro nombre o categoría',
+                                  : 'Intenta con otro nombre, marca o categoría',
                               style: TextStyle(
                                 color: InventoryTokens.textMuted.withValues(alpha: 0.6),
                                 fontSize: 13,
