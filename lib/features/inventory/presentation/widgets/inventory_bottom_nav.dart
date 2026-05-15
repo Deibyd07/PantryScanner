@@ -14,11 +14,11 @@ class InventoryBottomNav extends StatelessWidget {
       child: Container(
         height: 74,
         decoration: BoxDecoration(
-          color: const Color(0xFFF8F7EE).withValues(alpha: 0.95),
+          color: const Color(0xFFFFF8F7).withValues(alpha: 0.96),
           borderRadius: BorderRadius.circular(40),
           boxShadow: const <BoxShadow>[
             BoxShadow(
-              color: Color(0x1A154212),
+              color: Color(0x22C0392B),
               blurRadius: 30,
               offset: Offset(0, 10),
             ),
