@@ -4,7 +4,9 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../data/repositories/sqlite_notification_settings_repository.dart';
+import '../../data/services/local_notification_service.dart';
 import '../../data/services/noop_notification_scheduler.dart';
+import '../../data/services/real_notification_scheduler.dart';
 import '../../domain/entities/notification_settings.dart';
 import '../../domain/repositories/notification_settings_repository.dart';
 import '../../domain/services/notification_scheduler.dart';
@@ -14,7 +16,10 @@ import '../../domain/usecases/watch_notification_settings_usecase.dart';
 
 final Provider<NotificationScheduler> notificationSchedulerProvider =
     Provider<NotificationScheduler>((ref) {
-  return const NoopNotificationScheduler();
+  if (kIsWeb) {
+    return const NoopNotificationScheduler();
+  }
+  return RealNotificationScheduler(LocalNotificationService.instance);
 });
 
 final _InMemoryNotificationSettingsRepository _globalWebRepo =
