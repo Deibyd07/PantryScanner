@@ -1,8 +1,10 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../inventory/presentation/widgets/inventory_tokens.dart';
+import '../../data/services/local_notification_service.dart';
 import '../../domain/entities/notification_settings.dart';
 import '../providers/notification_settings_providers.dart';
 
@@ -75,6 +77,31 @@ class _NotificationSettingsScreenState
         ),
       );
     }
+  }
+
+  /// Requests notification permission on Android 13+ before enabling.
+  /// Returns `true` if the permission was granted (or we're on web).
+  Future<bool> _ensurePermission() async {
+    if (kIsWeb) return true;
+    final bool granted =
+        await LocalNotificationService.instance.requestPermission();
+    if (!granted && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text(
+            'Permiso de notificaciones denegado. '
+            'Actívalo en la configuración del sistema.',
+          ),
+          backgroundColor: Theme.of(context).colorScheme.error,
+          action: SnackBarAction(
+            label: 'Entendido',
+            textColor: Colors.white,
+            onPressed: () {},
+          ),
+        ),
+      );
+    }
+    return granted;
   }
 
   @override
@@ -153,9 +180,16 @@ class _NotificationSettingsScreenState
                               'Puedes pausar todas las notificaciones sin perder tu configuración.',
                             child: SwitchListTile.adaptive(
                               value: settings.enabled,
-                              onChanged: (bool value) => _save(
-                                settings.copyWith(enabled: value),
-                              ),
+                              onChanged: (bool value) async {
+                                if (value) {
+                                  final bool granted =
+                                      await _ensurePermission();
+                                  if (!granted) return;
+                                }
+                                _save(
+                                  settings.copyWith(enabled: value),
+                                );
+                              },
                               contentPadding: EdgeInsets.zero,
                               title: const Text(
                                 'Notificaciones de vencimiento',
