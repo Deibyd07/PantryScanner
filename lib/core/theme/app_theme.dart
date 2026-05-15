@@ -29,7 +29,10 @@ class AppTheme {
       outlineVariant:        Color(0xFFFFD9D7),
     );
 
-    final TextTheme textTheme = GoogleFonts.plusJakartaSansTextTheme();
+    final TextTheme textTheme = GoogleFonts.plusJakartaSansTextTheme(ThemeData.light().textTheme).apply(
+      bodyColor: _onSurface,
+      displayColor: _onSurface,
+    );
 
     return ThemeData(
       useMaterial3: true,

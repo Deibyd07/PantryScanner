@@ -27,7 +27,7 @@ class _PantryScannerAppState extends State<PantryScannerApp> {
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
-      themeMode: ThemeMode.system,
+      themeMode: ThemeMode.light,
       routerConfig: appRouter,
       locale: const Locale('es'),
       localizationsDelegates: const <LocalizationsDelegate<dynamic>>[
