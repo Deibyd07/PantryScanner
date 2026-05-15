@@ -11,7 +11,7 @@ class InventoryTopBar extends StatelessWidget {
     return SliverAppBar(
       floating: true,
       pinned: true,
-      backgroundColor: InventoryTokens.bg.withValues(alpha: 0.85),
+      backgroundColor: const Color(0xFFFFF8F7).withValues(alpha: 0.95),
       surfaceTintColor: Colors.transparent,
       titleSpacing: 0,
       title: Row(

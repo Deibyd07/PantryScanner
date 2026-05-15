@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../app/router/app_router.dart';
+import '../../../../core/presentation/widgets/app_background.dart';
 import '../../../../core/presentation/widgets/offline_banner.dart';
 import '../../domain/entities/inventory_item.dart';
 import '../models/pantry_card_item.dart';
@@ -40,7 +41,7 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
     final AsyncValue<List<InventoryItem>> asyncItems = ref.watch(inventoryItemsProvider);
 
     return Scaffold(
-      backgroundColor: InventoryTokens.bg,
+      backgroundColor: Colors.transparent,
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       floatingActionButton: FloatingActionButton.large(
         onPressed: () => context.push(AppRoutes.productForm),
@@ -54,17 +55,7 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
       ),
       body: Stack(
         children: <Widget>[
-          const Positioned.fill(
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: <Color>[InventoryTokens.bg, InventoryTokens.bgMuted],
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                ),
-              ),
-            ),
-          ),
+          const Positioned.fill(child: AppBackground()),
           CustomScrollView(
             slivers: <Widget>[
               const InventoryTopBar(),
