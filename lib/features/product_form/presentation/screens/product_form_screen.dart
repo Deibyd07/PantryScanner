@@ -912,6 +912,7 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen>
 
     final InventoryItem item = InventoryItem(
       id: _existingId,
+      syncId: '', // Will be assigned by repository if new
       barcode: barcode,
       name: _nameController.text.trim(),
       brand: null,
@@ -921,6 +922,7 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen>
       imageUrl: _selectedImagePath,
       notes: _notesController.text.trim().isEmpty ? null : _notesController.text.trim(),
       createdAt: DateTime.now(),
+      updatedAt: DateTime.now(),
     );
 
     final bool success =
