@@ -1,44 +1,28 @@
 import 'package:flutter/material.dart';
 
+// ─────────────────────────────────────────────────────────────────────────────
+// PantryScanner Design Tokens
+// Paleta inspirada en sábana de cuadros rojos y blancos:
+//   Rojo cereza vibrante · Blanco cálido rosado · Carmesí profundo · Coral
+// ─────────────────────────────────────────────────────────────────────────────
 class InventoryTokens {
-  static const Color bg = Color(0xFFFBFAEE);
-  static const Color bgMuted = Color(0xFFF2F1E5);
-  static const Color primary = Color(0xFF002B02);
-  static const Color secondary = Color(0xFF4A6549);
-  static const Color tertiary = Color(0xFF790007);
-  static const Color accentContainer = Color(0xFF154212);
-  static const Color accentOnContainer = Color(0xFF7EAF73);
-  static const Color outline = Color(0xFFC2C9BB);
-  static const Color textMuted = Color(0xFF72796E);
-  static const Color textBody = Color(0xFF42493E);
-}
-      offset: const Offset(0, 1),
-    ),
-    BoxShadow(
-      color: const Color(0xFF1C1917).withValues(alpha: 0.02),
-      blurRadius: 15,
-      offset: const Offset(0, 4),
-    ),
-  ];
+  // Backgrounds — blanco cálido con toque rosado
+  static const Color bg       = Color(0xFFFFF8F7); // cálido casi blanco
+  static const Color bgMuted  = Color(0xFFFFEDEB); // rosa muy suave
 
-  static List<BoxShadow> get elevMed => <BoxShadow>[
-    BoxShadow(
-      color: const Color(0xFF1C1917).withValues(alpha: 0.06),
-      blurRadius: 12,
-      offset: const Offset(0, 4),
-    ),
-    BoxShadow(
-      color: const Color(0xFF1C1917).withValues(alpha: 0.03),
-      blurRadius: 24,
-      offset: const Offset(0, 8),
-    ),
-  ];
+  // Brand — rojo cereza vibrante (del cuadro)
+  static const Color primary          = Color(0xFFC0392B); // rojo cereza profundo
+  static const Color secondary        = Color(0xFFE74C3C); // rojo vibrante
+  static const Color tertiary         = Color(0xFFFF6B6B); // coral suave (warnings)
 
-  static List<BoxShadow> get elevBrand => <BoxShadow>[
-    BoxShadow(
-      color: brand.withValues(alpha: 0.30),
-      blurRadius: 20,
-      offset: const Offset(0, 8),
-    ),
-  ];
+  // Accent buttons / FAB — carmesí intenso
+  static const Color accentContainer    = Color(0xFFC0392B); // botón FAB
+  static const Color accentOnContainer  = Color(0xFFFFD6D2); // texto sobre FAB
+
+  // Borders & dividers
+  static const Color outline = Color(0xFFFFBDBA); // rosa-rojo suave
+
+  // Text
+  static const Color textMuted = Color(0xFFA04040); // rojo apagado
+  static const Color textBody  = Color(0xFF4A1010); // granate oscuro
 }
