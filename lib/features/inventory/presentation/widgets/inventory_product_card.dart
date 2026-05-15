@@ -21,7 +21,7 @@ extension _StatusStyle on ProductStatus {
       case ProductStatus.outOfStock:
         return const Color(0xFF9E9E9E);
       case ProductStatus.normal:
-        return InventoryTokens.secondary;
+        return const Color(0xFF27AE60); // verde para "muy fresco" — contraste positivo
     }
   }
 
@@ -181,7 +181,7 @@ class InventoryProductCard extends StatelessWidget {
                           child: LinearProgressIndicator(
                             value: item.progress,
                             minHeight: 5,
-                            backgroundColor: const Color(0xFFE9E9DD),
+                            backgroundColor: const Color(0xFFFFDAD7),
                             color: statusColor,
                           ),
                         ),

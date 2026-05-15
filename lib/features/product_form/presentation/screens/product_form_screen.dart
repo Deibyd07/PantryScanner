@@ -7,6 +7,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/constants/app_constants.dart';
+import '../../../../core/presentation/widgets/app_background.dart';
 import '../../../../core/presentation/widgets/offline_banner.dart';
 import '../../../inventory/domain/entities/inventory_item.dart';
 import '../../../inventory/presentation/providers/inventory_providers.dart';
@@ -283,9 +284,12 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen>
     final _SaveState saveState = ref.watch(_saveNotifierProvider);
 
     return Scaffold(
-      backgroundColor: colors.surface,
+      backgroundColor: Colors.transparent,
       body: Stack(
         children: <Widget>[
+          const Positioned.fill(
+            child: AppBackground(overlayOpacity: 0.94),
+          ),
           CustomScrollView(
             slivers: <Widget>[
           // ── Floating App Bar ──
@@ -331,13 +335,27 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen>
 
           // ── Form body ──
           SliverToBoxAdapter(
-            child: Form(
-              key: _formKey,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: <Widget>[
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.97),
+                  borderRadius: BorderRadius.circular(28),
+                  boxShadow: <BoxShadow>[
+                    BoxShadow(
+                      color: const Color(0xFFC0392B).withValues(alpha: 0.08),
+                      blurRadius: 24,
+                      offset: const Offset(0, 8),
+                    ),
+                  ],
+                ),
+                child: Form(
+                  key: _formKey,
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 20, 16, 0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: <Widget>[
                     // ── Section: Foto del producto ──
                     _SectionHeader(title: 'Foto del producto', icon: Icons.photo_camera_outlined),
                     const SizedBox(height: 12),
@@ -399,12 +417,14 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen>
                       ),
                     ],
 
-                    const SizedBox(height: 32),
+                     const SizedBox(height: 32),
 
-                    // ── Save button (SUB-04.3) ──
-                    _buildSaveButton(colors, saveState.isSaving),
-                    const SizedBox(height: 40),
-                  ],
+                     // ── Save button ──
+                     _buildSaveButton(colors, saveState.isSaving),
+                     const SizedBox(height: 32),
+                      ],
+                    ),
+                  ),
                 ),
               ),
             ),

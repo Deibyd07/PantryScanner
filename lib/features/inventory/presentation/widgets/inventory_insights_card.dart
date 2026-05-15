@@ -12,8 +12,15 @@ class InventoryInsightsCard extends StatelessWidget {
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(24),
-        color: Colors.white.withValues(alpha: 0.42),
-        border: Border.all(color: InventoryTokens.outline.withValues(alpha: 0.25)),
+        gradient: LinearGradient(
+          colors: <Color>[
+            Colors.white.withValues(alpha: 0.80),
+            const Color(0xFFFFEDEB).withValues(alpha: 0.60),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        border: Border.all(color: InventoryTokens.outline.withValues(alpha: 0.35)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -98,7 +105,7 @@ class _MetricTile extends StatelessWidget {
       height: 70,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16),
-        color: const Color(0xFFF5F4E8),
+        color: const Color(0xFFFFEDEB),
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
