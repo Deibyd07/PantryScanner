@@ -11,6 +11,7 @@ import '../../../../core/presentation/widgets/app_background.dart';
 import '../../../../core/presentation/widgets/offline_banner.dart';
 import '../../../inventory/domain/entities/inventory_item.dart';
 import '../../../inventory/presentation/providers/inventory_providers.dart';
+import '../../../inventory/presentation/widgets/inventory_tokens.dart';
 
 // ─────────────────────────────────────────
 // State notifier to handle async save state
@@ -1123,3 +1124,6 @@ class _ImageSourceTile extends StatelessWidget {
     );
   }
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// HU-03: Skeleton placeholder row shown while the API lookup is in progress

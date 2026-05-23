@@ -119,6 +119,7 @@ class SqliteInventoryRepository implements InventoryRepository {
     return rows.isEmpty ? null : rows.first;
   }
 
+
   /// Upserts a product into the cache so it can be auto-filled offline.
   Future<void> _cacheProduct(InventoryItem item) async {
     if (item.barcode.isEmpty) return;
