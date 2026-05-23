@@ -1,18 +1,27 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
 import '../core/theme/app_theme.dart';
+import '../features/inventory/presentation/providers/inventory_providers.dart';
+import '../features/notifications/presentation/providers/notification_settings_providers.dart';
 import 'router/app_router.dart';
 
-class PantryScannerApp extends StatefulWidget {
+/// Riverpod provider that holds the auth-aware GoRouter instance.
+final Provider<GoRouter> routerProvider = Provider<GoRouter>((ref) {
+  return createAppRouter(ref);
+});
+
+class PantryScannerApp extends ConsumerStatefulWidget {
   const PantryScannerApp({super.key});
 
   @override
-  State<PantryScannerApp> createState() => _PantryScannerAppState();
+  ConsumerState<PantryScannerApp> createState() => _PantryScannerAppState();
 }
 
-class _PantryScannerAppState extends State<PantryScannerApp> {
+class _PantryScannerAppState extends ConsumerState<PantryScannerApp> {
   @override
   void initState() {
     super.initState();
@@ -22,13 +31,19 @@ class _PantryScannerAppState extends State<PantryScannerApp> {
 
   @override
   Widget build(BuildContext context) {
+    // Initialize the sync service
+    ref.watch(inventorySyncServiceProvider);
+    ref.watch(notificationSettingsSyncProvider);
+    
+    final GoRouter router = ref.watch(routerProvider);
+
     return MaterialApp.router(
       title: 'PantryScanner',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
       themeMode: ThemeMode.system,
-      routerConfig: appRouter,
+      routerConfig: router,
       locale: const Locale('es'),
       localizationsDelegates: const <LocalizationsDelegate<dynamic>>[
         GlobalMaterialLocalizations.delegate,
