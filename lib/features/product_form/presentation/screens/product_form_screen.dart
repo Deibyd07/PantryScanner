@@ -305,7 +305,7 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen>
             ),
             flexibleSpace: FlexibleSpaceBar(
               titlePadding:
-                  const EdgeInsets.only(left: 20, bottom: 16),
+                  const EdgeInsets.only(left: 64, bottom: 16),
               title: FadeTransition(
                 opacity: _fadeIn,
                 child: Column(
@@ -548,6 +548,7 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen>
   Widget _buildNameField(ColorScheme colors) {
     return TextFormField(
       controller: _nameController,
+      style: const TextStyle(color: InventoryTokens.textBody),
       textCapitalization: TextCapitalization.sentences,
       decoration: const InputDecoration(
         labelText: 'Nombre del producto',
@@ -569,6 +570,7 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen>
   Widget _buildBarcodeField(ColorScheme colors) {
     return TextFormField(
       controller: _barcodeController,
+      style: const TextStyle(color: InventoryTokens.textBody),
       readOnly: widget.initialBarcode != null && widget.initialBarcode!.isNotEmpty,
       keyboardType: TextInputType.number,
       decoration: InputDecoration(
@@ -841,6 +843,7 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen>
   Widget _buildNotesField(ColorScheme colors) {
     return TextFormField(
       controller: _notesController,
+      style: const TextStyle(color: InventoryTokens.textBody),
       minLines: 3,
       maxLines: 5,
       maxLength: 300,
@@ -933,6 +936,7 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen>
 
     final InventoryItem item = InventoryItem(
       id: _existingId,
+      syncId: '', // Will be assigned by repository if new
       barcode: barcode,
       name: _nameController.text.trim(),
       brand: null,
@@ -942,6 +946,7 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen>
       imageUrl: _selectedImagePath,
       notes: _notesController.text.trim().isEmpty ? null : _notesController.text.trim(),
       createdAt: DateTime.now(),
+      updatedAt: DateTime.now(),
     );
 
     final bool success =
