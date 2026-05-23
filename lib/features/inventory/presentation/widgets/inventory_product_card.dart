@@ -56,9 +56,16 @@ extension _StatusStyle on ProductStatus {
 // Horizontal product card (image left, info right)
 // ─────────────────────────────────────────────────────────────
 class InventoryProductCard extends StatelessWidget {
-  const InventoryProductCard({super.key, required this.item});
+  const InventoryProductCard({
+    super.key,
+    required this.item,
+    this.onIncrement,
+    this.onDecrement,
+  });
 
   final PantryCardItem item;
+  final VoidCallback? onIncrement;
+  final VoidCallback? onDecrement;
 
   @override
   Widget build(BuildContext context) {
@@ -145,19 +152,11 @@ class InventoryProductCard extends StatelessWidget {
                       children: <Widget>[
                         Row(
                           children: <Widget>[
-                            Icon(
-                              Icons.inventory_2_outlined,
-                              size: 12,
-                              color: InventoryTokens.textMuted,
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              item.quantity,
-                              style: const TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
-                                color: InventoryTokens.textBody,
-                              ),
+                            // ── Quantity stepper ──
+                            _QuantityStepper(
+                              quantity: item.rawQuantity,
+                              onDecrement: onDecrement,
+                              onIncrement: onIncrement,
                             ),
                             const Spacer(),
                             Text(
@@ -297,3 +296,75 @@ class _StatusBadge extends StatelessWidget {
   }
 }
 
+// ─────────────────────────────────────────────────────────────
+// Compact quantity stepper  [ – ]  3  [ + ]
+// ─────────────────────────────────────────────────────────────
+class _QuantityStepper extends StatelessWidget {
+  const _QuantityStepper({
+    required this.quantity,
+    this.onDecrement,
+    this.onIncrement,
+  });
+
+  final int quantity;
+  final VoidCallback? onDecrement;
+  final VoidCallback? onIncrement;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 28,
+      decoration: BoxDecoration(
+        color: InventoryTokens.primary.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(99),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: <Widget>[
+          _StepBtn(icon: Icons.remove_rounded, onTap: onDecrement),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 6),
+            child: Text(
+              '$quantity',
+              style: const TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w800,
+                color: InventoryTokens.primary,
+              ),
+            ),
+          ),
+          _StepBtn(icon: Icons.add_rounded, onTap: onIncrement),
+        ],
+      ),
+    );
+  }
+}
+
+class _StepBtn extends StatelessWidget {
+  const _StepBtn({required this.icon, this.onTap});
+
+  final IconData icon;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(99),
+        child: SizedBox(
+          width: 28,
+          height: 28,
+          child: Icon(
+            icon,
+            size: 16,
+            color: onTap == null
+                ? InventoryTokens.textMuted
+                : InventoryTokens.primary,
+          ),
+        ),
+      ),
+    );
+  }
+}

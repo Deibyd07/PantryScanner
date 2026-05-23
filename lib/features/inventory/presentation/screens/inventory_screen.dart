@@ -329,7 +329,10 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
                               );
                           },
                           child: InventoryProductCard(
-                              item: _toPantryCard(filtered[index])),
+                            item: _toPantryCard(filtered[index]),
+                            onIncrement: () => _handleIncrement(item),
+                            onDecrement: () => _handleDecrement(item),
+                          ),
                         );
                       },
                     ),
@@ -383,10 +386,81 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
       name: item.name,
       category: item.category ?? 'Sin categoría',
       quantity: '${item.quantity} ${item.quantity == 1 ? 'unidad' : 'unidades'}',
+      rawQuantity: item.quantity,
       daysLeft: daysLeft,
       progress: progress,
       status: status,
       imageUrl: item.imageUrl ?? '',
     );
+  }
+
+  // ── HU-12: Increment quantity ──────────────────────────────────────────────
+  Future<void> _handleIncrement(InventoryItem item) async {
+    await ref
+        .read(updateInventoryItemQuantityUseCaseProvider)
+        .call(item, 1);
+  }
+
+  // ── HU-12: Decrement quantity (with delete dialog when reaching 0) ─────────
+  Future<void> _handleDecrement(InventoryItem item) async {
+    if (item.quantity <= 1) {
+      // Ask before eliminating
+      final bool? confirmed = await showDialog<bool>(
+        context: context,
+        builder: (BuildContext ctx) => AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          title: const Text('Eliminar producto'),
+          content: Text(
+            'La cantidad de "${item.name}" llegará a cero. ¿Deseas eliminarlo de tu despensa?',
+          ),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(false),
+              child: const Text('Cancelar'),
+            ),
+            FilledButton(
+              style: FilledButton.styleFrom(
+                backgroundColor: const Color(0xFFE53935),
+              ),
+              onPressed: () => Navigator.of(ctx).pop(true),
+              child: const Text('Eliminar'),
+            ),
+          ],
+        ),
+      );
+
+      if (confirmed == true && mounted) {
+        await ref.read(deleteInventoryItemUseCaseProvider).call(item.id);
+        if (mounted) {
+          ScaffoldMessenger.of(context)
+            ..hideCurrentSnackBar()
+            ..showSnackBar(
+              SnackBar(
+                duration: const Duration(seconds: 5),
+                behavior: SnackBarBehavior.floating,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                content: Text(
+                  '"${item.name}" eliminado',
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                ),
+                action: SnackBarAction(
+                  label: 'Deshacer',
+                  onPressed: () {
+                    ref.read(saveInventoryItemUseCaseProvider).call(item);
+                  },
+                ),
+              ),
+            );
+        }
+      }
+    } else {
+      await ref
+          .read(updateInventoryItemQuantityUseCaseProvider)
+          .call(item, -1);
+    }
   }
 }
