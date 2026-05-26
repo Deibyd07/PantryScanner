@@ -1,9 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
-
-import '../../../inventory/presentation/widgets/inventory_tokens.dart';
+import '../../../../core/design/design_system.dart';
 import '../../data/services/local_notification_service.dart';
 import '../../domain/entities/notification_settings.dart';
 import '../providers/notification_settings_providers.dart';
@@ -108,10 +106,9 @@ class _NotificationSettingsScreenState
   Widget build(BuildContext context) {
     final settingsAsync = ref.watch(notificationSettingsProvider);
     final ColorScheme colors = Theme.of(context).colorScheme;
-    final bool isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: InventoryTokens.bg,
+      backgroundColor: context.palette.bg,
       appBar: AppBar(
         title: const Text('Notificaciones'),
       ),
@@ -122,31 +119,7 @@ class _NotificationSettingsScreenState
           onRetry: () => ref.invalidate(notificationSettingsProvider),
         ),
         data: (NotificationSettings settings) {
-          return Stack(
-            children: <Widget>[
-              Positioned.fill(
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: isDark
-                          ? <Color>[
-                              colors.surface,
-                              colors.surface.withValues(alpha: 0.9),
-                              colors.primary.withValues(alpha: 0.12),
-                            ]
-                          : <Color>[
-                              InventoryTokens.bg,
-                              InventoryTokens.bgMuted,
-                              const Color(0xFFE7EFE2),
-                            ],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                  ),
-                ),
-              ),
-              SafeArea(
-                child: SingleChildScrollView(
+          return SingleChildScrollView(
                   padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
                   child: FadeTransition(
                     opacity: _fadeAnim,
@@ -157,23 +130,18 @@ class _NotificationSettingsScreenState
                         children: <Widget>[
                           Text(
                             'Alertas inteligentes',
-                            style: GoogleFonts.epilogue(
-                              fontSize: 32,
-                              fontWeight: FontWeight.w900,
+                            style: AppTypography.displayLg.copyWith(
                               color: colors.onSurface,
-                              height: 1.05,
                             ),
                           ),
-                          const SizedBox(height: 8),
+                          const SizedBox(height: AppSpacing.sm),
                           Text(
                             'Define cuándo quieres recibir avisos de vencimiento y ajusta reglas por categoría.',
-                            style: TextStyle(
+                            style: AppTypography.bodyMd.copyWith(
                               color: colors.onSurface.withValues(alpha: 0.65),
-                              fontSize: 14,
-                              height: 1.4,
                             ),
                           ),
-                          const SizedBox(height: 18),
+                          const SizedBox(height: AppSpacing.md + 2),
                           _SettingsCard(
                             title: 'Activar alertas',
                             subtitle:
@@ -295,10 +263,9 @@ class _NotificationSettingsScreenState
                                           child: Text(
                                             settings.preferredTime
                                                 .format(context),
-                                            style: GoogleFonts.epilogue(
-                                              fontSize: 22,
-                                              fontWeight: FontWeight.w700,
+                                            style: AppTypography.headingLg.copyWith(
                                               color: colors.onSurface,
+                                              fontWeight: FontWeight.w700,
                                             ),
                                           ),
                                         ),
@@ -368,10 +335,7 @@ class _NotificationSettingsScreenState
                       ),
                     ),
                   ),
-                ),
-              ),
-            ],
-          );
+                );
         },
       ),
     );
@@ -415,9 +379,8 @@ class _SettingsCard extends StatelessWidget {
           if (title != null) ...<Widget>[
             Text(
               title!,
-              style: GoogleFonts.epilogue(
+              style: AppTypography.headingSm.copyWith(
                 fontWeight: FontWeight.w700,
-                fontSize: 16,
                 color: colors.onSurface,
               ),
             ),
@@ -472,7 +435,7 @@ class _CategoryRuleRow extends StatelessWidget {
           SizedBox(
             width: 130,
             child: DropdownButtonFormField<int?>(
-              value: value,
+              initialValue: value,
               decoration: const InputDecoration(
                 contentPadding:
                     EdgeInsets.symmetric(horizontal: 12, vertical: 10),

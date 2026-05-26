@@ -1,26 +1,20 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
-import 'inventory_tokens.dart';
+import '../../../../core/design/design_system.dart';
 
 class InventoryInsightsCard extends StatelessWidget {
   const InventoryInsightsCard({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final PaletteSpec p = context.palette;
+
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(AppSpacing.ml),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(24),
-        gradient: LinearGradient(
-          colors: <Color>[
-            Colors.white.withValues(alpha: 0.80),
-            const Color(0xFFFFEDEB).withValues(alpha: 0.60),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        border: Border.all(color: InventoryTokens.outline.withValues(alpha: 0.35)),
+        color: p.surface,
+        borderRadius: AppRadius.brXxl,
+        boxShadow: AppElevation.modal,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -28,56 +22,66 @@ class InventoryInsightsCard extends StatelessWidget {
           Row(
             children: <Widget>[
               Container(
-                width: 56,
-                height: 56,
+                width: 44,
+                height: 44,
                 decoration: const BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: InventoryTokens.accentContainer,
+                  gradient: AppColors.brandGradient,
+                  borderRadius: AppRadius.brMdPlus,
                 ),
-                child: const Icon(Icons.auto_awesome, color: InventoryTokens.accentOnContainer),
+                child: const Icon(
+                  Icons.auto_awesome_rounded,
+                  color: Colors.white,
+                  size: 22,
+                ),
               ),
-              const SizedBox(width: 14),
+              const SizedBox(width: AppSpacing.md),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
                     Text(
                       'Resumen inteligente',
-                      style: GoogleFonts.epilogue(
-                        fontSize: 24,
-                        fontWeight: FontWeight.w800,
-                        color: InventoryTokens.primary,
-                      ),
+                      style: AppTypography.headingSm.copyWith(color: p.textBody),
                     ),
-                    const SizedBox(height: 2),
-                    const Text(
-                      '3 productos vencen en menos de 48 horas',
-                      style: TextStyle(
-                        color: InventoryTokens.textBody,
-                        fontWeight: FontWeight.w600,
-                      ),
+                    const SizedBox(height: AppSpacing.xxs),
+                    Text(
+                      '3 productos vencen en menos de 48 h',
+                      style: AppTypography.bodyXs.copyWith(color: p.textMuted),
                     ),
                   ],
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 18),
-          const Row(
+          const SizedBox(height: AppSpacing.md),
+          Container(height: 1, color: p.divider),
+          const SizedBox(height: AppSpacing.md),
+          Row(
             children: <Widget>[
-              Expanded(
+              const Expanded(
                 child: _MetricTile(
                   value: '12%',
-                  label: 'Tasa de desperdicio',
-                  color: InventoryTokens.tertiary,
+                  label: 'Desperdicio',
+                  icon: Icons.trending_down_rounded,
+                  color: AppColors.warningStrong,
                 ),
               ),
-              SizedBox(width: 12),
+              _VerticalDivider(color: p.divider),
               Expanded(
                 child: _MetricTile(
                   value: '84',
-                  label: 'Total de productos',
-                  color: InventoryTokens.secondary,
+                  label: 'Productos',
+                  icon: Icons.inventory_2_outlined,
+                  color: p.brandPrimary,
+                ),
+              ),
+              _VerticalDivider(color: p.divider),
+              const Expanded(
+                child: _MetricTile(
+                  value: '3',
+                  label: 'Por vencer',
+                  icon: Icons.timer_outlined,
+                  color: AppColors.dangerStrong,
                 ),
               ),
             ],
@@ -88,48 +92,64 @@ class InventoryInsightsCard extends StatelessWidget {
   }
 }
 
-class _MetricTile extends StatelessWidget {
-  const _MetricTile({
-    required this.value,
-    required this.label,
-    required this.color,
-  });
-
-  final String value;
-  final String label;
+class _VerticalDivider extends StatelessWidget {
+  const _VerticalDivider({required this.color});
   final Color color;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 70,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16),
-        color: const Color(0xFFFFEDEB),
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: <Widget>[
-          Text(
-            value,
-            style: GoogleFonts.epilogue(
-              fontSize: 26,
-              fontWeight: FontWeight.w900,
-              color: color,
-              letterSpacing: -1,
-            ),
+      width: 1,
+      height: 56,
+      margin: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
+      color: color,
+    );
+  }
+}
+
+class _MetricTile extends StatelessWidget {
+  const _MetricTile({
+    required this.value,
+    required this.label,
+    required this.icon,
+    required this.color,
+  });
+
+  final String value;
+  final String label;
+  final IconData icon;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    final PaletteSpec p = context.palette;
+
+    return Column(
+      children: <Widget>[
+        Container(
+          width: 36,
+          height: 36,
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.1),
+            borderRadius: AppRadius.brMs,
           ),
-          Text(
-            label.toUpperCase(),
-            style: const TextStyle(
-              fontSize: 10,
-              fontWeight: FontWeight.w800,
-              letterSpacing: 1.1,
-              color: InventoryTokens.textMuted,
-            ),
+          child: Icon(icon, size: 18, color: color),
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        Text(
+          value,
+          style: AppTypography.headingLg.copyWith(color: color),
+        ),
+        const SizedBox(height: AppSpacing.xxs),
+        Text(
+          label,
+          style: AppTypography.labelTab.copyWith(
+            color: p.textMuted,
+            fontWeight: FontWeight.w600,
           ),
-        ],
-      ),
+          textAlign: TextAlign.center,
+        ),
+      ],
     );
   }
 }

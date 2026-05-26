@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx claude-code-templates@latest *)",
+      "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\Deibyd\\\\Desktop\\\\Proyectos\\\\PantryScanner\" -Recurse -Force)",
+      "Bash(Select-Object FullName)",
+      "Bash(flutter analyze *)",
+      "Bash(flutter devices *)",
+      "PowerShell(flutter *)",
+      "Bash(adb kill-server *)",
+      "Bash(adb start-server *)",
+      "Bash(adb devices *)",
+      "PowerShell(Get-Process *)",
+      "PowerShell(Stop-Process *)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "WebFetch(domain:api.github.com)"
+    ]
+  }
+}

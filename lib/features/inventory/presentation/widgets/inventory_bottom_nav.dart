@@ -1,70 +1,122 @@
 import 'package:flutter/material.dart';
 
-import 'inventory_tokens.dart';
+import '../../../../core/design/design_system.dart';
 
 class InventoryBottomNav extends StatelessWidget {
-  const InventoryBottomNav({super.key, this.onScanTap});
+  const InventoryBottomNav({super.key, this.onScanTap, this.onNotifTap});
 
   final VoidCallback? onScanTap;
+  final VoidCallback? onNotifTap;
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      minimum: const EdgeInsets.only(left: 16, right: 16, bottom: 12),
-      child: Container(
-        height: 74,
-        decoration: BoxDecoration(
-          color: const Color(0xFFFFF8F7).withValues(alpha: 0.96),
-          borderRadius: BorderRadius.circular(40),
-          boxShadow: const <BoxShadow>[
-            BoxShadow(
-              color: Color(0x22C0392B),
-              blurRadius: 30,
-              offset: Offset(0, 10),
+    final PaletteSpec p = context.palette;
+
+    return Stack(
+      clipBehavior: Clip.none,
+      alignment: Alignment.topCenter,
+      children: <Widget>[
+        // ── White bar ─────────────────────────────────────────────────────────
+        Container(
+          decoration: BoxDecoration(
+            color: p.surface,
+            border: Border(
+              top: BorderSide(color: p.outlineSoft, width: 1),
             ),
-          ],
+            boxShadow: AppElevation.bottomBar,
+          ),
+          child: SafeArea(
+            top: false,
+            child: SizedBox(
+              height: 60,
+              child: Row(
+                children: <Widget>[
+                  const Expanded(child: _NavItem(icon: Icons.inventory_2_rounded, label: 'Despensa', active: true)),
+                  const Expanded(child: _NavItem(icon: Icons.restaurant_menu_outlined, label: 'Recetas')),
+                  const SizedBox(width: 72),
+                  Expanded(child: _NavItem(icon: Icons.notifications_none_rounded, label: 'Alertas', onTap: onNotifTap)),
+                  const Expanded(child: _NavItem(icon: Icons.person_outline_rounded, label: 'Perfil')),
+                ],
+              ),
+            ),
+          ),
         ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: <Widget>[
-            const _BottomNavIcon(icon: Icons.inventory_2_rounded, active: true),
-            _BottomNavIcon(icon: Icons.photo_camera_outlined, onTap: onScanTap),
-            const _BottomNavIcon(icon: Icons.restaurant_menu_outlined),
-            const _BottomNavIcon(icon: Icons.person_outline_rounded),
-          ],
+        // ── Elevated center scan button ────────────────────────────────────────
+        Positioned(
+          top: -26,
+          child: GestureDetector(
+            onTap: () {
+              AppHaptics.confirm();
+              onScanTap?.call();
+            },
+            child: Container(
+              width: 60,
+              height: 60,
+              decoration: BoxDecoration(
+                gradient: AppColors.brandGradient,
+                shape: BoxShape.circle,
+                border: Border.all(color: p.surface, width: 3),
+                boxShadow: AppElevation.fabBrand(),
+              ),
+              child: const Icon(Icons.qr_code_scanner_rounded, color: Colors.white, size: 26),
+            ),
+          ),
         ),
-      ),
+      ],
     );
   }
 }
 
-class _BottomNavIcon extends StatelessWidget {
-  const _BottomNavIcon({required this.icon, this.active = false, this.onTap});
+class _NavItem extends StatelessWidget {
+  const _NavItem({
+    required this.icon,
+    required this.label,
+    this.active = false,
+    this.onTap,
+  });
 
   final IconData icon;
+  final String label;
   final bool active;
   final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
-    if (active) {
-      return Transform.translate(
-        offset: const Offset(0, -8),
-        child: Container(
-          width: 50,
-          height: 50,
-          decoration: const BoxDecoration(
-            shape: BoxShape.circle,
-            color: InventoryTokens.primary,
-          ),
-          child: Icon(icon, color: Colors.white),
-        ),
-      );
-    }
+    final PaletteSpec p = context.palette;
+    final Color color = active ? p.brandPrimary : p.textMuted;
 
-    return IconButton(
-      onPressed: onTap,
-      icon: Icon(icon, color: InventoryTokens.textMuted),
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: <Widget>[
+          Icon(
+            icon,
+            color: color,
+            size: active ? 24 : 22,
+          ),
+          const SizedBox(height: AppSpacing.xxs + 1),
+          Text(
+            label,
+            style: AppTypography.labelTab.copyWith(
+              color: color,
+              fontWeight: active ? FontWeight.w700 : FontWeight.w500,
+              letterSpacing: active ? 0.1 : 0,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.xxs + 1),
+          AnimatedContainer(
+            duration: AppDuration.normal,
+            width: active ? 16 : 0,
+            height: 3,
+            decoration: BoxDecoration(
+              color: p.brandPrimary,
+              borderRadius: AppRadius.brPill,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

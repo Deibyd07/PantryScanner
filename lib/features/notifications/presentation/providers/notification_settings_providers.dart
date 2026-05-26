@@ -112,5 +112,4 @@ final Provider<void> notificationSettingsSyncProvider = Provider<void>((ref) {
   });
 
   ref.onDispose(sub.cancel);
-  return null;
 });
