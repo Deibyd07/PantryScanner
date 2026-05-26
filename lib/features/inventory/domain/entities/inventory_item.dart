@@ -36,30 +36,6 @@ class InventoryItem {
   final DateTime updatedAt;
   final bool isDeleted;
 
-  ProductStatus get status {
-    if (quantity <= 0) {
-      return ProductStatus.outOfStock;
-    }
-
-    if (expiryDate == null) {
-      return ProductStatus.normal;
-    }
-
-    final DateTime today = DateTime.now();
-    final DateTime endOfToday = DateTime(today.year, today.month, today.day, 23, 59, 59);
-
-    if (expiryDate!.isBefore(endOfToday)) {
-      return ProductStatus.expired;
-    }
-
-    final int daysToExpiry = expiryDate!.difference(today).inDays;
-    if (daysToExpiry <= 3) {
-      return ProductStatus.expiringSoon;
-    }
-
-    return ProductStatus.normal;
-  }
-
   InventoryItem copyWith({
     int? id,
     String? syncId,
@@ -90,5 +66,29 @@ class InventoryItem {
       updatedAt: updatedAt ?? DateTime.now(),
       isDeleted: isDeleted ?? this.isDeleted,
     );
+  }
+
+  ProductStatus get status {
+    if (quantity <= 0) {
+      return ProductStatus.outOfStock;
+    }
+
+    if (expiryDate == null) {
+      return ProductStatus.normal;
+    }
+
+    final DateTime today = DateTime.now();
+    final DateTime endOfToday = DateTime(today.year, today.month, today.day, 23, 59, 59);
+
+    if (expiryDate!.isBefore(endOfToday)) {
+      return ProductStatus.expired;
+    }
+
+    final int daysToExpiry = expiryDate!.difference(today).inDays;
+    if (daysToExpiry <= 3) {
+      return ProductStatus.expiringSoon;
+    }
+
+    return ProductStatus.normal;
   }
 }

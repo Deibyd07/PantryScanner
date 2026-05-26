@@ -7,11 +7,12 @@ import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/constants/app_constants.dart';
-import '../../../../core/presentation/widgets/app_background.dart';
 import '../../../../core/presentation/widgets/offline_banner.dart';
 import '../../../inventory/domain/entities/inventory_item.dart';
 import '../../../inventory/presentation/providers/inventory_providers.dart';
+// ignore: deprecated_member_use_from_same_package
 import '../../../inventory/presentation/widgets/inventory_tokens.dart';
+import '../../../../core/design/design_system.dart';
 
 // ─────────────────────────────────────────
 // State notifier to handle async save state
@@ -283,164 +284,177 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen>
   Widget build(BuildContext context) {
     final ColorScheme colors = Theme.of(context).colorScheme;
     final _SaveState saveState = ref.watch(_saveNotifierProvider);
+    final double topPad = MediaQuery.paddingOf(context).top;
+    final double bottomPad = MediaQuery.paddingOf(context).bottom;
 
     return Scaffold(
-      backgroundColor: Colors.transparent,
+      backgroundColor: const Color(0xFF7F1D1D),
       body: Stack(
         children: <Widget>[
-          const Positioned.fill(
-            child: AppBackground(overlayOpacity: 0.94),
-          ),
-          CustomScrollView(
-            slivers: <Widget>[
-          // ── Floating App Bar ──
-          SliverAppBar(
-            pinned: true,
-            expandedHeight: 140,
-            backgroundColor: colors.surface,
-            surfaceTintColor: Colors.transparent,
-            leading: IconButton(
-              icon: const Icon(Icons.arrow_back_rounded),
-              onPressed: () => Navigator.of(context).pop(),
-            ),
-            flexibleSpace: FlexibleSpaceBar(
-              titlePadding:
-                  const EdgeInsets.only(left: 64, bottom: 16),
-              title: FadeTransition(
-                opacity: _fadeIn,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Text(
-                      'Agregar producto',
-                      style: TextStyle(
-                        color: colors.onSurface,
-                        fontWeight: FontWeight.w900,
-                        fontSize: 20,
-                      ),
-                    ),
-                    Text(
-                      'Confirma los datos antes de guardar',
-                      style: TextStyle(
-                        color: colors.onSurface.withOpacity(0.55),
-                        fontWeight: FontWeight.w400,
-                        fontSize: 11,
-                      ),
-                    ),
-                  ],
+          Column(
+            children: <Widget>[
+              // ── Gradient hero ──
+              Container(
+                height: 190 + topPad,
+                width: double.infinity,
+                padding: EdgeInsets.only(top: topPad),
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: <Color>[Color(0xFFEF4444), Color(0xFF7F1D1D)],
+                  ),
+                ),
+                child: FadeTransition(
+                  opacity: _fadeIn,
+                  child: _buildHero(context),
                 ),
               ),
-            ),
-          ),
-
-          // ── Form body ──
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.97),
-                  borderRadius: BorderRadius.circular(28),
-                  boxShadow: <BoxShadow>[
-                    BoxShadow(
-                      color: const Color(0xFFC0392B).withValues(alpha: 0.08),
-                      blurRadius: 24,
-                      offset: const Offset(0, 8),
-                    ),
-                  ],
-                ),
-                child: Form(
-                  key: _formKey,
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 20, 16, 0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: <Widget>[
-                    // ── Section: Foto del producto ──
-                    _SectionHeader(title: 'Foto del producto', icon: Icons.photo_camera_outlined),
-                    const SizedBox(height: 12),
-                    _buildImagePicker(colors),
-
-                    // ── Section: Información básica ──
-                    const SizedBox(height: 24),
-                    _SectionHeader(title: 'Información básica', icon: Icons.info_outline_rounded),
-                    const SizedBox(height: 12),
-                    _buildNameField(colors),
-                    const SizedBox(height: 12),
-                    _buildBarcodeField(colors),
-
-                    // ── Section: Categoría ──
-                    const SizedBox(height: 24),
-                    _SectionHeader(title: 'Categoría', icon: Icons.category_outlined),
-                    const SizedBox(height: 12),
-                    _buildCategoryPicker(colors),
-
-                    // ── Section: Cantidad ──
-                    const SizedBox(height: 24),
-                    _SectionHeader(title: 'Cantidad', icon: Icons.production_quantity_limits_rounded),
-                    const SizedBox(height: 12),
-                    _buildQuantitySelector(colors),
-
-                    // ── Section: Vencimiento ──
-                    const SizedBox(height: 24),
-                    _SectionHeader(title: 'Fecha de vencimiento', icon: Icons.event_rounded),
-                    const SizedBox(height: 12),
-                    _buildExpiryPicker(colors),
-
-                    // ── Section: Notas ──
-                    const SizedBox(height: 24),
-                    _SectionHeader(title: 'Notas opcionales', icon: Icons.notes_rounded),
-                    const SizedBox(height: 12),
-                    _buildNotesField(colors),
-
-                    // ── Error message ──
-                    if (saveState.error != null) ...<Widget>[
-                      const SizedBox(height: 16),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                        decoration: BoxDecoration(
-                          color: colors.errorContainer,
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: Row(
-                          children: <Widget>[
-                            Icon(Icons.error_outline_rounded, color: colors.error, size: 18),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Text(
-                                'Error al guardar: ${saveState.error}',
-                                style: TextStyle(color: colors.error, fontSize: 13),
+              // ── White scrollable form ──
+              Expanded(
+                child: Container(
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.vertical(top: Radius.circular(36)),
+                  ),
+                  child: SingleChildScrollView(
+                    padding: EdgeInsets.fromLTRB(24, 28, 24, bottomPad + 32),
+                    child: Form(
+                      key: _formKey,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: <Widget>[
+                          const _SectionHeader(title: 'Foto del producto', icon: Icons.photo_camera_outlined),
+                          const SizedBox(height: 12),
+                          _buildImagePicker(colors),
+                          const SizedBox(height: 28),
+                          const _SectionDivider(),
+                          const _SectionHeader(title: 'Información básica', icon: Icons.info_outline_rounded),
+                          const SizedBox(height: 12),
+                          _buildNameField(colors),
+                          const SizedBox(height: 12),
+                          _buildBarcodeField(colors),
+                          const SizedBox(height: 28),
+                          const _SectionDivider(),
+                          const _SectionHeader(title: 'Categoría', icon: Icons.category_outlined),
+                          const SizedBox(height: 12),
+                          _buildCategoryPicker(colors),
+                          const SizedBox(height: 28),
+                          const _SectionDivider(),
+                          const _SectionHeader(title: 'Cantidad', icon: Icons.production_quantity_limits_rounded),
+                          const SizedBox(height: 12),
+                          _buildQuantitySelector(colors),
+                          const SizedBox(height: 28),
+                          const _SectionDivider(),
+                          const _SectionHeader(title: 'Fecha de vencimiento', icon: Icons.event_rounded),
+                          const SizedBox(height: 12),
+                          _buildExpiryPicker(colors),
+                          const SizedBox(height: 28),
+                          const _SectionDivider(),
+                          const _SectionHeader(title: 'Notas opcionales', icon: Icons.notes_rounded),
+                          const SizedBox(height: 12),
+                          _buildNotesField(colors),
+                          if (saveState.error != null) ...<Widget>[
+                            const SizedBox(height: 16),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                              decoration: BoxDecoration(
+                                color: colors.errorContainer,
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              child: Row(
+                                children: <Widget>[
+                                  Icon(Icons.error_outline_rounded, color: colors.error, size: 18),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Text(
+                                      'Error al guardar: ${saveState.error}',
+                                      style: TextStyle(color: colors.error, fontSize: 13),
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
                           ],
-                        ),
+                          const SizedBox(height: 32),
+                          _buildSaveButton(colors, saveState.isSaving),
+                        ],
                       ),
-                    ],
-
-                     const SizedBox(height: 32),
-
-                     // ── Save button ──
-                     _buildSaveButton(colors, saveState.isSaving),
-                     const SizedBox(height: 32),
-                      ],
                     ),
                   ),
                 ),
               ),
-            ),
+            ],
           ),
-        ],
-          ),
-          // ── Offline indicator ───────────────────────────────────────────
-          const Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            child: OfflineBanner(),
-          ),
+          const Positioned(top: 0, left: 0, right: 0, child: OfflineBanner()),
         ],
       ),
+    );
+  }
+
+  Widget _buildHero(BuildContext context) {
+    return Stack(
+      children: <Widget>[
+        Padding(
+          padding: const EdgeInsets.only(top: 10, left: 12),
+          child: GestureDetector(
+            onTap: () => Navigator.of(context).pop(),
+            child: Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
+              ),
+              child: const Icon(Icons.arrow_back_rounded, color: Colors.white, size: 20),
+            ),
+          ),
+        ),
+        Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              Container(
+                width: 64,
+                height: 64,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: <BoxShadow>[
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.25),
+                      blurRadius: 24,
+                      offset: const Offset(0, 10),
+                      spreadRadius: -4,
+                    ),
+                  ],
+                ),
+                child: const Icon(Icons.add_shopping_cart_rounded, color: Color(0xFFC0392B), size: 30),
+              ),
+              const SizedBox(height: 12),
+              const Text(
+                'Agregar producto',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 20,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: -0.3,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Llena los datos y guarda en tu despensa',
+                style: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.7),
+                  fontSize: 12,
+                  fontWeight: FontWeight.w400,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 
@@ -455,11 +469,11 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen>
         duration: const Duration(milliseconds: 250),
         height: 180,
         decoration: BoxDecoration(
-          color: hasImage ? Colors.transparent : colors.surfaceContainerHighest,
-          borderRadius: BorderRadius.circular(24),
+          color: hasImage ? Colors.transparent : Colors.white,
+          borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: hasImage ? colors.primary.withOpacity(0.5) : colors.outlineVariant,
-            width: hasImage ? 2 : 1.5,
+            color: hasImage ? InventoryTokens.primary : InventoryTokens.outline,
+            width: hasImage ? 1.5 : 1,
           ),
         ),
         clipBehavior: Clip.antiAlias,
@@ -484,7 +498,7 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen>
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                       decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.55),
+                        color: Colors.black.withValues(alpha: 0.55),
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: const Row(
@@ -510,32 +524,32 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen>
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: <Widget>[
                   Container(
-                    width: 60,
-                    height: 60,
+                    width: 56,
+                    height: 56,
                     decoration: BoxDecoration(
-                      color: colors.primary.withOpacity(0.1),
-                      shape: BoxShape.circle,
+                      color: InventoryTokens.primary.withValues(alpha: 0.08),
+                      borderRadius: BorderRadius.circular(16),
                     ),
-                    child: Icon(
+                    child: const Icon(
                       Icons.add_a_photo_rounded,
-                      color: colors.primary,
-                      size: 28,
+                      color: InventoryTokens.primary,
+                      size: 26,
                     ),
                   ),
                   const SizedBox(height: 12),
-                  Text(
-                    'Agregar foto',
+                  const Text(
+                    'Agregar foto del producto',
                     style: TextStyle(
-                      color: colors.primary,
+                      color: InventoryTokens.textBody,
                       fontWeight: FontWeight.w700,
-                      fontSize: 15,
+                      fontSize: 14,
                     ),
                   ),
                   const SizedBox(height: 4),
-                  Text(
-                    'Cámara o galería • Opcional',
+                  const Text(
+                    'Cámara · Galería · Opcional',
                     style: TextStyle(
-                      color: colors.onSurfaceVariant,
+                      color: InventoryTokens.textMuted,
                       fontSize: 12,
                     ),
                   ),
@@ -602,13 +616,13 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen>
             }),
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 200),
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
               decoration: BoxDecoration(
-                color: selected ? colors.primary : colors.surfaceContainerHighest,
-                borderRadius: BorderRadius.circular(20),
+                color: selected ? InventoryTokens.primary : Colors.white,
+                borderRadius: BorderRadius.circular(12),
                 border: Border.all(
-                  color: selected ? colors.primary : colors.outlineVariant,
-                  width: 1.5,
+                  color: selected ? InventoryTokens.primary : InventoryTokens.outline,
+                  width: selected ? 1.5 : 1,
                 ),
               ),
               child: Row(
@@ -616,16 +630,16 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen>
                 children: <Widget>[
                   Icon(
                     icon,
-                    size: 16,
-                    color: selected ? colors.onPrimary : colors.onSurfaceVariant,
+                    size: 15,
+                    color: selected ? Colors.white : InventoryTokens.textMuted,
                   ),
                   const SizedBox(width: 6),
                   Text(
                     label,
                     style: TextStyle(
-                      color: selected ? colors.onPrimary : colors.onSurfaceVariant,
+                      color: selected ? Colors.white : InventoryTokens.textBody,
                       fontSize: 13,
-                      fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
+                      fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
                     ),
                   ),
                 ],
@@ -637,24 +651,21 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen>
         GestureDetector(
           onTap: () => _showCreateCategoryDialog(context, colors),
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
             decoration: BoxDecoration(
-              color: colors.secondaryContainer.withOpacity(0.5),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                color: colors.secondary,
-                width: 1.5,
-              ),
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: InventoryTokens.primary),
             ),
-            child: Row(
+            child: const Row(
               mainAxisSize: MainAxisSize.min,
               children: <Widget>[
-                Icon(Icons.add_rounded, size: 16, color: colors.secondary),
-                const SizedBox(width: 6),
+                Icon(Icons.add_rounded, size: 15, color: InventoryTokens.primary),
+                SizedBox(width: 6),
                 Text(
                   'Crear nueva',
                   style: TextStyle(
-                    color: colors.secondary,
+                    color: InventoryTokens.primary,
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
                   ),
@@ -734,9 +745,9 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen>
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
       decoration: BoxDecoration(
-        color: colors.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: colors.outlineVariant),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: InventoryTokens.outline),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -802,26 +813,25 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen>
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
         decoration: BoxDecoration(
-          color: hasDate
-              ? colors.primaryContainer.withOpacity(0.5)
-              : colors.surfaceContainerHighest,
-          borderRadius: BorderRadius.circular(24),
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(14),
           border: Border.all(
-            color: hasDate ? colors.primary.withOpacity(0.4) : colors.outlineVariant,
+            color: hasDate ? InventoryTokens.primary : InventoryTokens.outline,
+            width: hasDate ? 1.5 : 1,
           ),
         ),
         child: Row(
           children: <Widget>[
             Icon(
               Icons.event_rounded,
-              color: hasDate ? colors.primary : colors.onSurfaceVariant,
+              color: hasDate ? InventoryTokens.primary : InventoryTokens.textMuted,
             ),
             const SizedBox(width: 12),
             Expanded(
               child: Text(
                 dateText,
                 style: TextStyle(
-                  color: hasDate ? colors.primary : colors.onSurfaceVariant,
+                  color: hasDate ? InventoryTokens.primary : InventoryTokens.textMuted,
                   fontSize: 14,
                   fontWeight: hasDate ? FontWeight.w600 : FontWeight.w400,
                 ),
@@ -830,10 +840,10 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen>
             if (hasDate)
               GestureDetector(
                 onTap: () => setState(() => _expiryDate = null),
-                child: Icon(Icons.close_rounded, color: colors.primary, size: 20),
+                child: const Icon(Icons.close_rounded, color: InventoryTokens.primary, size: 20),
               )
             else
-              Icon(Icons.chevron_right_rounded, color: colors.onSurfaceVariant),
+              const Icon(Icons.chevron_right_rounded, color: InventoryTokens.textMuted),
           ],
         ),
       ),
@@ -850,61 +860,17 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen>
       decoration: const InputDecoration(
         labelText: 'Notas (opcional)',
         hintText: 'Ej: Comprado en oferta, revisar antes de usar…',
-        prefixIcon: Padding(
-          padding: EdgeInsets.only(bottom: 48),
-          child: Icon(Icons.notes_rounded),
-        ),
         alignLabelWithHint: true,
       ),
     );
   }
 
   Widget _buildSaveButton(ColorScheme colors, bool isSaving) {
-    return FilledButton(
-      style: FilledButton.styleFrom(
-        minimumSize: const Size(double.infinity, 56),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
-        backgroundColor: colors.primary,
-      ),
+    return BrandGradientButton(
+      label: 'Guardar en inventario',
+      icon: Icons.check_rounded,
+      isLoading: isSaving,
       onPressed: isSaving ? null : _save,
-      child: isSaving
-          ? Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: <Widget>[
-                SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2.5,
-                    color: colors.onPrimary,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Text(
-                  'Guardando…',
-                  style: TextStyle(
-                    color: colors.onPrimary,
-                    fontWeight: FontWeight.w700,
-                    fontSize: 16,
-                  ),
-                ),
-              ],
-            )
-          : Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: <Widget>[
-                const Icon(Icons.check_rounded, size: 22),
-                const SizedBox(width: 10),
-                Text(
-                  'Guardar en inventario',
-                  style: TextStyle(
-                    color: colors.onPrimary,
-                    fontWeight: FontWeight.w700,
-                    fontSize: 16,
-                  ),
-                ),
-              ],
-            ),
     );
   }
 
@@ -955,6 +921,7 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen>
     if (!mounted) return;
 
     if (success) {
+      AppHaptics.success();
       // SUB-04.4 — Snackbar de confirmación visual
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -999,21 +966,33 @@ class _SectionHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final ColorScheme colors = Theme.of(context).colorScheme;
     return Row(
       children: <Widget>[
-        Icon(icon, size: 16, color: colors.primary),
-        const SizedBox(width: 6),
+        Icon(icon, size: 16, color: InventoryTokens.primary),
+        const SizedBox(width: 7),
         Text(
-          title.toUpperCase(),
-          style: TextStyle(
-            color: colors.primary,
-            fontSize: 11,
-            fontWeight: FontWeight.w800,
-            letterSpacing: 1.2,
+          title,
+          style: const TextStyle(
+            color: InventoryTokens.textBody,
+            fontSize: 13,
+            fontWeight: FontWeight.w700,
+            letterSpacing: -0.2,
           ),
         ),
       ],
+    );
+  }
+}
+
+class _SectionDivider extends StatelessWidget {
+  const _SectionDivider();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 1,
+      margin: const EdgeInsets.only(bottom: 20),
+      color: const Color(0xFFF0F2F5),
     );
   }
 }
@@ -1046,7 +1025,7 @@ class _QuantityButton extends StatelessWidget {
         child: Icon(
           icon,
           size: 20,
-          color: enabled ? colors.onPrimary : colors.onSurfaceVariant.withOpacity(0.4),
+          color: enabled ? colors.onPrimary : colors.onSurfaceVariant.withValues(alpha: 0.4),
         ),
       ),
     );
@@ -1093,7 +1072,7 @@ class _ImageSourceTile extends StatelessWidget {
               width: 44,
               height: 44,
               decoration: BoxDecoration(
-                color: iconColor.withOpacity(0.12),
+                color: iconColor.withValues(alpha: 0.12),
                 shape: BoxShape.circle,
               ),
               child: Icon(icon, color: iconColor, size: 22),
@@ -1129,6 +1108,3 @@ class _ImageSourceTile extends StatelessWidget {
     );
   }
 }
-
-// ─────────────────────────────────────────────────────────────────────────────
-// HU-03: Skeleton placeholder row shown while the API lookup is in progress

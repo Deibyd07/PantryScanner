@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -130,7 +129,7 @@ class InventorySyncService {
         }
       }
     } catch (e) {
-      debugPrint('Sync Push Error: $e');
+      debugPrint('Sync Push Error: \$e');
     } finally {
       _isSyncing = false;
     }
@@ -163,7 +162,7 @@ class InventorySyncService {
           
           await localRepo.saveItemFromCloud(remoteItem);
         } catch (e) {
-          debugPrint('Error parsing cloud item: $e');
+          debugPrint('Error parsing cloud item: \$e');
         }
       }
     }

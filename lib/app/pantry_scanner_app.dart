@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
-import '../core/theme/app_theme.dart';
+import '../core/design/design_system.dart';
 import '../features/inventory/presentation/providers/inventory_providers.dart';
 import '../features/notifications/presentation/providers/notification_settings_providers.dart';
 import 'router/app_router.dart';
@@ -40,8 +40,8 @@ class _PantryScannerAppState extends ConsumerState<PantryScannerApp> {
     return MaterialApp.router(
       title: 'PantryScanner',
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.lightTheme,
-      darkTheme: AppTheme.darkTheme,
+      theme: AppThemeLight.theme,
+      darkTheme: AppThemeDark.theme,
       themeMode: ThemeMode.system,
       routerConfig: router,
       locale: const Locale('es'),

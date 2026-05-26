@@ -1,28 +1,34 @@
 import 'package:flutter/material.dart';
 
-// ─────────────────────────────────────────────────────────────────────────────
-// PantryScanner Design Tokens
-// Paleta inspirada en sábana de cuadros rojos y blancos:
-//   Rojo cereza vibrante · Blanco cálido rosado · Carmesí profundo · Coral
-// ─────────────────────────────────────────────────────────────────────────────
+/// **DEPRECATED** — usa `AppColors` desde
+/// `package:pantry_scanner/core/design/design_system.dart`.
+///
+/// Alias de compatibilidad para código existente; mantiene los valores
+/// `const Color` originales para que callers que usen `const` constructors
+/// sigan compilando. Las pantallas se migran progresivamente.
+@Deprecated('Use AppColors from core/design/design_system.dart')
 class InventoryTokens {
-  // Backgrounds — blanco cálido con toque rosado
-  static const Color bg       = Color(0xFFFFF8F7); // cálido casi blanco
-  static const Color bgMuted  = Color(0xFFFFEDEB); // rosa muy suave
+  // Fondos
+  static const Color bg = Color(0xFFF7F8FA);
+  static const Color bgMuted = Color(0xFFF1F5F9);
 
-  // Brand — rojo cereza vibrante (del cuadro)
-  static const Color primary          = Color(0xFFC0392B); // rojo cereza profundo
-  static const Color secondary        = Color(0xFFE74C3C); // rojo vibrante
-  static const Color tertiary         = Color(0xFFFF6B6B); // coral suave (warnings)
+  // Marca
+  static const Color primary = Color(0xFFC0392B);
+  static const Color secondary = Color(0xFFE74C3C);
+  static const Color tertiary = Color(0xFFFF6B6B);
 
-  // Accent buttons / FAB — carmesí intenso
-  static const Color accentContainer    = Color(0xFFC0392B); // botón FAB
-  static const Color accentOnContainer  = Color(0xFFFFD6D2); // texto sobre FAB
+  // FAB / accent
+  static const Color accentContainer = Color(0xFFC0392B);
+  static const Color accentOnContainer = Color(0xFFFFFFFF);
 
-  // Borders & dividers
-  static const Color outline = Color(0xFFFFBDBA); // rosa-rojo suave
+  // Tintes rojos
+  static const Color redTint = Color(0xFFFEF2F2);
+  static const Color redTintMedium = Color(0xFFFEE2E2);
 
-  // Text
-  static const Color textMuted = Color(0xFFA04040); // rojo apagado
-  static const Color textBody  = Color(0xFF4A1010); // granate oscuro
+  // Borders
+  static const Color outline = Color(0xFFE2E8F0);
+
+  // Texto
+  static const Color textMuted = Color(0xFF64748B);
+  static const Color textBody = Color(0xFF0F172A);
 }

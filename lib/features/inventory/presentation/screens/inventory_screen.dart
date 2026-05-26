@@ -3,9 +3,9 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../app/router/app_router.dart';
+import '../../../../core/design/design_system.dart';
 import '../../../../core/presentation/widgets/app_background.dart';
 import '../../../../core/presentation/widgets/offline_banner.dart';
 import '../../domain/entities/inventory_item.dart';
@@ -15,7 +15,6 @@ import '../widgets/inventory_bottom_nav.dart';
 import '../widgets/inventory_category_chips.dart';
 import '../widgets/inventory_insights_card.dart';
 import '../widgets/inventory_product_card.dart';
-import '../widgets/inventory_tokens.dart';
 import '../widgets/inventory_top_bar.dart';
 
 class InventoryScreen extends ConsumerStatefulWidget {
@@ -49,7 +48,6 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
   void initState() {
     super.initState();
     _searchCtrl.addListener(() {
-      // Rebuild suffix icon reactively when text changes
       setState(() {});
     });
   }
@@ -64,53 +62,81 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
   @override
   Widget build(BuildContext context) {
     final AsyncValue<List<InventoryItem>> asyncItems = ref.watch(inventoryItemsProvider);
+    final PaletteSpec p = context.palette;
+
+    final double topPad = MediaQuery.paddingOf(context).top;
 
     return Scaffold(
-      backgroundColor: Colors.transparent,
-      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
-      floatingActionButton: FloatingActionButton.large(
-        onPressed: () => context.push(AppRoutes.productForm),
-        backgroundColor: InventoryTokens.accentContainer,
-        foregroundColor: InventoryTokens.accentOnContainer,
+      backgroundColor: p.scaffold,
+      extendBody: true,
+      floatingActionButtonLocation: FloatingActionButtonLocation.endDocked,
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          AppHaptics.confirm();
+          context.push(AppRoutes.productForm);
+        },
+        backgroundColor: p.brandPrimary,
+        foregroundColor: Colors.white,
+        elevation: 6,
         shape: const CircleBorder(),
-        child: const Icon(Icons.add, size: 36),
+        child: const Icon(Icons.add_rounded, size: 28),
       ),
       bottomNavigationBar: InventoryBottomNav(
         onScanTap: () => context.push(AppRoutes.scanner),
+        onNotifTap: () => context.push(AppRoutes.notificationSettings),
       ),
       body: Stack(
         children: <Widget>[
-          const Positioned.fill(child: AppBackground()),
+          // Doodle background (capa base)
+          const Positioned.fill(
+            child: AppBackground(overlayOpacity: 0.93),
+          ),
+          // Gradient hero (identidad de marca — encima del doodle)
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            height: 400 + topPad,
+            child: const DecoratedBox(
+              decoration: BoxDecoration(gradient: AppColors.heroGradient),
+            ),
+          ),
           CustomScrollView(
             slivers: <Widget>[
               const InventoryTopBar(),
               SliverPadding(
-                padding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.lg,
+                  AppSpacing.sm,
+                  AppSpacing.lg,
+                  0,
+                ),
                 sliver: SliverToBoxAdapter(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
                       Text(
                         'Mi despensa',
-                        style: GoogleFonts.epilogue(
-                          fontSize: 56,
-                          fontWeight: FontWeight.w900,
-                          letterSpacing: -3.2,
-                          color: InventoryTokens.primary,
-                          height: 0.92,
+                        style: AppTypography.displayHero.copyWith(color: Colors.white),
+                      ),
+                      const SizedBox(height: AppSpacing.xs + 2),
+                      Text(
+                        'Organiza · Controla · Ahorra',
+                        style: AppTypography.bodySm.copyWith(
+                          color: Colors.white.withValues(alpha: 0.65),
+                          letterSpacing: 0.3,
                         ),
                       ),
-                      const SizedBox(height: 20),
+                      const SizedBox(height: AppSpacing.ml),
                       const InventoryInsightsCard(),
-                      const SizedBox(height: 24),
+                      const SizedBox(height: AppSpacing.xl - 4),
                       TextField(
                         controller: _searchCtrl,
-                        style: const TextStyle(color: InventoryTokens.textBody),
+                        style: AppTypography.bodyMd.copyWith(color: p.textBody),
                         onChanged: (String value) {
-                          // Cancel previous timer and start a new 300 ms one
                           _debounce?.cancel();
                           _debounce = Timer(
-                            const Duration(milliseconds: 300),
+                            AppDuration.debounce,
                             () => setState(
                               () => _searchQuery = value.trim().toLowerCase(),
                             ),
@@ -118,16 +144,13 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
                         },
                         decoration: InputDecoration(
                           hintText: 'Busca en tu despensa...',
-                          hintStyle: TextStyle(
-                            color: InventoryTokens.textMuted.withValues(alpha: 0.55),
-                          ),
-                          prefixIcon: const Icon(Icons.search),
-                          // ── Clear (X) button — only shown when field has text ──
+                          hintStyle: AppTypography.bodyMd.copyWith(color: p.textMuted),
+                          prefixIcon: Icon(Icons.search_rounded, color: p.textMuted),
                           suffixIcon: _searchCtrl.text.isNotEmpty
                               ? IconButton(
-                                  icon: const Icon(Icons.close_rounded, size: 20),
+                                  icon: const Icon(Icons.close_rounded, size: 18),
                                   tooltip: 'Limpiar búsqueda',
-                                  color: InventoryTokens.primary,
+                                  color: p.textMuted,
                                   onPressed: () {
                                     _searchCtrl.clear();
                                     setState(() => _searchQuery = '');
@@ -135,41 +158,38 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
                                 )
                               : null,
                           filled: true,
-                          fillColor: const Color(0xFFFFEDEB),
+                          fillColor: p.surface,
                           border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(100),
-                            borderSide: BorderSide.none,
+                            borderRadius: AppRadius.brLg,
+                            borderSide: BorderSide(color: p.outline),
                           ),
                           enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(100),
-                            borderSide: BorderSide(
-                              color: InventoryTokens.outline.withValues(alpha: 0.4),
-                            ),
+                            borderRadius: AppRadius.brLg,
+                            borderSide: BorderSide(color: p.outline),
                           ),
                           focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(100),
+                            borderRadius: AppRadius.brLg,
                             borderSide: BorderSide(
-                              color: InventoryTokens.primary,
-                              width: 1.5,
+                              color: p.brandPrimary,
+                              width: 1.8,
                             ),
                           ),
                         ),
                       ),
-                      const SizedBox(height: 18),
+                      const SizedBox(height: AppSpacing.md + 2),
                       InventoryCategoryChips(
                         categories: _chips,
                         selectedIndex: _selectedChip,
                         onSelected: (int index) =>
                             setState(() => _selectedChip = index),
                       ),
-                      const SizedBox(height: 20),
+                      const SizedBox(height: AppSpacing.ml),
                     ],
                   ),
                 ),
               ),
               asyncItems.when(
                 data: (List<InventoryItem> rows) {
-                  // ── Filter: name, brand, category (case-insensitive) ────
                   final List<InventoryItem> filtered = _searchQuery.isEmpty
                       ? rows
                       : rows
@@ -183,45 +203,45 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
                     return SliverFillRemaining(
                       hasScrollBody: false,
                       child: Padding(
-                        padding: const EdgeInsets.only(top: 48),
+                        padding: const EdgeInsets.only(top: AppSpacing.xxl),
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.start,
                           children: <Widget>[
                             Icon(
                               Icons.inventory_2_outlined,
                               size: 64,
-                              color: InventoryTokens.textMuted.withValues(alpha: 0.35),
+                              color: p.textMuted.withValues(alpha: 0.35),
                             ),
-                            const SizedBox(height: 16),
+                            const SizedBox(height: AppSpacing.md),
                             Text(
                               _searchQuery.isEmpty
                                   ? 'Tu despensa está vacía'
                                   : 'Sin resultados para "$_searchQuery"',
-                              style: const TextStyle(
-                                color: InventoryTokens.textMuted,
+                              style: AppTypography.bodyLg.copyWith(
+                                color: p.textMuted,
                                 fontWeight: FontWeight.w600,
-                                fontSize: 16,
                               ),
                             ),
-                            const SizedBox(height: 8),
+                            const SizedBox(height: AppSpacing.sm),
                             Text(
                               _searchQuery.isEmpty
                                   ? 'Agrega tu primer producto escaneando un código'
                                   : 'Intenta con otro nombre, marca o categoría',
-                              style: TextStyle(
-                                color: InventoryTokens.textMuted.withValues(alpha: 0.6),
-                                fontSize: 13,
+                              style: AppTypography.bodySm.copyWith(
+                                color: p.textMuted.withValues(alpha: 0.6),
                               ),
                             ),
                             if (_searchQuery.isEmpty) ...<Widget>[
-                              const SizedBox(height: 24),
+                              const SizedBox(height: AppSpacing.lg),
                               FilledButton.icon(
                                 onPressed: () => context.push(AppRoutes.scanner),
                                 style: FilledButton.styleFrom(
-                                  backgroundColor: InventoryTokens.primary,
+                                  backgroundColor: p.brandPrimary,
                                   foregroundColor: Colors.white,
                                   padding: const EdgeInsets.symmetric(
-                                      horizontal: 24, vertical: 12),
+                                    horizontal: AppSpacing.lg,
+                                    vertical: AppSpacing.ms,
+                                  ),
                                 ),
                                 icon: const Icon(Icons.qr_code_scanner_rounded),
                                 label: const Text('Escanear mi primer producto'),
@@ -234,29 +254,27 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
                   }
 
                   return SliverPadding(
-                    padding: const EdgeInsets.fromLTRB(24, 0, 24, 140),
+                    padding: const EdgeInsets.fromLTRB(AppSpacing.lg, 0, AppSpacing.lg, 140),
                     sliver: SliverList.separated(
                       itemCount: filtered.length,
-                      separatorBuilder: (_, __) => const SizedBox(height: 12),
+                      separatorBuilder: (_, __) => const SizedBox(height: AppSpacing.ms),
                       itemBuilder: (BuildContext context, int index) {
                         final InventoryItem item = filtered[index];
                         return Dismissible(
                           key: ValueKey<int>(item.id),
                           direction: DismissDirection.endToStart,
-                          // ── Red background revealed on swipe ───────────
                           background: Container(
                             alignment: Alignment.centerRight,
-                            padding: const EdgeInsets.only(right: 24),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFE53935),
-                              borderRadius: BorderRadius.circular(20),
+                            padding: const EdgeInsets.only(right: AppSpacing.lg),
+                            decoration: const BoxDecoration(
+                              color: AppColors.dangerStrong,
+                              borderRadius: AppRadius.brXl,
                             ),
                             child: const Column(
                               mainAxisSize: MainAxisSize.min,
                               children: <Widget>[
-                                Icon(Icons.delete_outline,
-                                    color: Colors.white, size: 28),
-                                SizedBox(height: 4),
+                                Icon(Icons.delete_outline, color: Colors.white, size: 28),
+                                SizedBox(height: AppSpacing.xs),
                                 Text(
                                   'Eliminar',
                                   style: TextStyle(
@@ -268,13 +286,13 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
                               ],
                             ),
                           ),
-                          // ── Confirmation dialog ────────────────────────
                           confirmDismiss: (_) async {
+                            AppHaptics.warning();
                             return await showDialog<bool>(
                               context: context,
                               builder: (BuildContext ctx) => AlertDialog(
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(20),
+                                shape: const RoundedRectangleBorder(
+                                  borderRadius: AppRadius.brXl,
                                 ),
                                 title: const Text('Eliminar producto'),
                                 content: Text(
@@ -287,7 +305,7 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
                                   ),
                                   FilledButton(
                                     style: FilledButton.styleFrom(
-                                      backgroundColor: const Color(0xFFE53935),
+                                      backgroundColor: AppColors.dangerStrong,
                                     ),
                                     onPressed: () => Navigator.of(ctx).pop(true),
                                     child: const Text('Eliminar'),
@@ -297,8 +315,8 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
                             ) ??
                                 false;
                           },
-                          // ── On confirmed: delete + Undo snackbar ───────
                           onDismissed: (_) {
+                            AppHaptics.error();
                             ref
                                 .read(deleteInventoryItemUseCaseProvider)
                                 .call(item.id);
@@ -309,8 +327,8 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
                                 SnackBar(
                                   duration: const Duration(seconds: 5),
                                   behavior: SnackBarBehavior.floating,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
+                                  shape: const RoundedRectangleBorder(
+                                    borderRadius: AppRadius.brMd,
                                   ),
                                   content: Text(
                                     '"${item.name}" eliminado',
@@ -329,7 +347,7 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
                               );
                           },
                           child: InventoryProductCard(
-                            item: _toPantryCard(filtered[index]),
+                            item: _toPantryCard(item),
                             onIncrement: () => _handleIncrement(item),
                             onDecrement: () => _handleDecrement(item),
                           ),
@@ -347,7 +365,7 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
                   child: Center(
                     child: Text(
                       'No se pudo cargar el inventario',
-                      style: TextStyle(
+                      style: AppTypography.bodyMd.copyWith(
                         color: Theme.of(context).colorScheme.error,
                         fontWeight: FontWeight.w600,
                       ),
@@ -367,6 +385,49 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
         ],
       ),
     );
+  }
+
+  Future<void> _handleIncrement(InventoryItem item) async {
+    AppHaptics.confirm();
+    await ref
+        .read(updateInventoryItemQuantityUseCaseProvider)
+        .call(item, 1);
+  }
+
+  Future<void> _handleDecrement(InventoryItem item) async {
+    if (item.quantity <= 1) {
+      AppHaptics.warning();
+      final bool? confirmed = await showDialog<bool>(
+        context: context,
+        builder: (BuildContext ctx) => AlertDialog(
+          shape: const RoundedRectangleBorder(borderRadius: AppRadius.brXl),
+          title: const Text('¿Eliminar producto?'),
+          content: Text(
+            'La cantidad de "${item.name}" llegará a 0. ¿Quieres eliminarlo del inventario?',
+          ),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(false),
+              child: const Text('Cancelar'),
+            ),
+            FilledButton(
+              style: FilledButton.styleFrom(backgroundColor: AppColors.dangerStrong),
+              onPressed: () => Navigator.of(ctx).pop(true),
+              child: const Text('Eliminar'),
+            ),
+          ],
+        ),
+      );
+      if (confirmed == true && mounted) {
+        AppHaptics.error();
+        ref.read(deleteInventoryItemUseCaseProvider).call(item.id);
+      }
+      return;
+    }
+    AppHaptics.confirm();
+    await ref
+        .read(updateInventoryItemQuantityUseCaseProvider)
+        .call(item, -1);
   }
 
   PantryCardItem _toPantryCard(InventoryItem item) {
@@ -392,75 +453,5 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
       status: status,
       imageUrl: item.imageUrl ?? '',
     );
-  }
-
-  // ── HU-12: Increment quantity ──────────────────────────────────────────────
-  Future<void> _handleIncrement(InventoryItem item) async {
-    await ref
-        .read(updateInventoryItemQuantityUseCaseProvider)
-        .call(item, 1);
-  }
-
-  // ── HU-12: Decrement quantity (with delete dialog when reaching 0) ─────────
-  Future<void> _handleDecrement(InventoryItem item) async {
-    if (item.quantity <= 1) {
-      // Ask before eliminating
-      final bool? confirmed = await showDialog<bool>(
-        context: context,
-        builder: (BuildContext ctx) => AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-          ),
-          title: const Text('Eliminar producto'),
-          content: Text(
-            'La cantidad de "${item.name}" llegará a cero. ¿Deseas eliminarlo de tu despensa?',
-          ),
-          actions: <Widget>[
-            TextButton(
-              onPressed: () => Navigator.of(ctx).pop(false),
-              child: const Text('Cancelar'),
-            ),
-            FilledButton(
-              style: FilledButton.styleFrom(
-                backgroundColor: const Color(0xFFE53935),
-              ),
-              onPressed: () => Navigator.of(ctx).pop(true),
-              child: const Text('Eliminar'),
-            ),
-          ],
-        ),
-      );
-
-      if (confirmed == true && mounted) {
-        await ref.read(deleteInventoryItemUseCaseProvider).call(item.id);
-        if (mounted) {
-          ScaffoldMessenger.of(context)
-            ..hideCurrentSnackBar()
-            ..showSnackBar(
-              SnackBar(
-                duration: const Duration(seconds: 5),
-                behavior: SnackBarBehavior.floating,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                content: Text(
-                  '"${item.name}" eliminado',
-                  style: const TextStyle(fontWeight: FontWeight.w600),
-                ),
-                action: SnackBarAction(
-                  label: 'Deshacer',
-                  onPressed: () {
-                    ref.read(saveInventoryItemUseCaseProvider).call(item);
-                  },
-                ),
-              ),
-            );
-        }
-      }
-    } else {
-      await ref
-          .read(updateInventoryItemQuantityUseCaseProvider)
-          .call(item, -1);
-    }
   }
 }

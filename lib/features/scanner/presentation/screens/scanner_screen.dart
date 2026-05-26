@@ -8,6 +8,7 @@ import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 import '../../../../app/router/app_router.dart';
+import '../../../../core/design/design_system.dart';
 import '../../../../core/presentation/widgets/offline_banner.dart';
 import '../../domain/usecases/scan_barcode_usecase.dart';
 
@@ -116,24 +117,24 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
           ),
           const _ScanGuideOverlay(),
           Positioned(
-            left: 16,
-            right: 16,
-            bottom: 24,
+            left: AppSpacing.md,
+            right: AppSpacing.md,
+            bottom: AppSpacing.lg,
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: <Widget>[
                 if (_lastValidCode != null)
                   Container(
                     width: double.infinity,
-                    margin: const EdgeInsets.only(bottom: 10),
-                    padding: const EdgeInsets.all(14),
+                    margin: const EdgeInsets.only(bottom: AppSpacing.sm + 2),
+                    padding: const EdgeInsets.all(AppSpacing.mdPlus),
                     decoration: BoxDecoration(
-                      color: Colors.green.shade700.withValues(alpha: 0.92),
-                      borderRadius: BorderRadius.circular(14),
+                      color: AppColors.successStrong.withValues(alpha: 0.92),
+                      borderRadius: AppRadius.brMdPlus,
                     ),
                     child: Text(
                       'Codigo detectado: $_lastValidCode',
-                      style: const TextStyle(
+                      style: AppTypography.bodyMd.copyWith(
                         color: Colors.white,
                         fontWeight: FontWeight.w700,
                       ),
@@ -142,15 +143,15 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
                 if (_errorMessage != null)
                   Container(
                     width: double.infinity,
-                    margin: const EdgeInsets.only(bottom: 10),
-                    padding: const EdgeInsets.all(14),
+                    margin: const EdgeInsets.only(bottom: AppSpacing.sm + 2),
+                    padding: const EdgeInsets.all(AppSpacing.mdPlus),
                     decoration: BoxDecoration(
-                      color: Colors.red.shade700.withValues(alpha: 0.92),
-                      borderRadius: BorderRadius.circular(14),
+                      color: AppColors.dangerStrong.withValues(alpha: 0.92),
+                      borderRadius: AppRadius.brMdPlus,
                     ),
                     child: Text(
                       _errorMessage!,
-                      style: const TextStyle(
+                      style: AppTypography.bodyMd.copyWith(
                         color: Colors.white,
                         fontWeight: FontWeight.w700,
                       ),
@@ -163,6 +164,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
                         onPressed: _lastValidCode == null
                             ? null
                             : () {
+                                AppHaptics.confirm();
                                 context.push(
                                   '${AppRoutes.productForm}?barcode=$_lastValidCode',
                                 );
@@ -244,7 +246,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
     final String? code = _scanBarcodeUseCase.call(barcode.rawValue);
 
     if (code != null) {
-      HapticFeedback.mediumImpact();
+      AppHaptics.success();
       SystemSound.play(SystemSoundType.click);
 
       setState(() {
@@ -252,6 +254,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
         _errorMessage = null;
       });
     } else {
+      AppHaptics.warning();
       setState(() {
         _errorMessage = 'Codigo no reconocido. Usa un EAN-13 o UPC-A valido.';
         _lastValidCode = null;

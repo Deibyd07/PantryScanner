@@ -3,7 +3,6 @@ import '../repositories/inventory_repository.dart';
 
 /// Updates the quantity of an existing [InventoryItem] by [delta] (+1 or -1).
 /// Clamps the result to a minimum of 0.
-/// Returns the new quantity after the update.
 class UpdateInventoryItemQuantityUseCase {
   const UpdateInventoryItemQuantityUseCase(this._repository);
 
