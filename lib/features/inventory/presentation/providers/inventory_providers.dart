@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+
 import '../../data/repositories/sqlite_inventory_repository.dart';
 import '../../domain/entities/inventory_item.dart';
 import '../../domain/repositories/inventory_repository.dart';
@@ -203,11 +204,12 @@ final AutoDisposeFutureProviderFamily<InventoryItem?, String>
 });
 
 /// Returns cached product metadata for [barcode], or null if not cached.
-/// Only works on mobile (SQLite). Returns null on web.
 final AutoDisposeFutureProviderFamily<Map<String, dynamic>?, String>
     productCacheProvider = FutureProvider.autoDispose
         .family<Map<String, dynamic>?, String>((ref, barcode) async {
-  if (kIsWeb) return null;
+  if (barcode.isEmpty) return null;
+  if (kIsWeb) return null; // No SQLite cache on web
+
   final InventoryRepository repo = ref.read(inventoryRepositoryProvider);
   if (repo is SqliteInventoryRepository) {
     return repo.lookupCache(barcode);
