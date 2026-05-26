@@ -1129,3 +1129,6 @@ class _ImageSourceTile extends StatelessWidget {
     );
   }
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// HU-03: Skeleton placeholder row shown while the API lookup is in progress

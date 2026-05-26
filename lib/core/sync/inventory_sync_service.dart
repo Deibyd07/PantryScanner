@@ -130,7 +130,7 @@ class InventorySyncService {
         }
       }
     } catch (e) {
-      debugPrint('Sync Push Error: \$e');
+      debugPrint('Sync Push Error: $e');
     } finally {
       _isSyncing = false;
     }
@@ -163,7 +163,7 @@ class InventorySyncService {
           
           await localRepo.saveItemFromCloud(remoteItem);
         } catch (e) {
-          debugPrint('Error parsing cloud item: \$e');
+          debugPrint('Error parsing cloud item: $e');
         }
       }
     }
