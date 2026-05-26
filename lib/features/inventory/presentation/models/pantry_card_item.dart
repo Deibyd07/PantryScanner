@@ -5,6 +5,7 @@ class PantryCardItem {
     required this.name,
     required this.category,
     required this.quantity,
+    required this.rawQuantity,
     required this.daysLeft,
     required this.progress,
     required this.imageUrl,
@@ -14,6 +15,7 @@ class PantryCardItem {
   final String name;
   final String category;
   final String quantity;
+  final int rawQuantity;
   final int daysLeft;
   final double progress;
   final String imageUrl;

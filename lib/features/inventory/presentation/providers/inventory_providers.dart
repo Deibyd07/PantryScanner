@@ -9,6 +9,7 @@ import '../../domain/entities/inventory_item.dart';
 import '../../domain/repositories/inventory_repository.dart';
 import '../../domain/usecases/delete_inventory_item_usecase.dart';
 import '../../domain/usecases/save_inventory_item_usecase.dart';
+import '../../domain/usecases/update_inventory_item_quantity_usecase.dart';
 import '../../domain/usecases/watch_inventory_items_usecase.dart';
 import '../../../../core/sync/inventory_sync_service.dart';
 
@@ -188,6 +189,13 @@ final Provider<SaveInventoryItemUseCase> saveInventoryItemUseCaseProvider =
 final Provider<DeleteInventoryItemUseCase> deleteInventoryItemUseCaseProvider =
     Provider<DeleteInventoryItemUseCase>((ref) {
   return DeleteInventoryItemUseCase(ref.watch(inventoryRepositoryProvider));
+});
+
+final Provider<UpdateInventoryItemQuantityUseCase>
+    updateInventoryItemQuantityUseCaseProvider =
+    Provider<UpdateInventoryItemQuantityUseCase>((ref) {
+  return UpdateInventoryItemQuantityUseCase(
+      ref.watch(inventoryRepositoryProvider));
 });
 
 final StreamProvider<List<InventoryItem>> inventoryItemsProvider =
