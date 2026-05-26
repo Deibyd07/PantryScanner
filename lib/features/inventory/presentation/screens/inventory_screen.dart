@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../app/router/app_router.dart';
 import '../../../../core/design/design_system.dart';
+import '../../../../core/presentation/widgets/app_background.dart';
 import '../../../../core/presentation/widgets/offline_banner.dart';
 import '../../domain/entities/inventory_item.dart';
 import '../models/pantry_card_item.dart';
@@ -86,7 +87,11 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
       ),
       body: Stack(
         children: <Widget>[
-          // Gradient hero background (identidad de marca — fija en ambos modos)
+          // Doodle background (capa base)
+          const Positioned.fill(
+            child: AppBackground(overlayOpacity: 0.93),
+          ),
+          // Gradient hero (identidad de marca — encima del doodle)
           Positioned(
             top: 0,
             left: 0,
