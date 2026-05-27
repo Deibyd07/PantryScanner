@@ -19,7 +19,7 @@ class AppDatabase {
 
     _db = await openDatabase(
       dbPath,
-      version: 4,
+      version: 5,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -36,6 +36,7 @@ class AppDatabase {
         brand       TEXT,
         category    TEXT,
         quantity    INTEGER NOT NULL DEFAULT 1,
+        min_stock   INTEGER NOT NULL DEFAULT 1,
         expiry_date INTEGER,
         image_url   TEXT,
         notes       TEXT,
@@ -101,6 +102,12 @@ class AppDatabase {
     if (oldVersion < 4) {
       await _createNotificationSettingsTable(db);
       await _seedNotificationSettings(db);
+    }
+
+    if (oldVersion < 5) {
+      await db.execute(
+        'ALTER TABLE inventory_items ADD COLUMN min_stock INTEGER NOT NULL DEFAULT 1',
+      );
     }
   }
 

@@ -65,6 +65,7 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
   @override
   Widget build(BuildContext context) {
     final AsyncValue<List<InventoryItem>> asyncItems = ref.watch(inventoryItemsProvider);
+    ref.watch(lowStockWatcherProvider);
     final PaletteSpec p = context.palette;
 
     final double topPad = MediaQuery.paddingOf(context).top;
