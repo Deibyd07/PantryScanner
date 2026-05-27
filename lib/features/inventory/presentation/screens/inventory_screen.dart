@@ -66,6 +66,15 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
 
     final double topPad = MediaQuery.paddingOf(context).top;
 
+    final List<InventoryItem> allItems = asyncItems.valueOrNull ?? <InventoryItem>[];
+    final List<int> chipCounts = _chips.asMap().entries.map((MapEntry<int, String> e) {
+      if (e.key == 0) return allItems.length;
+      return allItems
+          .where((InventoryItem item) =>
+              (item.category ?? '').toLowerCase() == e.value.toLowerCase())
+          .length;
+    }).toList();
+
     return Scaffold(
       backgroundColor: p.scaffold,
       extendBody: true,
@@ -182,6 +191,7 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
                         selectedIndex: _selectedChip,
                         onSelected: (int index) =>
                             setState(() => _selectedChip = index),
+                        counts: chipCounts,
                       ),
                       const SizedBox(height: AppSpacing.ml),
                     ],
@@ -190,14 +200,26 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
               ),
               asyncItems.when(
                 data: (List<InventoryItem> rows) {
-                  final List<InventoryItem> filtered = _searchQuery.isEmpty
+                  // Category filter (index 0 = Todos)
+                  final String selectedCategory =
+                      _selectedChip == 0 ? '' : _chips[_selectedChip].toLowerCase();
+
+                  List<InventoryItem> filtered = selectedCategory.isEmpty
                       ? rows
                       : rows
                           .where((InventoryItem e) =>
-                              e.name.toLowerCase().contains(_searchQuery) ||
-                              (e.brand ?? '').toLowerCase().contains(_searchQuery) ||
-                              (e.category ?? '').toLowerCase().contains(_searchQuery))
+                              (e.category ?? '').toLowerCase() == selectedCategory)
                           .toList();
+
+                  // Search filter on top of category filter
+                  if (_searchQuery.isNotEmpty) {
+                    filtered = filtered
+                        .where((InventoryItem e) =>
+                            e.name.toLowerCase().contains(_searchQuery) ||
+                            (e.brand ?? '').toLowerCase().contains(_searchQuery) ||
+                            (e.category ?? '').toLowerCase().contains(_searchQuery))
+                        .toList();
+                  }
 
                   if (filtered.isEmpty) {
                     return SliverFillRemaining(
