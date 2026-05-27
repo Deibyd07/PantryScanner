@@ -72,6 +72,7 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen>
   // Field values
   int _existingId = 0; // If != 0, we are updating an existing product
   int _quantity = AppConstants.defaultQuantity; // default = 1
+  int _minStock = 1;
   DateTime? _expiryDate;
   String? _selectedCategory;
   String? _selectedImagePath; // New: local path of picked image
@@ -126,6 +127,7 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen>
         _nameController.text = existingItem.name;
         _selectedCategory = existingItem.category;
         _quantity = existingItem.quantity;
+        _minStock = existingItem.minStock;
         _expiryDate = existingItem.expiryDate;
         _selectedImagePath = existingItem.imageUrl;
         if (existingItem.notes != null) {
@@ -344,6 +346,21 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen>
                           const _SectionHeader(title: 'Cantidad', icon: Icons.production_quantity_limits_rounded),
                           const SizedBox(height: 12),
                           _buildQuantitySelector(colors),
+                          const SizedBox(height: 28),
+                          const _SectionDivider(),
+                          const _SectionHeader(title: 'Stock mínimo', icon: Icons.notification_important_outlined),
+                          const SizedBox(height: 4),
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 12),
+                            child: Text(
+                              'Recibirás una alerta cuando la cantidad llegue a este valor.',
+                              style: TextStyle(
+                                color: colors.onSurfaceVariant,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ),
+                          _buildMinStockSelector(colors),
                           const SizedBox(height: 28),
                           const _SectionDivider(),
                           const _SectionHeader(title: 'Fecha de vencimiento', icon: Icons.event_rounded),
@@ -801,6 +818,64 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen>
   }
 
 
+  Widget _buildMinStockSelector(ColorScheme colors) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: InventoryTokens.outline),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Text(
+            'Cantidad mínima de alerta',
+            style: TextStyle(
+              color: colors.onSurfaceVariant,
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              _QuantityButton(
+                icon: Icons.remove_rounded,
+                enabled: _minStock > 1,
+                onTap: () => setState(() => _minStock -= 1),
+                colors: colors,
+              ),
+              const SizedBox(width: 8),
+              AnimatedSwitcher(
+                duration: const Duration(milliseconds: 150),
+                transitionBuilder: (Widget child, Animation<double> anim) =>
+                    ScaleTransition(scale: anim, child: child),
+                child: Text(
+                  '$_minStock',
+                  key: ValueKey<int>(_minStock),
+                  style: TextStyle(
+                    color: colors.primary,
+                    fontSize: 28,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              _QuantityButton(
+                icon: Icons.add_rounded,
+                enabled: true,
+                onTap: () => setState(() => _minStock += 1),
+                colors: colors,
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildExpiryPicker(ColorScheme colors) {
     final bool hasDate = _expiryDate != null;
     final String dateText = hasDate
@@ -908,6 +983,7 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen>
       brand: null,
       category: _selectedCategory,
       quantity: _quantity,
+      minStock: _minStock,
       expiryDate: _expiryDate,
       imageUrl: _selectedImagePath,
       notes: _notesController.text.trim().isEmpty ? null : _notesController.text.trim(),
