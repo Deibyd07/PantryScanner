@@ -99,6 +99,7 @@ class SqliteInventoryRepository implements InventoryRepository {
       brand: row['brand'] as String?,
       category: row['category'] as String?,
       quantity: row['quantity'] as int,
+      minStock: row['min_stock'] as int? ?? 1,
       expiryDate: row['expiry_date'] != null
           ? DateTime.fromMillisecondsSinceEpoch(row['expiry_date'] as int)
           : null,
@@ -120,6 +121,7 @@ class SqliteInventoryRepository implements InventoryRepository {
       'brand': item.brand,
       'category': item.category,
       'quantity': item.quantity,
+      'min_stock': item.minStock,
       'expiry_date': item.expiryDate?.millisecondsSinceEpoch,
       'image_url': item.imageUrl,
       'notes': item.notes,
