@@ -160,8 +160,8 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen>
   }
 
   // ───── Image picker ─────
-  Future<void> _pickImage(ImageSource source) async {
-    Navigator.of(context).pop(); // close bottom sheet
+  Future<void> _pickImage(BuildContext dialogContext, ImageSource source) async {
+    Navigator.of(dialogContext).pop(); // close bottom sheet using its own context
 
     // Mobile & Web: use image_picker
     try {
@@ -192,7 +192,7 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen>
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
-      builder: (_) => SafeArea(
+      builder: (BuildContext sheetContext) => SafeArea(
         child: Padding(
           padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
           child: Column(
@@ -225,7 +225,7 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen>
                   label: 'Tomar foto',
                   subtitle: 'Abre la cámara del dispositivo',
                   colors: colors,
-                  onTap: () => _pickImage(ImageSource.camera),
+                  onTap: () => _pickImage(sheetContext, ImageSource.camera),
                 ),
                 const SizedBox(height: 10),
               ],
@@ -236,7 +236,7 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen>
                     ? 'Elige una imagen de tu computador'
                     : 'Elige una imagen guardada',
                 colors: colors,
-                onTap: () => _pickImage(ImageSource.gallery),
+                onTap: () => _pickImage(sheetContext, ImageSource.gallery),
               ),
               if (kIsWeb) ...<Widget>[
                 const SizedBox(height: 12),
@@ -266,7 +266,7 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen>
                   colors: colors,
                   isDestructive: true,
                   onTap: () {
-                    Navigator.of(context).pop();
+                    Navigator.of(sheetContext).pop();
                     setState(() => _selectedImagePath = null);
                   },
                 ),
