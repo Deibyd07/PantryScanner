@@ -19,7 +19,7 @@ class AppDatabase {
 
     _db = await openDatabase(
       dbPath,
-      version: 4,
+      version: 5,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -58,6 +58,7 @@ class AppDatabase {
 
     await _createNotificationSettingsTable(db);
     await _seedNotificationSettings(db);
+    await _createSentNotificationsTable(db);
   }
 
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
@@ -102,6 +103,10 @@ class AppDatabase {
       await _createNotificationSettingsTable(db);
       await _seedNotificationSettings(db);
     }
+
+    if (oldVersion < 5) {
+      await _createSentNotificationsTable(db);
+    }
   }
 
   Future<void> _createNotificationSettingsTable(Database db) async {
@@ -135,5 +140,75 @@ class AppDatabase {
       },
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
+  }
+
+  /// Creates the table that tracks which notifications were already sent per
+  /// product per day, preventing duplicate alerts.
+  Future<void> _createSentNotificationsTable(Database db) async {
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS sent_notifications (
+        id        INTEGER PRIMARY KEY AUTOINCREMENT,
+        item_id   INTEGER NOT NULL,
+        sent_date TEXT NOT NULL,
+        sent_at   INTEGER NOT NULL
+      )
+    ''');
+    await db.execute(
+      'CREATE UNIQUE INDEX IF NOT EXISTS idx_sent_notifications_item_date '
+      'ON sent_notifications (item_id, sent_date)',
+    );
+  }
+
+  // ── Deduplication helpers (used by background isolate) ──────────────────────
+
+  /// Returns `true` if a notification was already sent for [itemId] today.
+  Future<bool> wasNotificationSentToday(int itemId) async {
+    final db = await database;
+    final String today = _todayString();
+    final rows = await db.query(
+      'sent_notifications',
+      where: 'item_id = ? AND sent_date = ?',
+      whereArgs: [itemId, today],
+      limit: 1,
+    );
+    return rows.isNotEmpty;
+  }
+
+  /// Records that a notification was sent for [itemId] today.
+  Future<void> markNotificationSent(int itemId) async {
+    final db = await database;
+    final String today = _todayString();
+    await db.insert(
+      'sent_notifications',
+      {
+        'item_id': itemId,
+        'sent_date': today,
+        'sent_at': DateTime.now().millisecondsSinceEpoch,
+      },
+      conflictAlgorithm: ConflictAlgorithm.ignore,
+    );
+  }
+
+  /// Deletes deduplication records older than 14 days to prevent unbounded
+  /// growth of the table.
+  Future<void> pruneOldSentNotifications() async {
+    final db = await database;
+    final cutoff = DateTime.now().subtract(const Duration(days: 14));
+    final cutoffStr =
+        '${cutoff.year.toString().padLeft(4, '0')}-'
+        '${cutoff.month.toString().padLeft(2, '0')}-'
+        '${cutoff.day.toString().padLeft(2, '0')}';
+    await db.delete(
+      'sent_notifications',
+      where: 'sent_date < ?',
+      whereArgs: [cutoffStr],
+    );
+  }
+
+  static String _todayString() {
+    final now = DateTime.now();
+    return '${now.year.toString().padLeft(4, '0')}-'
+        '${now.month.toString().padLeft(2, '0')}-'
+        '${now.day.toString().padLeft(2, '0')}';
   }
 }

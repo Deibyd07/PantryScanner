@@ -7,6 +7,7 @@ import 'package:timezone/data/latest_all.dart' as tz;
 
 import 'app/pantry_scanner_app.dart';
 import 'features/notifications/data/services/local_notification_service.dart';
+import 'features/notifications/data/services/pantry_expiry_scheduler.dart';
 import 'firebase_options.dart';
 
 Future<void> main() async {
@@ -24,6 +25,8 @@ Future<void> main() async {
   // Initialize the local notification plugin (HU-13)
   if (!kIsWeb) {
     await LocalNotificationService.instance.init();
+    // Register periodic background expiry-check task (HU-14)
+    await registerExpiryCheckTask();
   }
 
   runApp(const ProviderScope(child: PantryScannerApp()));
