@@ -34,7 +34,7 @@ class InventoryBottomNav extends StatelessWidget {
                   const Expanded(child: _NavItem(icon: Icons.inventory_2_rounded, label: 'Despensa', active: true)),
                   const Expanded(child: _NavItem(icon: Icons.restaurant_menu_outlined, label: 'Recetas')),
                   const SizedBox(width: 72),
-                  Expanded(child: _NavItem(icon: Icons.notifications_none_rounded, label: 'Alertas', onTap: onNotifTap)),
+                  Expanded(child: _NavItem(icon: Icons.tune_rounded, label: 'Alertas', onTap: onNotifTap)),
                   const Expanded(child: _NavItem(icon: Icons.person_outline_rounded, label: 'Perfil')),
                 ],
               ),
