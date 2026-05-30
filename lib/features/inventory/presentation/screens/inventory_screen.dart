@@ -84,17 +84,20 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
     return Scaffold(
       backgroundColor: p.scaffold,
       extendBody: true,
-      floatingActionButtonLocation: FloatingActionButtonLocation.endDocked,
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          AppHaptics.confirm();
-          context.push(AppRoutes.productForm);
-        },
-        backgroundColor: p.brandPrimary,
-        foregroundColor: Colors.white,
-        elevation: 6,
-        shape: const CircleBorder(),
-        child: const Icon(Icons.add_rounded, size: 28),
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+      floatingActionButton: Padding(
+        padding: const EdgeInsets.only(bottom: 24),
+        child: FloatingActionButton(
+          onPressed: () {
+            AppHaptics.confirm();
+            context.push(AppRoutes.productForm);
+          },
+          backgroundColor: p.brandPrimary,
+          foregroundColor: Colors.white,
+          elevation: 6,
+          shape: const CircleBorder(),
+          child: const Icon(Icons.add_rounded, size: 28),
+        ),
       ),
       bottomNavigationBar: InventoryBottomNav(
         onScanTap: () => context.push(AppRoutes.scanner),
