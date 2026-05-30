@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
@@ -12,7 +13,15 @@ import '../../../inventory/domain/entities/inventory_item.dart';
 import '../../../inventory/presentation/providers/inventory_providers.dart';
 // ignore: deprecated_member_use_from_same_package
 import '../../../inventory/presentation/widgets/inventory_tokens.dart';
+import '../../../product_lookup/domain/entities/product_info.dart';
+import '../../../product_lookup/presentation/providers/product_lookup_providers.dart';
 import '../../../../core/design/design_system.dart';
+
+// ─────────────────────────────────────────
+// Lookup status displayed under the barcode field while/after we query
+// the cache + remote OpenFoodFacts API.
+// ─────────────────────────────────────────
+enum _LookupStatus { idle, loading, found, notFound }
 
 // ─────────────────────────────────────────
 // State notifier to handle async save state
@@ -77,6 +86,15 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen>
   String? _selectedCategory;
   String? _selectedImagePath; // New: local path of picked image
 
+  // Product lookup state (HU-NEW: API auto-fill)
+  _LookupStatus _lookupStatus = _LookupStatus.idle;
+  ProductLookupSource? _lookupSource;
+  Timer? _lookupDebounce;
+  String? _lastLookedUpBarcode;
+
+  bool _isRemotePath(String path) =>
+      path.startsWith('http://') || path.startsWith('https://');
+
   // Categories state
   final List<Map<String, dynamic>> _categories = <Map<String, dynamic>>[
     {'label': 'Lácteos', 'icon': Icons.egg_outlined},
@@ -99,11 +117,16 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen>
     super.initState();
     if (widget.initialBarcode != null && widget.initialBarcode!.isNotEmpty) {
       _barcodeController.text = widget.initialBarcode!;
-      // Try to auto-fill from local cache (works offline)
+      _lastLookedUpBarcode = widget.initialBarcode;
+      // Resolve product info: inventory → cache → API. Manual entry kicks in
+      // automatically when none of those return data.
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        _tryAutofillFromCache(widget.initialBarcode!);
+        _resolveProduct(widget.initialBarcode!);
       });
     }
+
+    // React to manual edits of the barcode field with a debounced lookup.
+    _barcodeController.addListener(_onBarcodeChanged);
 
     _headerAnim = AnimationController(
       vsync: this,
@@ -113,14 +136,15 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen>
     _fadeIn = CurvedAnimation(parent: _headerAnim, curve: Curves.easeOut);
   }
 
-  /// Looks up the local SQLite cache or inventory for [barcode] and auto-fills
-  /// the form fields. If it's already in the inventory, we load its full state
-  /// so saving will update it instead of duplicating.
-  Future<void> _tryAutofillFromCache(String barcode) async {
-    // 1. Try to find the existing full item in the inventory
+  /// Resolves product info for [barcode] in three stages:
+  /// 1. Inventory hit  → full edit mode (existing item).
+  /// 2. Cache + API    → auto-fill name/brand/category/image.
+  /// 3. Otherwise      → manual entry with a "not found" banner.
+  Future<void> _resolveProduct(String barcode) async {
+    // 1. Existing inventory item → full edit mode
     final InventoryItem? existingItem =
         await ref.read(itemByBarcodeProvider(barcode).future);
-    
+
     if (existingItem != null && mounted) {
       setState(() {
         _existingId = existingItem.id;
@@ -133,33 +157,129 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen>
         if (existingItem.notes != null) {
           _notesController.text = existingItem.notes!;
         }
+        _lookupStatus = _LookupStatus.idle;
       });
       return;
     }
 
-    // 2. If not in inventory, try to auto-fill metadata from the cache
-    final Map<String, dynamic>? cached =
-        await ref.read(productCacheProvider(barcode).future);
-    if (cached == null || !mounted) return;
+    // 2. Lookup cache + remote API
+    if (!mounted) return;
+    setState(() => _lookupStatus = _LookupStatus.loading);
+
+    final ProductLookupResult result =
+        await ref.read(productLookupProvider(barcode).future);
+
+    if (!mounted) return;
+
+    if (!result.hasProduct) {
+      setState(() {
+        _lookupStatus = _LookupStatus.notFound;
+        _lookupSource = result.source;
+      });
+      AppHaptics.warning();
+      _showLookupSnack(
+        message: 'Producto no reconocido. Ingrésalo manualmente.',
+        background: const Color(0xFFB45309),
+        icon: Icons.edit_note_rounded,
+      );
+      return;
+    }
+
+    final ProductInfo info = result.product!;
     setState(() {
-      final String cachedName = cached['name'] as String? ?? '';
-      if (cachedName.isNotEmpty && _nameController.text.isEmpty) {
-        _nameController.text = cachedName;
+      if (_nameController.text.isEmpty && info.name.isNotEmpty) {
+        _nameController.text = info.name;
       }
-      final String? cachedCategory = cached['category'] as String?;
-      if (cachedCategory != null && _selectedCategory == null) {
-        _selectedCategory = cachedCategory;
+      if (_selectedCategory == null && info.category != null) {
+        _selectedCategory = info.category;
       }
+      if (_selectedImagePath == null && (info.imageUrl?.isNotEmpty == true)) {
+        _selectedImagePath = info.imageUrl;
+      }
+      _lookupStatus = _LookupStatus.found;
+      _lookupSource = result.source;
     });
+    AppHaptics.success();
+    _showLookupSnack(
+      message: 'Producto encontrado y autocompletado.',
+      background: const Color(0xFF166534),
+      icon: Icons.check_circle_rounded,
+    );
+  }
+
+  void _showLookupSnack({
+    required String message,
+    required Color background,
+    required IconData icon,
+  }) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          duration: const Duration(seconds: 3),
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: background,
+          margin: const EdgeInsets.all(16),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
+          content: Row(
+            children: <Widget>[
+              Icon(icon, color: Colors.white, size: 20),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  message,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 13.5,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
   }
 
   @override
   void dispose() {
+    _lookupDebounce?.cancel();
+    _barcodeController.removeListener(_onBarcodeChanged);
     _nameController.dispose();
     _barcodeController.dispose();
     _notesController.dispose();
     _headerAnim.dispose();
     super.dispose();
+  }
+
+  void _onBarcodeChanged() {
+    final String value = _barcodeController.text.trim();
+
+    if (value.isEmpty) {
+      _lookupDebounce?.cancel();
+      _lastLookedUpBarcode = null;
+      if (_lookupStatus != _LookupStatus.idle) {
+        setState(() {
+          _lookupStatus = _LookupStatus.idle;
+          _lookupSource = null;
+        });
+      }
+      return;
+    }
+
+    final bool isValidFormat = RegExp(r'^\d{12,13}$').hasMatch(value);
+    if (!isValidFormat) return;
+    if (value == _lastLookedUpBarcode) return;
+
+    _lookupDebounce?.cancel();
+    _lookupDebounce = Timer(const Duration(milliseconds: 500), () {
+      if (!mounted) return;
+      _lastLookedUpBarcode = value;
+      _resolveProduct(value);
+    });
   }
 
   // ───── Image picker ─────
@@ -333,6 +453,10 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen>
                           const _SectionDivider(),
                           const _SectionHeader(title: 'Información básica', icon: Icons.info_outline_rounded),
                           const SizedBox(height: 12),
+                          if (_lookupStatus != _LookupStatus.idle) ...<Widget>[
+                            _buildLookupStatusBanner(colors),
+                            const SizedBox(height: 12),
+                          ],
                           _buildNameField(colors),
                           const SizedBox(height: 12),
                           _buildBarcodeField(colors),
@@ -486,7 +610,9 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen>
         duration: const Duration(milliseconds: 250),
         height: 180,
         decoration: BoxDecoration(
-          color: hasImage ? Colors.transparent : Colors.white,
+          color: hasImage
+              ? const Color(0xFFF7F7F8)
+              : Colors.white,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: hasImage ? InventoryTokens.primary : InventoryTokens.outline,
@@ -498,10 +624,36 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen>
             ? Stack(
                 fit: StackFit.expand,
                 children: <Widget>[
-                  if (kIsWeb)
-                    Image.network(
-                      _selectedImagePath!,
-                      fit: BoxFit.cover,
+                  if (kIsWeb || _isRemotePath(_selectedImagePath!))
+                    Padding(
+                      padding: const EdgeInsets.all(8),
+                      child: Image.network(
+                        _selectedImagePath!,
+                        fit: BoxFit.contain,
+                        loadingBuilder: (BuildContext _, Widget child,
+                            ImageChunkEvent? progress) {
+                          if (progress == null) return child;
+                          return const Center(
+                            child: SizedBox(
+                              width: 24,
+                              height: 24,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2.2,
+                                color: InventoryTokens.primary,
+                              ),
+                            ),
+                          );
+                        },
+                        errorBuilder: (_, __, ___) => Container(
+                          color: InventoryTokens.outline.withValues(alpha: 0.2),
+                          alignment: Alignment.center,
+                          child: const Icon(
+                            Icons.broken_image_outlined,
+                            color: InventoryTokens.textMuted,
+                            size: 36,
+                          ),
+                        ),
+                      ),
                     )
                   else
                     Image.file(
@@ -613,6 +765,95 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen>
                 child: Icon(Icons.check_circle_rounded, color: colors.primary),
               )
             : null,
+      ),
+    );
+  }
+
+  Widget _buildLookupStatusBanner(ColorScheme colors) {
+    final IconData icon;
+    final Color background;
+    final Color foreground;
+    final String title;
+    final String subtitle;
+    final Widget? leading;
+
+    switch (_lookupStatus) {
+      case _LookupStatus.loading:
+        icon = Icons.travel_explore_rounded;
+        background = colors.primaryContainer.withValues(alpha: 0.55);
+        foreground = colors.onPrimaryContainer;
+        title = 'Buscando producto…';
+        subtitle = 'Consultando base de datos global de alimentos.';
+        leading = SizedBox(
+          width: 18,
+          height: 18,
+          child: CircularProgressIndicator(
+            strokeWidth: 2.2,
+            valueColor: AlwaysStoppedAnimation<Color>(foreground),
+          ),
+        );
+        break;
+      case _LookupStatus.found:
+        icon = _lookupSource == ProductLookupSource.cache
+            ? Icons.bolt_rounded
+            : Icons.check_circle_rounded;
+        background = const Color(0xFFDCFCE7);
+        foreground = const Color(0xFF166534);
+        title = 'Producto encontrado';
+        subtitle = _lookupSource == ProductLookupSource.cache
+            ? 'Cargado desde la caché local. Revisa los datos antes de guardar.'
+            : 'Datos auto-completados desde OpenFoodFacts. Revisa antes de guardar.';
+        leading = null;
+        break;
+      case _LookupStatus.notFound:
+        icon = Icons.edit_note_rounded;
+        background = const Color(0xFFFEF3C7);
+        foreground = const Color(0xFF92400E);
+        title = 'Producto no reconocido';
+        subtitle = 'Completa los campos manualmente para agregarlo a tu despensa.';
+        leading = null;
+        break;
+      case _LookupStatus.idle:
+        return const SizedBox.shrink();
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: background,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: foreground.withValues(alpha: 0.18)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          leading ?? Icon(icon, color: foreground, size: 20),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Text(
+                  title,
+                  style: TextStyle(
+                    color: foreground,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  subtitle,
+                  style: TextStyle(
+                    color: foreground.withValues(alpha: 0.86),
+                    fontSize: 11.5,
+                    height: 1.35,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
