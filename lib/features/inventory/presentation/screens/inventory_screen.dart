@@ -319,28 +319,13 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
                             const SizedBox(height: AppSpacing.sm),
                             Text(
                               _searchQuery.isEmpty
-                                  ? 'Agrega tu primer producto escaneando un código'
+                                  ? 'Toca el botón central para escanear tu primer producto'
                                   : 'Intenta con otro nombre, marca o categoría',
                               style: AppTypography.bodySm.copyWith(
                                 color: p.textMuted.withValues(alpha: 0.6),
                               ),
+                              textAlign: TextAlign.center,
                             ),
-                            if (_searchQuery.isEmpty) ...<Widget>[
-                              const SizedBox(height: AppSpacing.lg),
-                              FilledButton.icon(
-                                onPressed: () => context.push(AppRoutes.scanner),
-                                style: FilledButton.styleFrom(
-                                  backgroundColor: p.brandPrimary,
-                                  foregroundColor: Colors.white,
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: AppSpacing.lg,
-                                    vertical: AppSpacing.ms,
-                                  ),
-                                ),
-                                icon: const Icon(Icons.qr_code_scanner_rounded),
-                                label: const Text('Escanear mi primer producto'),
-                              ),
-                            ],
                           ],
                         ),
                       ),
