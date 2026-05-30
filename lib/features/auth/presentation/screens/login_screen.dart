@@ -303,14 +303,19 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
       mainAxisAlignment: MainAxisAlignment.center,
       children: <Widget>[
         Container(
-          width: 72,
-          height: 72,
+          width: 76,
+          height: 76,
           decoration: const BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.all(Radius.circular(22)),
             boxShadow: AppElevation.heroIcon,
           ),
-          child: const Icon(Icons.kitchen_rounded, color: AppColors.brandPrimary, size: 36),
+          clipBehavior: Clip.antiAlias,
+          padding: const EdgeInsets.all(8),
+          child: Image.asset(
+            'assets/branding/icon_symbol.png',
+            fit: BoxFit.contain,
+          ),
         ),
         const SizedBox(height: AppSpacing.md - 2),
         Text(

@@ -25,36 +25,57 @@ class InventoryTopBar extends ConsumerWidget {
       toolbarHeight: 64,
       title: Row(
         children: <Widget>[
-          // Logo container — fondo translúcido sobre el gradiente hero
+          // Logo de marca: símbolo PNG transparente dentro de contenedor blanco
           Container(
             width: 36,
             height: 36,
+            padding: const EdgeInsets.all(1),
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.18),
-              borderRadius: AppRadius.brMs,
-              border: Border.all(color: Colors.white.withValues(alpha: 0.35)),
-            ),
-            child: const Icon(
-              Icons.qr_code_scanner_rounded,
               color: Colors.white,
-              size: 18,
+              borderRadius: AppRadius.brMs,
+              boxShadow: AppElevation.heroIcon,
+            ),
+            clipBehavior: Clip.antiAlias,
+            child: Transform.scale(
+              scale: 1.35,
+              child: Image.asset(
+                'assets/branding/icon_symbol.png',
+                fit: BoxFit.contain,
+              ),
             ),
           ),
           const SizedBox(width: AppSpacing.sm + 2),
-          Text(
-            'PantryScanner',
-            style: AppTypography.headingSm.copyWith(
-              color: Colors.white,
-              fontSize: 16,
-              fontWeight: FontWeight.w900,
-            ),
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              Text(
+                'PantryScanner',
+                style: AppTypography.headingSm.copyWith(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w900,
+                  height: 1.1,
+                  letterSpacing: 0.1,
+                ),
+              ),
+              Text(
+                'Tu despensa, bajo control',
+                style: AppTypography.bodyXs.copyWith(
+                  color: Colors.white.withValues(alpha: 0.72),
+                  fontSize: 10.5,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 0.2,
+                ),
+              ),
+            ],
           ),
           const Spacer(),
-          // Botón notificaciones
+          // Botón notificaciones recibidas (inbox)
           IconButton(
             onPressed: () {
               AppHaptics.tap();
-              context.push(AppRoutes.notificationSettings);
+              context.push(AppRoutes.notificationsInbox);
             },
             icon: Icon(
               Icons.notifications_none_rounded,
