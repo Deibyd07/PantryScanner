@@ -53,43 +53,53 @@ class SplitHeroScaffold extends StatelessWidget {
   Widget build(BuildContext context) {
     final double topPad = MediaQuery.paddingOf(context).top;
     final double bottomPad = MediaQuery.paddingOf(context).bottom;
+    final double effectiveHeroHeight = heroHeight + topPad;
 
     return Scaffold(
       backgroundColor: AppColors.brandPrimaryDark, // fallback para overscroll
       body: Stack(
         children: <Widget>[
-          Column(
-            children: <Widget>[
-              // ── Hero ────────────────────────────────────────────────────────
-              Container(
-                height: heroHeight + topPad,
-                width: double.infinity,
-                padding: EdgeInsets.only(top: topPad),
-                decoration: BoxDecoration(gradient: gradient),
-                alignment: heroTopAlignment
-                    ? Alignment.topCenter
-                    : Alignment.center,
-                child: heroContent,
+          // ── Capa 1: gradiente que cubre toda la pantalla (incluso detrás
+          //   de las esquinas redondeadas de la card, para que la curva
+          //   nunca revele un color "cortado").
+          Positioned.fill(
+            child: DecoratedBox(decoration: BoxDecoration(gradient: gradient)),
+          ),
+          // ── Capa 2: card blanca con tope redondeado, ocupa la zona
+          //   inferior. El gradiente sigue siendo visible detrás de la curva.
+          Positioned(
+            left: 0,
+            right: 0,
+            top: effectiveHeroHeight,
+            bottom: 0,
+            child: Container(
+              width: double.infinity,
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surface,
+                borderRadius: AppRadius.sheetTop,
               ),
-              // ── Form card ───────────────────────────────────────────────────
-              Expanded(
-                child: Container(
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.surface,
-                    borderRadius: AppRadius.sheetTop,
-                  ),
-                  child: SafeArea(
-                    top: false,
-                    bottom: false,
-                    child: Padding(
-                      padding: EdgeInsets.only(bottom: bottomPad),
-                      child: formContent,
-                    ),
-                  ),
+              child: SafeArea(
+                top: false,
+                bottom: false,
+                child: Padding(
+                  padding: EdgeInsets.only(bottom: bottomPad),
+                  child: formContent,
                 ),
               ),
-            ],
+            ),
+          ),
+          // ── Capa 3: contenido del hero (logo, título) por encima del
+          //   gradiente, ocupando exactamente la zona del hero.
+          Positioned(
+            left: 0,
+            right: 0,
+            top: topPad,
+            height: heroHeight,
+            child: Align(
+              alignment:
+                  heroTopAlignment ? Alignment.topCenter : Alignment.center,
+              child: heroContent,
+            ),
           ),
           if (overlay != null) overlay!,
         ],
