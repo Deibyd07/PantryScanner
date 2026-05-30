@@ -10,12 +10,15 @@ import '../../../../core/presentation/widgets/app_background.dart';
 import '../../../../core/presentation/widgets/offline_banner.dart';
 import '../../domain/entities/inventory_item.dart';
 import '../models/pantry_card_item.dart';
+import '../../domain/entities/sort_preference.dart';
 import '../providers/inventory_providers.dart';
+import '../providers/sort_providers.dart';
 import '../widgets/inventory_bottom_nav.dart';
 import '../widgets/inventory_category_chips.dart';
 import '../widgets/inventory_insights_card.dart';
 import '../widgets/inventory_product_card.dart';
 import '../widgets/inventory_top_bar.dart';
+import '../widgets/sort_bottom_sheet.dart';
 
 class InventoryScreen extends ConsumerStatefulWidget {
   const InventoryScreen({super.key});
@@ -62,9 +65,21 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
   @override
   Widget build(BuildContext context) {
     final AsyncValue<List<InventoryItem>> asyncItems = ref.watch(inventoryItemsProvider);
+    ref.watch(lowStockWatcherProvider);
     final PaletteSpec p = context.palette;
 
     final double topPad = MediaQuery.paddingOf(context).top;
+
+    final List<InventoryItem> allItems = asyncItems.valueOrNull ?? <InventoryItem>[];
+    final List<int> chipCounts = _chips.asMap().entries.map((MapEntry<int, String> e) {
+      if (e.key == 0) return allItems.length;
+      return allItems
+          .where((InventoryItem item) =>
+              (item.category ?? '').toLowerCase() == e.value.toLowerCase())
+          .length;
+    }).toList();
+
+    final SortPreference sortPref = ref.watch(sortPreferenceProvider);
 
     return Scaffold(
       backgroundColor: p.scaffold,
@@ -176,12 +191,74 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
                           ),
                         ),
                       ),
-                      const SizedBox(height: AppSpacing.md + 2),
+                      const SizedBox(height: AppSpacing.sm + 2),
+                      // Sort indicator + button
+                      Row(
+                        children: <Widget>[
+                          Expanded(
+                            child: GestureDetector(
+                              onTap: () {
+                                AppHaptics.tap();
+                                showModalBottomSheet<void>(
+                                  context: context,
+                                  isScrollControlled: true,
+                                  backgroundColor: p.surface,
+                                  shape: const RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.vertical(
+                                      top: Radius.circular(24),
+                                    ),
+                                  ),
+                                  builder: (_) => const SortBottomSheet(),
+                                );
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: AppSpacing.md,
+                                  vertical: AppSpacing.sm,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: p.surface,
+                                  borderRadius: AppRadius.brPill,
+                                  border: Border.all(color: p.outline),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: <Widget>[
+                                    Icon(
+                                      Icons.sort_rounded,
+                                      size: 15,
+                                      color: p.brandPrimary,
+                                    ),
+                                    const SizedBox(width: AppSpacing.xs),
+                                    Text(
+                                      sortPref.criteria.label,
+                                      style: AppTypography.labelSm.copyWith(
+                                        color: p.brandPrimary,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                    const SizedBox(width: AppSpacing.xs),
+                                    Icon(
+                                      sortPref.ascending
+                                          ? Icons.arrow_upward_rounded
+                                          : Icons.arrow_downward_rounded,
+                                      size: 13,
+                                      color: p.brandPrimary,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: AppSpacing.sm + 2),
                       InventoryCategoryChips(
                         categories: _chips,
                         selectedIndex: _selectedChip,
                         onSelected: (int index) =>
                             setState(() => _selectedChip = index),
+                        counts: chipCounts,
                       ),
                       const SizedBox(height: AppSpacing.ml),
                     ],
@@ -190,14 +267,31 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
               ),
               asyncItems.when(
                 data: (List<InventoryItem> rows) {
-                  final List<InventoryItem> filtered = _searchQuery.isEmpty
+                  // Category filter (index 0 = Todos)
+                  final String selectedCategory =
+                      _selectedChip == 0 ? '' : _chips[_selectedChip].toLowerCase();
+
+                  List<InventoryItem> filtered = selectedCategory.isEmpty
                       ? rows
                       : rows
                           .where((InventoryItem e) =>
-                              e.name.toLowerCase().contains(_searchQuery) ||
-                              (e.brand ?? '').toLowerCase().contains(_searchQuery) ||
-                              (e.category ?? '').toLowerCase().contains(_searchQuery))
+                              (e.category ?? '').toLowerCase() == selectedCategory)
                           .toList();
+
+                  // Search filter on top of category filter
+                  if (_searchQuery.isNotEmpty) {
+                    filtered = filtered
+                        .where((InventoryItem e) =>
+                            e.name.toLowerCase().contains(_searchQuery) ||
+                            (e.brand ?? '').toLowerCase().contains(_searchQuery) ||
+                            (e.category ?? '').toLowerCase().contains(_searchQuery))
+                        .toList();
+                  }
+
+                  // Sort
+                  filtered = ref
+                      .read(sortInventoryItemsUseCaseProvider)
+                      .call(filtered, sortPref);
 
                   if (filtered.isEmpty) {
                     return SliverFillRemaining(

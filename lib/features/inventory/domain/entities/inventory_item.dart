@@ -20,6 +20,7 @@ class InventoryItem {
     this.expiryDate,
     this.imageUrl,
     this.notes,
+    this.minStock = 1,
   });
 
   final int id;
@@ -35,6 +36,9 @@ class InventoryItem {
   final DateTime createdAt;
   final DateTime updatedAt;
   final bool isDeleted;
+  final int minStock;
+
+  bool get isLowStock => quantity > 0 && quantity <= minStock;
 
   InventoryItem copyWith({
     int? id,
@@ -50,6 +54,7 @@ class InventoryItem {
     DateTime? createdAt,
     DateTime? updatedAt,
     bool? isDeleted,
+    int? minStock,
   }) {
     return InventoryItem(
       id: id ?? this.id,
@@ -65,6 +70,7 @@ class InventoryItem {
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? DateTime.now(),
       isDeleted: isDeleted ?? this.isDeleted,
+      minStock: minStock ?? this.minStock,
     );
   }
 
