@@ -3,10 +3,16 @@ import 'package:flutter/material.dart';
 import '../../../../core/design/design_system.dart';
 
 class InventoryBottomNav extends StatelessWidget {
-  const InventoryBottomNav({super.key, this.onScanTap, this.onNotifTap});
+  const InventoryBottomNav({
+    super.key,
+    this.onScanTap,
+    this.onNotifTap,
+    this.onProfileTap,
+  });
 
   final VoidCallback? onScanTap;
   final VoidCallback? onNotifTap;
+  final VoidCallback? onProfileTap;
 
   @override
   Widget build(BuildContext context) {
@@ -35,7 +41,7 @@ class InventoryBottomNav extends StatelessWidget {
                   const Expanded(child: _NavItem(icon: Icons.restaurant_menu_outlined, label: 'Recetas')),
                   const SizedBox(width: 72),
                   Expanded(child: _NavItem(icon: Icons.tune_rounded, label: 'Alertas', onTap: onNotifTap)),
-                  const Expanded(child: _NavItem(icon: Icons.person_outline_rounded, label: 'Perfil')),
+                  Expanded(child: _NavItem(icon: Icons.person_outline_rounded, label: 'Perfil', onTap: onProfileTap)),
                 ],
               ),
             ),

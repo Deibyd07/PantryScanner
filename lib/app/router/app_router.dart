@@ -9,6 +9,7 @@ import '../../features/auth/presentation/screens/register_screen.dart';
 import '../../features/inventory/presentation/screens/inventory_screen.dart';
 import '../../features/notifications/presentation/screens/notification_settings_screen.dart';
 import '../../features/notifications/presentation/screens/notifications_inbox_screen.dart';
+import '../../features/profile/presentation/screens/profile_screen.dart';
 import '../../features/product_form/presentation/screens/product_form_screen.dart';
 import '../../features/scanner/presentation/screens/scanner_screen.dart';
 
@@ -18,6 +19,7 @@ class AppRoutes {
   static const String productForm = '/product-form';
   static const String notificationSettings = '/notification-settings';
   static const String notificationsInbox = '/notifications-inbox';
+  static const String profile = '/profile';
 
   // Auth routes
   static const String login = '/login';
@@ -112,6 +114,13 @@ GoRouter createAppRouter(Ref ref) {
         name: 'notifications-inbox',
         builder: (BuildContext context, GoRouterState state) {
           return const NotificationsInboxScreen();
+        },
+      ),
+      GoRoute(
+        path: AppRoutes.profile,
+        name: 'profile',
+        builder: (BuildContext context, GoRouterState state) {
+          return const ProfileScreen();
         },
       ),
     ],

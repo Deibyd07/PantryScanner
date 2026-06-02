@@ -102,6 +102,7 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
       bottomNavigationBar: InventoryBottomNav(
         onScanTap: () => context.push(AppRoutes.scanner),
         onNotifTap: () => context.push(AppRoutes.notificationSettings),
+        onProfileTap: () => context.push(AppRoutes.profile),
       ),
       body: Stack(
         children: <Widget>[
