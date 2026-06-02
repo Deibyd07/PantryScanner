@@ -409,42 +409,44 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen>
     final double topPad = MediaQuery.paddingOf(context).top;
     final double bottomPad = MediaQuery.paddingOf(context).bottom;
 
+    final double heroHeight = 190 + topPad;
+
     return Scaffold(
       backgroundColor: const Color(0xFF7F1D1D),
       body: Stack(
         children: <Widget>[
-          Column(
-            children: <Widget>[
-              // ── Gradient hero ──
-              Container(
-                height: 190 + topPad,
-                width: double.infinity,
-                padding: EdgeInsets.only(top: topPad),
-                decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: <Color>[Color(0xFFEF4444), Color(0xFF7F1D1D)],
-                  ),
-                ),
-                child: FadeTransition(
-                  opacity: _fadeIn,
-                  child: _buildHero(context),
+          // ── Capa 1: gradiente cubre TODA la pantalla (incluye detrás de
+          //   la curva de la card, para evitar el "corte" de color)
+          const Positioned.fill(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: <Color>[Color(0xFFEF4444), Color(0xFF7F1D1D)],
                 ),
               ),
-              // ── White scrollable form ──
-              Expanded(
-                child: Container(
-                  decoration: const BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.vertical(top: Radius.circular(36)),
-                  ),
-                  child: SingleChildScrollView(
-                    padding: EdgeInsets.fromLTRB(24, 28, 24, bottomPad + 32),
-                    child: Form(
-                      key: _formKey,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
+            ),
+          ),
+          // ── Capa 2: card blanca posicionada desde heroHeight, con tope
+          //   redondeado. Las esquinas redondeadas dejan ver el gradiente
+          //   continuo, no el color plano del Scaffold.
+          Positioned(
+            left: 0,
+            right: 0,
+            top: heroHeight,
+            bottom: 0,
+            child: Container(
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.vertical(top: Radius.circular(36)),
+              ),
+              child: SingleChildScrollView(
+                padding: EdgeInsets.fromLTRB(24, 28, 24, bottomPad + 32),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: <Widget>[
                           const _SectionHeader(title: 'Foto del producto', icon: Icons.photo_camera_outlined),
                           const SizedBox(height: 12),
@@ -525,7 +527,16 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen>
                   ),
                 ),
               ),
-            ],
+          // ── Capa 3: hero (back button + título) por encima del gradiente
+          Positioned(
+            left: 0,
+            right: 0,
+            top: 0,
+            height: heroHeight,
+            child: FadeTransition(
+              opacity: _fadeIn,
+              child: _buildHero(context),
+            ),
           ),
           const Positioned(top: 0, left: 0, right: 0, child: OfflineBanner()),
         ],
