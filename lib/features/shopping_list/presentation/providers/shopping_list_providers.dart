@@ -88,6 +88,22 @@ class _InMemoryShoppingListRepository implements ShoppingListRepository {
   }
 
   @override
+  Future<void> updateItem(
+    int id, {
+    required String name,
+    required String? quantity,
+  }) async {
+    if (name.trim().isEmpty) return;
+    final int idx = _items.indexWhere((ShoppingListItem i) => i.id == id);
+    if (idx < 0) return;
+    _items[idx] = _items[idx].copyWith(
+      name: name.trim(),
+      quantity: quantity,
+    );
+    _emit();
+  }
+
+  @override
   Future<void> toggleChecked(int id, {required bool isChecked}) async {
     final int idx = _items.indexWhere((ShoppingListItem i) => i.id == id);
     if (idx < 0) return;
@@ -99,9 +115,41 @@ class _InMemoryShoppingListRepository implements ShoppingListRepository {
   }
 
   @override
+  Future<void> markManyChecked(List<int> ids) async {
+    if (ids.isEmpty) return;
+    final Set<int> setIds = ids.toSet();
+    final DateTime now = DateTime.now();
+    bool changed = false;
+    for (int i = 0; i < _items.length; i++) {
+      if (setIds.contains(_items[i].id) && !_items[i].isChecked) {
+        _items[i] = _items[i].copyWith(isChecked: true, checkedAt: now);
+        changed = true;
+      }
+    }
+    if (changed) _emit();
+  }
+
+  @override
   Future<void> deleteItem(int id) async {
     _items.removeWhere((ShoppingListItem i) => i.id == id);
     _emit();
+  }
+
+  @override
+  Future<int> restoreItem(ShoppingListItem item) async {
+    final ShoppingListItem restored = ShoppingListItem(
+      id: _nextId++,
+      name: item.name,
+      quantity: item.quantity,
+      sourceRecipeId: item.sourceRecipeId,
+      sourceTitle: item.sourceTitle,
+      isChecked: item.isChecked,
+      createdAt: item.createdAt,
+      checkedAt: item.checkedAt,
+    );
+    _items.insert(0, restored);
+    _emit();
+    return restored.id;
   }
 
   @override

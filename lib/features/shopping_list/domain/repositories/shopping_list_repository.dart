@@ -12,15 +12,31 @@ abstract class ShoppingListRepository {
     String? sourceTitle,
   });
 
-  /// Agrega varios ítems en lote. Devuelve cuántos se añadieron realmente
-  /// (excluye los que ya existían).
+  /// Agrega varios ítems en lote (transaccional). Devuelve cuántos se
+  /// añadieron realmente (excluye los que ya existían).
   Future<int> addItems({
     required List<ShoppingListItemDraft> drafts,
   });
 
+  /// Actualiza el nombre y/o la cantidad de un ítem existente.
+  /// Pasar `null` en `quantity` lo limpia.
+  Future<void> updateItem(
+    int id, {
+    required String name,
+    required String? quantity,
+  });
+
   Future<void> toggleChecked(int id, {required bool isChecked});
 
+  /// Marca como conseguidos todos los ítems pendientes de [ids] en una
+  /// sola operación atómica.
+  Future<void> markManyChecked(List<int> ids);
+
   Future<void> deleteItem(int id);
+
+  /// Restaura un ítem que se había borrado (para soportar Undo). Conserva
+  /// el contenido pero genera un nuevo id. Devuelve el id generado.
+  Future<int> restoreItem(ShoppingListItem item);
 
   Future<void> clearCompleted();
 }
