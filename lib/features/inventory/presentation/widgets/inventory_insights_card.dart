@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/design/design_system.dart';
+import '../../../../l10n/generated/app_localizations.dart';
 import '../../domain/entities/inventory_item.dart';
 import '../providers/inventory_providers.dart';
 
@@ -11,6 +12,7 @@ class InventoryInsightsCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final PaletteSpec p = context.palette;
+    final AppLocalizations t = AppLocalizations.of(context);
     final AsyncValue<List<InventoryItem>> asyncItems =
         ref.watch(inventoryItemsProvider);
 
@@ -30,12 +32,12 @@ class InventoryInsightsCard extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
           Text(
-            'Resumen inteligente',
+            t.insightsTitle,
             style: AppTypography.headingSm.copyWith(color: p.textBody),
           ),
           const SizedBox(height: AppSpacing.xxs),
           Text(
-            _buildSubtitle(metrics),
+            _buildSubtitle(t, metrics),
             style: AppTypography.bodyXs.copyWith(color: p.textMuted),
           ),
           const SizedBox(height: AppSpacing.md),
@@ -46,7 +48,7 @@ class InventoryInsightsCard extends ConsumerWidget {
               Expanded(
                 child: _MetricTile(
                   value: metrics.expiredCount.toString(),
-                  label: 'Vencidos',
+                  label: t.insightsMetricExpired,
                   icon: Icons.error_outline_rounded,
                   color: AppColors.dangerStrong,
                 ),
@@ -55,7 +57,7 @@ class InventoryInsightsCard extends ConsumerWidget {
               Expanded(
                 child: _MetricTile(
                   value: metrics.totalCount.toString(),
-                  label: 'Productos',
+                  label: t.insightsMetricProducts,
                   icon: Icons.inventory_2_outlined,
                   color: p.brandPrimary,
                 ),
@@ -64,7 +66,7 @@ class InventoryInsightsCard extends ConsumerWidget {
               Expanded(
                 child: _MetricTile(
                   value: metrics.expiringSoonCount.toString(),
-                  label: 'Por vencer',
+                  label: t.insightsMetricExpiring,
                   icon: Icons.timer_outlined,
                   color: AppColors.warningStrong,
                 ),
@@ -76,20 +78,14 @@ class InventoryInsightsCard extends ConsumerWidget {
     );
   }
 
-  String _buildSubtitle(_InsightsMetrics m) {
-    if (m.totalCount == 0) {
-      return 'Aún no tienes productos en tu despensa';
-    }
-    if (m.expiringSoonCount == 0 && m.expiredCount == 0) {
-      return 'Todo en orden: nada por vencer pronto';
-    }
+  String _buildSubtitle(AppLocalizations t, _InsightsMetrics m) {
+    if (m.totalCount == 0) return t.insightsEmpty;
+    if (m.expiringSoonCount == 0 && m.expiredCount == 0) return t.insightsAllGood;
     if (m.expiredCount > 0 && m.expiringSoonCount > 0) {
-      return '${m.expiredCount} vencidos · ${m.expiringSoonCount} por vencer pronto';
+      return t.insightsMixed(m.expiredCount, m.expiringSoonCount);
     }
-    if (m.expiredCount > 0) {
-      return '${m.expiredCount} ${m.expiredCount == 1 ? "producto vencido" : "productos vencidos"}';
-    }
-    return '${m.expiringSoonCount} ${m.expiringSoonCount == 1 ? "producto vence" : "productos vencen"} pronto';
+    if (m.expiredCount > 0) return t.insightsExpired(m.expiredCount);
+    return t.insightsExpiring(m.expiringSoonCount);
   }
 }
 

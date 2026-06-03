@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../app/router/app_router.dart';
 import '../../../../core/design/design_system.dart';
+import '../../../../l10n/generated/app_localizations.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
 import '../../../shopping_list/presentation/providers/shopping_list_providers.dart';
 
@@ -15,6 +16,7 @@ class InventoryTopBar extends ConsumerWidget {
     final authState = ref.watch(authStateProvider);
     final user = authState.valueOrNull;
     final PaletteSpec p = context.palette;
+    final AppLocalizations t = AppLocalizations.of(context);
 
     return SliverAppBar(
       floating: true,
@@ -61,7 +63,7 @@ class InventoryTopBar extends ConsumerWidget {
                 ),
               ),
               Text(
-                'Tu despensa, bajo control',
+                t.appTagline,
                 style: AppTypography.bodyXs.copyWith(
                   color: Colors.white.withValues(alpha: 0.72),
                   fontSize: 10.5,
@@ -75,6 +77,7 @@ class InventoryTopBar extends ConsumerWidget {
           // Carrito de lista de compras (con badge de pendientes)
           _CartButton(
             count: ref.watch(shoppingListPendingCountProvider),
+            tooltip: t.cartTooltip,
             onTap: () {
               AppHaptics.tap();
               context.push(AppRoutes.shoppingList);
@@ -116,17 +119,17 @@ class InventoryTopBar extends ConsumerWidget {
                     ),
                     backgroundColor: p.surface,
                     title: Text(
-                      'Cerrar sesión',
+                      t.popupLogoutTitle,
                       style: AppTypography.headingSm.copyWith(color: p.textBody),
                     ),
                     content: Text(
-                      '¿Estás seguro de que deseas cerrar tu sesión?',
+                      t.popupLogoutBody,
                       style: AppTypography.bodyMd.copyWith(color: p.textBody),
                     ),
                     actions: <Widget>[
                       TextButton(
                         onPressed: () => Navigator.pop(ctx, false),
-                        child: const Text('Cancelar'),
+                        child: Text(t.commonCancel),
                       ),
                       FilledButton(
                         onPressed: () => Navigator.pop(ctx, true),
@@ -134,7 +137,7 @@ class InventoryTopBar extends ConsumerWidget {
                           backgroundColor: AppColors.dangerStrong,
                           minimumSize: const Size(0, 40),
                         ),
-                        child: const Text('Cerrar sesión'),
+                        child: Text(t.popupLogoutTitle),
                       ),
                     ],
                   ),
@@ -157,7 +160,7 @@ class InventoryTopBar extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
                     Text(
-                      user?.displayName ?? 'Usuario',
+                      user?.displayName ?? t.profileUserFallback,
                       style: AppTypography.labelMd.copyWith(
                         color: p.textBody,
                         fontWeight: FontWeight.w700,
@@ -183,7 +186,7 @@ class InventoryTopBar extends ConsumerWidget {
                     const Icon(Icons.logout_rounded, size: 18, color: AppColors.dangerStrong),
                     const SizedBox(width: AppSpacing.sm + 2),
                     Text(
-                      'Cerrar sesión',
+                      t.popupLogoutTitle,
                       style: AppTypography.labelMd.copyWith(
                         color: AppColors.dangerStrong,
                       ),
@@ -202,15 +205,20 @@ class InventoryTopBar extends ConsumerWidget {
 }
 
 class _CartButton extends StatelessWidget {
-  const _CartButton({required this.count, required this.onTap});
+  const _CartButton({
+    required this.count,
+    required this.tooltip,
+    required this.onTap,
+  });
 
   final int count;
+  final String tooltip;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     return Tooltip(
-      message: 'Lista de compras',
+      message: tooltip,
       child: SizedBox(
         width: 36,
         height: 36,

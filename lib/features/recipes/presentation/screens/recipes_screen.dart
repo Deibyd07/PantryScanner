@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../app/router/app_router.dart';
 import '../../../../core/design/design_system.dart';
+import '../../../../l10n/generated/app_localizations.dart';
 import '../../domain/entities/recipe_match.dart';
 import '../providers/recipes_providers.dart';
 import '../widgets/recipe_card.dart';
@@ -23,6 +24,7 @@ class _RecipesScreenState extends ConsumerState<RecipesScreen> {
   @override
   Widget build(BuildContext context) {
     final PaletteSpec p = context.palette;
+    final AppLocalizations t = AppLocalizations.of(context);
     final AsyncValue<List<RecipeMatch>> async =
         ref.watch(recipeMatchesProvider);
 
@@ -32,7 +34,7 @@ class _RecipesScreenState extends ConsumerState<RecipesScreen> {
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (Object e, _) => Center(
           child: Text(
-            'No se pudieron cargar las recetas',
+            t.recipesLoadError,
             style: AppTypography.bodyMd.copyWith(color: p.textMuted),
           ),
         ),
@@ -51,6 +53,7 @@ class _RecipesScreenState extends ConsumerState<RecipesScreen> {
                 total: matches.length,
                 cookable: cookable,
                 withExpiring: withExpiring,
+                t: t,
               ),
               SliverToBoxAdapter(
                 child: Padding(
@@ -62,6 +65,7 @@ class _RecipesScreenState extends ConsumerState<RecipesScreen> {
                   ),
                   child: _FilterChips(
                     selected: _filter,
+                    t: t,
                     onSelected: (_RecipeFilter f) {
                       AppHaptics.select();
                       setState(() => _filter = f);
@@ -72,7 +76,7 @@ class _RecipesScreenState extends ConsumerState<RecipesScreen> {
               if (filtered.isEmpty)
                 SliverFillRemaining(
                   hasScrollBody: false,
-                  child: _EmptyState(filter: _filter, palette: p),
+                  child: _EmptyState(filter: _filter, palette: p, t: t),
                 )
               else
                 SliverPadding(
@@ -125,11 +129,13 @@ class _RecipesHero extends StatelessWidget {
     required this.total,
     required this.cookable,
     required this.withExpiring,
+    required this.t,
   });
 
   final int total;
   final int cookable;
   final int withExpiring;
+  final AppLocalizations t;
 
   @override
   Widget build(BuildContext context) {
@@ -165,7 +171,7 @@ class _RecipesHero extends StatelessWidget {
                 const Spacer(),
                 _CircleIconBtn(
                   icon: Icons.kitchen_rounded,
-                  tooltip: 'Ver despensa',
+                  tooltip: t.recipesViewPantry,
                   onTap: () {
                     AppHaptics.tap();
                     context.go(AppRoutes.inventory);
@@ -175,7 +181,7 @@ class _RecipesHero extends StatelessWidget {
             ),
             const SizedBox(height: AppSpacing.lg),
             Text(
-              'Cocina con lo que tienes',
+              t.recipesHeroTitle,
               style: AppTypography.displaySm.copyWith(
                 color: Colors.white,
                 fontWeight: FontWeight.w800,
@@ -184,12 +190,10 @@ class _RecipesHero extends StatelessWidget {
             const SizedBox(height: AppSpacing.xs),
             Text(
               total == 0
-                  ? 'Aún no hay recetas en el catálogo'
+                  ? t.recipesHeroEmpty
                   : cookable == 0
-                      ? 'Te faltan algunos ingredientes para cocinar completo'
-                      : cookable == 1
-                          ? '1 receta lista para cocinar ahora'
-                          : '$cookable recetas listas para cocinar ahora',
+                      ? t.recipesHeroNoneCookable
+                      : t.recipesHeroCookable(cookable),
               style: AppTypography.bodySm.copyWith(
                 color: Colors.white.withValues(alpha: 0.85),
               ),
@@ -199,7 +203,7 @@ class _RecipesHero extends StatelessWidget {
               children: <Widget>[
                 Expanded(
                   child: _SummaryChip(
-                    label: 'En catálogo',
+                    label: t.recipesStatCatalog,
                     count: total,
                     icon: Icons.menu_book_rounded,
                     accent: Colors.white,
@@ -208,7 +212,7 @@ class _RecipesHero extends StatelessWidget {
                 const SizedBox(width: AppSpacing.sm),
                 Expanded(
                   child: _SummaryChip(
-                    label: 'Puedes cocinar',
+                    label: t.recipesStatCookable,
                     count: cookable,
                     icon: Icons.local_dining_rounded,
                     accent: const Color(0xFFC8E6C9),
@@ -217,7 +221,7 @@ class _RecipesHero extends StatelessWidget {
                 const SizedBox(width: AppSpacing.sm),
                 Expanded(
                   child: _SummaryChip(
-                    label: 'Por vencer',
+                    label: t.recipesStatExpiring,
                     count: withExpiring,
                     icon: Icons.timer_outlined,
                     accent: const Color(0xFFFFE0B2),
@@ -323,10 +327,15 @@ class _SummaryChip extends StatelessWidget {
 // Filter chips
 // ─────────────────────────────────────────────────────────────────────────────
 class _FilterChips extends StatelessWidget {
-  const _FilterChips({required this.selected, required this.onSelected});
+  const _FilterChips({
+    required this.selected,
+    required this.onSelected,
+    required this.t,
+  });
 
   final _RecipeFilter selected;
   final ValueChanged<_RecipeFilter> onSelected;
+  final AppLocalizations t;
 
   @override
   Widget build(BuildContext context) {
@@ -336,19 +345,19 @@ class _FilterChips extends StatelessWidget {
         scrollDirection: Axis.horizontal,
         children: <Widget>[
           _Chip(
-            label: 'Todas',
+            label: t.recipesFilterAll,
             selected: selected == _RecipeFilter.todas,
             onTap: () => onSelected(_RecipeFilter.todas),
           ),
           const SizedBox(width: AppSpacing.sm),
           _Chip(
-            label: 'Puedo cocinar',
+            label: t.recipesFilterCookable,
             selected: selected == _RecipeFilter.puedoCocinar,
             onTap: () => onSelected(_RecipeFilter.puedoCocinar),
           ),
           const SizedBox(width: AppSpacing.sm),
           _Chip(
-            label: 'Aprovecha por vencer',
+            label: t.recipesFilterExpiring,
             selected: selected == _RecipeFilter.porVencer,
             onTap: () => onSelected(_RecipeFilter.porVencer),
           ),
@@ -403,10 +412,15 @@ class _Chip extends StatelessWidget {
 // Empty state
 // ─────────────────────────────────────────────────────────────────────────────
 class _EmptyState extends StatelessWidget {
-  const _EmptyState({required this.filter, required this.palette});
+  const _EmptyState({
+    required this.filter,
+    required this.palette,
+    required this.t,
+  });
 
   final _RecipeFilter filter;
   final PaletteSpec palette;
+  final AppLocalizations t;
 
   @override
   Widget build(BuildContext context) {
@@ -414,16 +428,16 @@ class _EmptyState extends StatelessWidget {
     final String body;
     switch (filter) {
       case _RecipeFilter.todas:
-        title = 'Sin recetas';
-        body = 'Pronto añadiremos más recetas al catálogo.';
+        title = t.recipesEmptyTitleAll;
+        body = t.recipesEmptyBodyAll;
         break;
       case _RecipeFilter.puedoCocinar:
-        title = 'Te faltan ingredientes';
-        body = 'Aún no tienes en despensa todos los ingredientes para cocinar una receta completa. Mira el resto y compra lo que te falte.';
+        title = t.recipesEmptyTitleCookable;
+        body = t.recipesEmptyBodyCookable;
         break;
       case _RecipeFilter.porVencer:
-        title = 'Nada por vencer';
-        body = 'Ninguna receta del catálogo usa productos que estés por perder. ¡Buena gestión!';
+        title = t.recipesEmptyTitleExpiring;
+        body = t.recipesEmptyBodyExpiring;
         break;
     }
 

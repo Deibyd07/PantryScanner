@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/design/design_system.dart';
+import '../../../../core/i18n/recipe_l10n.dart';
+import '../../../../l10n/generated/app_localizations.dart';
 import '../../domain/entities/recipe.dart';
 import '../../domain/entities/recipe_match.dart';
 import 'recipe_visual.dart';
@@ -21,6 +23,7 @@ class RecipeCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final PaletteSpec p = context.palette;
+    final AppLocalizations t = AppLocalizations.of(context);
     final Recipe r = match.recipe;
 
     return Material(
@@ -81,17 +84,17 @@ class RecipeCard extends StatelessWidget {
                       children: <Widget>[
                         _MetaChip(
                           icon: Icons.schedule_rounded,
-                          label: '${r.minutes} min',
+                          label: t.recipeMinutes(r.minutes),
                         ),
                         const SizedBox(width: AppSpacing.xs),
                         _MetaChip(
                           icon: Icons.local_fire_department_outlined,
-                          label: r.difficulty.label,
+                          label: r.difficulty.label(context),
                         ),
                         const SizedBox(width: AppSpacing.xs),
                         _MetaChip(
                           icon: Icons.restaurant_outlined,
-                          label: r.meal.label,
+                          label: r.meal.label(context),
                         ),
                       ],
                     ),
@@ -105,16 +108,18 @@ class RecipeCard extends StatelessWidget {
                             _StatusBadge(
                               icon: Icons.timer_outlined,
                               label: match.expiringIngredients.length == 1
-                                  ? 'Aprovecha 1 producto por vencer'
-                                  : 'Aprovecha ${match.expiringIngredients.length} productos por vencer',
+                                  ? t.recipeUseExpiringOne
+                                  : t.recipeUseExpiringMany(
+                                      match.expiringIngredients.length),
                               color: AppColors.warningStrong,
                             ),
                           if (!match.canCookNow)
                             _StatusBadge(
                               icon: Icons.shopping_cart_outlined,
                               label: match.missingIngredients.length == 1
-                                  ? 'Te falta 1 ingrediente'
-                                  : 'Te faltan ${match.missingIngredients.length} ingredientes',
+                                  ? t.recipeMissingOne
+                                  : t.recipeMissingMany(
+                                      match.missingIngredients.length),
                               color: p.textMuted,
                             ),
                         ],
@@ -137,11 +142,14 @@ class _CoveragePill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final AppLocalizations t = AppLocalizations.of(context);
     final bool ready = match.canCookNow;
     final Color bg = ready
         ? const Color(0xFF166534)
         : Colors.black.withValues(alpha: 0.55);
-    final String label = ready ? 'Listo' : '${match.coveragePercent}%';
+    final String label = ready
+        ? t.recipeReady
+        : t.recipeCoveragePercent(match.coveragePercent);
     final IconData icon =
         ready ? Icons.check_circle_rounded : Icons.pie_chart_outline_rounded;
 

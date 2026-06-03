@@ -4,36 +4,6 @@ enum RecipeDifficulty { facil, medio, avanzado }
 
 enum RecipeMeal { desayuno, almuerzo, cena, snack, postre }
 
-extension RecipeDifficultyX on RecipeDifficulty {
-  String get label {
-    switch (this) {
-      case RecipeDifficulty.facil:
-        return 'Fácil';
-      case RecipeDifficulty.medio:
-        return 'Medio';
-      case RecipeDifficulty.avanzado:
-        return 'Avanzado';
-    }
-  }
-}
-
-extension RecipeMealX on RecipeMeal {
-  String get label {
-    switch (this) {
-      case RecipeMeal.desayuno:
-        return 'Desayuno';
-      case RecipeMeal.almuerzo:
-        return 'Almuerzo';
-      case RecipeMeal.cena:
-        return 'Cena';
-      case RecipeMeal.snack:
-        return 'Snack';
-      case RecipeMeal.postre:
-        return 'Postre';
-    }
-  }
-}
-
 class Recipe {
   const Recipe({
     required this.id,

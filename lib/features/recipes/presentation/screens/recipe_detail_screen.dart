@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../app/router/app_router.dart';
 import '../../../../core/design/design_system.dart';
+import '../../../../core/i18n/recipe_l10n.dart';
+import '../../../../l10n/generated/app_localizations.dart';
 import '../../../shopping_list/domain/repositories/shopping_list_repository.dart';
 import '../../../shopping_list/presentation/providers/shopping_list_providers.dart';
 import '../../domain/entities/recipe.dart';
@@ -20,6 +22,7 @@ class RecipeDetailScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final PaletteSpec p = context.palette;
+    final AppLocalizations t = AppLocalizations.of(context);
     final Recipe? recipe = ref.watch(recipeByIdProvider(recipeId));
     final AsyncValue<List<RecipeMatch>> async =
         ref.watch(recipeMatchesProvider);
@@ -27,10 +30,10 @@ class RecipeDetailScreen extends ConsumerWidget {
     if (recipe == null) {
       return Scaffold(
         backgroundColor: p.bg,
-        appBar: AppBar(title: const Text('Receta')),
+        appBar: AppBar(title: const Text('')),
         body: Center(
           child: Text(
-            'Receta no encontrada',
+            t.recipeDetailNotFound,
             style: AppTypography.bodyMd.copyWith(color: p.textMuted),
           ),
         ),
@@ -152,7 +155,7 @@ class _DetailHero extends StatelessWidget {
                               color: Colors.white, size: 13),
                           const SizedBox(width: 5),
                           Text(
-                            'Puedes cocinarla ahora',
+                            AppLocalizations.of(context).recipeDetailCanCookNow,
                             style: AppTypography.labelSm.copyWith(
                               color: Colors.white,
                               fontWeight: FontWeight.w800,
@@ -221,6 +224,7 @@ class _MetaRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final AppLocalizations t = AppLocalizations.of(context);
     return Row(
       children: <Widget>[
         Expanded(
@@ -234,8 +238,8 @@ class _MetaRow extends StatelessWidget {
         Expanded(
           child: _MetaTile(
             icon: Icons.local_fire_department_outlined,
-            value: recipe.difficulty.label,
-            unit: 'dificultad',
+            value: recipe.difficulty.label(context),
+            unit: t.recipeDetailDifficultyLabel,
           ),
         ),
         const SizedBox(width: AppSpacing.sm),
@@ -243,7 +247,9 @@ class _MetaRow extends StatelessWidget {
           child: _MetaTile(
             icon: Icons.people_outline_rounded,
             value: '${recipe.servings}',
-            unit: recipe.servings == 1 ? 'porción' : 'porciones',
+            unit: recipe.servings == 1
+                ? t.recipeDetailServingsOne
+                : t.recipeDetailServingsMany,
           ),
         ),
       ],
@@ -312,11 +318,15 @@ class _IngredientsCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final PaletteSpec p = context.palette;
+    final AppLocalizations t = AppLocalizations.of(context);
     return _SectionCard(
-      title: 'Ingredientes',
+      title: t.recipeIngredientsTitle,
       caption: match == null
-          ? '${recipe.ingredients.length} en total'
-          : '${match!.matchedIngredients.length} en tu despensa · ${match!.missingIngredients.length} por conseguir',
+          ? t.recipeIngredientsCountTotal(recipe.ingredients.length)
+          : t.recipeIngredientsCountDetail(
+              match!.matchedIngredients.length,
+              match!.missingIngredients.length,
+            ),
       icon: Icons.shopping_basket_outlined,
       child: Column(
         children: <Widget>[
@@ -358,7 +368,7 @@ class _IngredientRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final PaletteSpec p = context.palette;
 
-    final _StatusSpec spec = _specFor(status, p);
+    final _StatusSpec spec = _specFor(context, status, p);
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm + 2),
@@ -409,35 +419,36 @@ class _IngredientRow extends StatelessWidget {
     );
   }
 
-  _StatusSpec _specFor(_IngredientStatus s, PaletteSpec p) {
+  _StatusSpec _specFor(BuildContext context, _IngredientStatus s, PaletteSpec p) {
+    final AppLocalizations t = AppLocalizations.of(context);
     switch (s) {
       case _IngredientStatus.inPantry:
-        return const _StatusSpec(
+        return _StatusSpec(
           icon: Icons.check_rounded,
-          iconColor: Color(0xFF166534),
-          iconBg: Color(0xFFE6F4EA),
-          subtitle: 'En tu despensa',
+          iconColor: const Color(0xFF166534),
+          iconBg: const Color(0xFFE6F4EA),
+          subtitle: t.recipeIngredientInPantry,
         );
       case _IngredientStatus.expiring:
         return _StatusSpec(
           icon: Icons.timer_outlined,
           iconColor: AppColors.warningStrong,
           iconBg: AppColors.warningStrong.withValues(alpha: 0.14),
-          subtitle: 'Por vencer · aprovéchalo',
+          subtitle: t.recipeIngredientExpiring,
         );
       case _IngredientStatus.missing:
         return _StatusSpec(
           icon: Icons.shopping_cart_outlined,
           iconColor: p.brandPrimary,
           iconBg: p.brandPrimary.withValues(alpha: 0.12),
-          subtitle: 'Comprar',
+          subtitle: t.recipeIngredientMissing,
         );
       case _IngredientStatus.optional:
         return _StatusSpec(
           icon: Icons.add_rounded,
           iconColor: p.textMuted,
           iconBg: p.surfaceMuted,
-          subtitle: 'Opcional',
+          subtitle: t.recipeIngredientOptional,
         );
       case _IngredientStatus.unknown:
         return _StatusSpec(
@@ -474,10 +485,10 @@ class _AddMissingButton extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final AppLocalizations t = AppLocalizations.of(context);
     final int n = match.missingIngredients.length;
-    final String label = n == 1
-        ? 'Añadir el faltante a la lista'
-        : 'Añadir $n faltantes a la lista';
+    final String label =
+        n == 1 ? t.recipeAddMissingOne : t.recipeAddMissingMany(n);
 
     return SizedBox(
       width: double.infinity,
@@ -523,14 +534,15 @@ class _AddMissingButton extends ConsumerWidget {
     required int added,
     required int total,
   }) {
+    final AppLocalizations t = AppLocalizations.of(context);
     final int skipped = total - added;
     final String msg = added == 0
-        ? 'Ya tenías esos ítems en la lista'
+        ? t.recipeAddedAllExisted
         : skipped == 0
             ? added == 1
-                ? '1 ítem añadido a la lista'
-                : '$added ítems añadidos a la lista'
-            : '$added añadidos · $skipped ya estaban';
+                ? t.recipeAddedOne
+                : t.recipeAddedMany(added)
+            : t.recipeAddedMixed(added, skipped);
 
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
@@ -570,7 +582,7 @@ class _AddMissingButton extends ConsumerWidget {
           action: added == 0
               ? null
               : SnackBarAction(
-                  label: 'Ver lista',
+                  label: t.recipeViewList,
                   textColor: Colors.white,
                   onPressed: () => context.push(AppRoutes.shoppingList),
                 ),
@@ -589,9 +601,10 @@ class _StepsCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final PaletteSpec p = context.palette;
+    final AppLocalizations t = AppLocalizations.of(context);
     return _SectionCard(
-      title: 'Preparación',
-      caption: '${recipe.steps.length} ${recipe.steps.length == 1 ? "paso" : "pasos"}',
+      title: t.recipeStepsTitle,
+      caption: t.recipeStepsCount(recipe.steps.length),
       icon: Icons.format_list_numbered_rounded,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

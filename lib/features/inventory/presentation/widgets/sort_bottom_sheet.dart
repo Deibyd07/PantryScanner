@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/design/design_system.dart';
+import '../../../../core/i18n/sort_l10n.dart';
+import '../../../../l10n/generated/app_localizations.dart';
 import '../../domain/entities/sort_preference.dart';
 import '../providers/sort_providers.dart';
 
@@ -31,6 +33,7 @@ class _SortBottomSheetState extends ConsumerState<SortBottomSheet> {
   @override
   Widget build(BuildContext context) {
     final PaletteSpec p = context.palette;
+    final AppLocalizations t = AppLocalizations.of(context);
 
     return SafeArea(
       child: Padding(
@@ -54,7 +57,7 @@ class _SortBottomSheetState extends ConsumerState<SortBottomSheet> {
             ),
             const SizedBox(height: AppSpacing.md),
             Text(
-              'Ordenar por',
+              t.sortTitle,
               style: AppTypography.headingSm.copyWith(color: p.textBody),
             ),
             const SizedBox(height: AppSpacing.ms),
@@ -97,7 +100,7 @@ class _SortBottomSheetState extends ConsumerState<SortBottomSheet> {
                         const SizedBox(width: AppSpacing.ms),
                         Expanded(
                           child: Text(
-                            opt.criteria.label,
+                            opt.criteria.label(context),
                             style: AppTypography.bodyMd.copyWith(
                               color: selected ? p.brandPrimary : p.textBody,
                               fontWeight: selected
@@ -131,7 +134,7 @@ class _SortBottomSheetState extends ConsumerState<SortBottomSheet> {
               child: Row(
                 children: <Widget>[
                   _DirectionBtn(
-                    label: 'Ascendente',
+                    label: t.sortAscending,
                     icon: Icons.arrow_upward_rounded,
                     selected: _local.ascending,
                     palette: p,
@@ -141,7 +144,7 @@ class _SortBottomSheetState extends ConsumerState<SortBottomSheet> {
                     },
                   ),
                   _DirectionBtn(
-                    label: 'Descendente',
+                    label: t.sortDescending,
                     icon: Icons.arrow_downward_rounded,
                     selected: !_local.ascending,
                     palette: p,
@@ -173,7 +176,7 @@ class _SortBottomSheetState extends ConsumerState<SortBottomSheet> {
                     borderRadius: AppRadius.brLg,
                   ),
                 ),
-                child: const Text('Aplicar'),
+                child: Text(t.sortApply),
               ),
             ),
           ],

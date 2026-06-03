@@ -4,10 +4,12 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 
 import 'app/pantry_scanner_app.dart';
 import 'features/notifications/data/services/local_notification_service.dart';
+import 'features/settings/presentation/providers/settings_providers.dart';
 import 'firebase_options.dart';
 
 Future<void> main() async {
@@ -22,8 +24,6 @@ Future<void> main() async {
     cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED,
   );
 
-  FirebaseAuth.instance.setLanguageCode('es');
-
   // Initialize timezone data for flutter_local_notifications (HU-13)
   tz.initializeTimeZones();
 
@@ -32,5 +32,18 @@ Future<void> main() async {
     await LocalNotificationService.instance.init();
   }
 
-  runApp(const ProviderScope(child: PantryScannerApp()));
+  // Bootstrap SharedPreferences antes de runApp para que el provider
+  // del idioma pueda leer el valor persistido en su primer build.
+  final SharedPreferences prefs = await SharedPreferences.getInstance();
+  final String savedLang = prefs.getString('settings.language') ?? 'es';
+  FirebaseAuth.instance.setLanguageCode(savedLang);
+
+  runApp(
+    ProviderScope(
+      overrides: <Override>[
+        sharedPreferencesProvider.overrideWithValue(prefs),
+      ],
+      child: const PantryScannerApp(),
+    ),
+  );
 }

@@ -1,0 +1,291 @@
+{
+  "@@locale": "en",
+
+  "appName": "PantryScanner",
+  "appTagline": "Your pantry, under control",
+
+  "commonCancel": "Cancel",
+  "commonSave": "Save",
+  "commonDelete": "Delete",
+  "commonClose": "Close",
+  "commonBack": "Back",
+  "commonContinue": "Continue",
+  "commonOk": "OK",
+  "commonError": "Error",
+  "commonRetry": "Retry",
+  "commonLoading": "Loading…",
+  "commonUndo": "Undo",
+  "commonSee": "See",
+  "commonEdit": "Edit",
+  "commonAdd": "Add",
+  "commonSearch": "Search",
+
+  "navPantry": "Pantry",
+  "navRecipes": "Recipes",
+  "navAlerts": "Alerts",
+  "navProfile": "Profile",
+
+  "cartTooltip": "Shopping list",
+  "popupLogoutTitle": "Log out",
+  "popupLogoutBody": "Are you sure you want to log out?",
+
+  "inventoryTitle": "My pantry",
+  "inventoryTagline": "Organize · Track · Save",
+  "inventorySearchHint": "Search in your pantry...",
+  "inventoryClearSearch": "Clear search",
+  "inventoryEmptyTitle": "Your pantry is empty",
+  "inventoryEmptyHint": "Tap the center button to scan your first product",
+  "inventorySearchNoResults": "No results for \"{query}\"",
+  "@inventorySearchNoResults": {
+    "placeholders": { "query": { "type": "String" } }
+  },
+  "inventorySearchTryOther": "Try another name, brand, or category",
+  "inventoryLoadError": "Could not load inventory",
+  "inventoryDeleteTitle": "Delete product",
+  "inventoryDeleteBody": "Are you sure you want to remove \"{name}\" from your pantry?",
+  "@inventoryDeleteBody": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "inventoryDeletedSnack": "\"{name}\" removed",
+  "@inventoryDeletedSnack": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "inventoryConfirmDeleteTitle": "Delete product?",
+  "inventoryConfirmDeleteBody": "The quantity of \"{name}\" will reach 0. Do you want to remove it from your inventory?",
+  "@inventoryConfirmDeleteBody": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+
+  "categoryAll": "All",
+  "categoryDairy": "Dairy",
+  "categoryMeat": "Meat",
+  "categoryFruitsVeg": "Fruits & vegetables",
+  "categoryCanned": "Canned",
+  "categoryDrinks": "Drinks",
+  "categorySnacks": "Snacks",
+  "categoryCereals": "Cereals",
+  "categoryCondiments": "Condiments",
+  "categoryUncategorized": "Uncategorized",
+
+  "unitOne": "unit",
+  "unitMany": "units",
+
+  "insightsTitle": "Smart summary",
+  "insightsMetricExpired": "Expired",
+  "insightsMetricProducts": "Products",
+  "insightsMetricExpiring": "Expiring",
+  "insightsEmpty": "You don't have any products in your pantry yet",
+  "insightsAllGood": "All good: nothing expiring soon",
+  "insightsMixed": "{expired} expired · {expiring} expiring soon",
+  "@insightsMixed": {
+    "placeholders": {
+      "expired": { "type": "int" },
+      "expiring": { "type": "int" }
+    }
+  },
+  "insightsExpired": "{count, plural, =1{1 expired product} other{{count} expired products}}",
+  "@insightsExpired": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "insightsExpiring": "{count, plural, =1{1 product expiring soon} other{{count} products expiring soon}}",
+  "@insightsExpiring": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "sortTitle": "Sort by",
+  "sortExpiryDate": "Expiry date",
+  "sortName": "Name A-Z",
+  "sortQuantity": "Quantity",
+  "sortCategory": "Category",
+  "sortAscending": "Ascending",
+  "sortDescending": "Descending",
+  "sortApply": "Apply",
+
+  "cartTitle": "Shopping list",
+  "cartEmpty": "You haven't added anything yet",
+  "cartAllDone": "All done!",
+  "cartPendingCount": "{count, plural, =1{1 item to buy} other{{count} items to buy}}",
+  "@cartPendingCount": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "cartStatTotal": "Total",
+  "cartStatPending": "Pending",
+  "cartStatDone": "Done",
+  "cartSectionToBuy": "To buy",
+  "cartSectionManual": "Added manually",
+  "cartSectionRecipe": "Missing to prepare this recipe",
+  "cartSectionDone": "Already have",
+  "cartSectionDoneSubtitle": "Marked as done",
+  "cartClearDoneTooltip": "Clear done",
+  "cartClearDoneTitle": "Clear done",
+  "cartClearDoneBody": "Do you want to clear all items you've already marked as done?",
+  "cartQuickAddHint": "Add item (e.g. Milk 2 L, 3 eggs)",
+  "cartDeletedSnack": "Deleted \"{name}\"",
+  "@cartDeletedSnack": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "cartClearedSnack": "{count, plural, =1{Cleared 1 done item} other{Cleared {count} done items}}",
+  "@cartClearedSnack": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "cartEmptyTitle": "Your list is empty",
+  "cartEmptyHint": "Add items with the field above or from a recipe using \"Add missing to list\".",
+  "cartMarkAll": "All",
+  "cartEditItemTitle": "Edit item",
+  "cartEditNameLabel": "Name",
+  "cartEditQtyLabel": "Quantity (optional)",
+  "cartEditQtyHint": "E.g. 2 L, 500 g, 3 units",
+  "cartDeleteItemTooltip": "Remove from list",
+  "cartEditTooltip": "Edit",
+
+  "recipeDifficultyEasy": "Easy",
+  "recipeDifficultyMedium": "Medium",
+  "recipeDifficultyAdvanced": "Advanced",
+  "recipeMealBreakfast": "Breakfast",
+  "recipeMealLunch": "Lunch",
+  "recipeMealDinner": "Dinner",
+  "recipeMealSnack": "Snack",
+  "recipeMealDessert": "Dessert",
+
+  "recipesLoadError": "Could not load recipes",
+  "recipesHeroTitle": "Cook with what you have",
+  "recipesHeroEmpty": "No recipes in the catalog yet",
+  "recipesHeroNoneCookable": "You're missing some ingredients to cook a full recipe",
+  "recipesHeroCookable": "{count, plural, =1{1 recipe ready to cook now} other{{count} recipes ready to cook now}}",
+  "@recipesHeroCookable": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "recipesStatCatalog": "In catalog",
+  "recipesStatCookable": "Can cook",
+  "recipesStatExpiring": "Expiring",
+  "recipesViewPantry": "View pantry",
+  "recipesFilterAll": "All",
+  "recipesFilterCookable": "Can cook",
+  "recipesFilterExpiring": "Use expiring",
+  "recipesEmptyTitleAll": "No recipes",
+  "recipesEmptyBodyAll": "We'll add more recipes to the catalog soon.",
+  "recipesEmptyTitleCookable": "Missing ingredients",
+  "recipesEmptyBodyCookable": "You don't have all the ingredients to cook a full recipe yet. Check the rest and buy what you're missing.",
+  "recipesEmptyTitleExpiring": "Nothing expiring",
+  "recipesEmptyBodyExpiring": "No recipe in the catalog uses products you're about to lose. Good job!",
+
+  "recipeMinutes": "{minutes} min",
+  "@recipeMinutes": {
+    "placeholders": { "minutes": { "type": "int" } }
+  },
+  "recipeReady": "Ready",
+  "recipeCoveragePercent": "{percent}%",
+  "@recipeCoveragePercent": {
+    "placeholders": { "percent": { "type": "int" } }
+  },
+  "recipeUseExpiringOne": "Uses 1 expiring product",
+  "recipeUseExpiringMany": "Uses {count} expiring products",
+  "@recipeUseExpiringMany": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "recipeMissingOne": "You're missing 1 ingredient",
+  "recipeMissingMany": "You're missing {count} ingredients",
+  "@recipeMissingMany": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "recipeDetailNotFound": "Recipe not found",
+  "recipeDetailCanCookNow": "You can cook it now",
+  "recipeDetailServingsOne": "serving",
+  "recipeDetailServingsMany": "servings",
+  "recipeDetailDifficultyLabel": "difficulty",
+  "recipeIngredientsTitle": "Ingredients",
+  "recipeIngredientsCountTotal": "{count} total",
+  "@recipeIngredientsCountTotal": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "recipeIngredientsCountDetail": "{inPantry} in your pantry · {missing} to get",
+  "@recipeIngredientsCountDetail": {
+    "placeholders": {
+      "inPantry": { "type": "int" },
+      "missing": { "type": "int" }
+    }
+  },
+  "recipeIngredientInPantry": "In your pantry",
+  "recipeIngredientExpiring": "Expiring · use it",
+  "recipeIngredientMissing": "Buy",
+  "recipeIngredientOptional": "Optional",
+  "recipeStepsTitle": "Preparation",
+  "recipeStepsCount": "{count, plural, =1{1 step} other{{count} steps}}",
+  "@recipeStepsCount": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "recipeAddMissingOne": "Add the missing one to the list",
+  "recipeAddMissingMany": "Add {count} missing to the list",
+  "@recipeAddMissingMany": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "recipeAddedAllExisted": "You already had those items on the list",
+  "recipeAddedOne": "1 item added to the list",
+  "recipeAddedMany": "{count} items added to the list",
+  "@recipeAddedMany": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "recipeAddedMixed": "{added} added · {skipped} already there",
+  "@recipeAddedMixed": {
+    "placeholders": {
+      "added": { "type": "int" },
+      "skipped": { "type": "int" }
+    }
+  },
+  "recipeViewList": "View list",
+
+  "statusExpired": "Expired",
+  "statusExpiringSoon": "Expiring soon",
+  "statusOutOfStock": "Out of stock",
+  "statusFresh": "Fresh",
+  "statusOutOfStockShort": "OUT OF STOCK",
+  "statusExpiredShort": "EXPIRED",
+  "statusDaysLeft": "{days}d left",
+  "@statusDaysLeft": {
+    "placeholders": { "days": { "type": "int" } }
+  },
+
+  "profileTitle": "My profile",
+  "profileUserFallback": "User",
+  "profileAccountGoogle": "Google account",
+  "profileAccountEmail": "Email account",
+
+  "profileStatsProducts": "Products",
+  "profileStatsCategories": "Categories",
+  "profileStatsWithPhoto": "With photo",
+
+  "profileAccountTitle": "Your account",
+  "profileAccountSubtitle": "Connected user information",
+  "profileAccountEmailLabel": "Email",
+  "profileAccountNameLabel": "Name",
+  "profileAccountTypeLabel": "Account type",
+  "profileAccountTypeGoogle": "Google",
+  "profileAccountTypePassword": "Email & password",
+
+  "profilePrefsTitle": "Preferences",
+  "profilePrefsSubtitle": "Customize the app to your liking",
+  "profilePrefsNotifications": "Alerts and notifications",
+  "profilePrefsLanguage": "Language",
+
+  "profileAboutTitle": "About",
+  "profileAboutSubtitle": "App information",
+  "profileAboutVersion": "Version",
+  "profileAboutTerms": "Terms and conditions",
+  "profileAboutPrivacy": "Privacy policy",
+
+  "profileLogout": "Log out",
+  "profileLogoutConfirmTitle": "Log out",
+  "profileLogoutConfirmBody": "Are you sure you want to log out? You will need to sign in again.",
+
+  "languageSheetTitle": "Choose language",
+  "languageSheetSubtitle": "Changes apply instantly",
+  "languageSpanish": "Spanish",
+  "languageEnglish": "English",
+  "languageSavedSnack": "Language updated",
+
+  "legalTermsTitle": "Terms and conditions",
+  "legalTermsBody": "Welcome to PantryScanner. By using this app you accept the following terms: the app is provided as is, without guarantees of absolute accuracy on expiry dates or inventory. The user is responsible for verifying information before making consumption or purchase decisions. PantryScanner does not store sensitive data outside your device and your Firebase account. The team reserves the right to modify features in future versions.",
+  "legalPrivacyTitle": "Privacy policy",
+  "legalPrivacyBody": "PantryScanner respects your privacy. We collect only: your email (for authentication), the products you register (stored locally on your device and synced with Firebase tied to your account), and app settings (language, preferences). We do not share your information with third parties for advertising purposes. You can delete your account and all related data by contacting the team. Product images are stored locally on your device."
+}

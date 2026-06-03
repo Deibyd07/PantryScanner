@@ -4,6 +4,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../core/design/design_system.dart';
+import '../../../../core/i18n/status_l10n.dart';
+import '../../../../l10n/generated/app_localizations.dart';
 import '../../domain/entities/inventory_item.dart';
 import '../models/pantry_card_item.dart';
 
@@ -31,19 +33,6 @@ extension _StatusStyle on ProductStatus {
         return AppColors.neutralSoft;
       case ProductStatus.normal:
         return AppColors.successSoft;
-    }
-  }
-
-  String get label {
-    switch (this) {
-      case ProductStatus.expired:
-        return 'Vencido';
-      case ProductStatus.expiringSoon:
-        return 'Vence pronto';
-      case ProductStatus.outOfStock:
-        return 'Agotado';
-      case ProductStatus.normal:
-        return 'Fresco';
     }
   }
 
@@ -197,19 +186,23 @@ class InventoryProductCard extends StatelessWidget {
                                 color: statusColor.withValues(alpha: 0.1),
                                 borderRadius: const BorderRadius.all(Radius.circular(6)),
                               ),
-                              child: Text(
-                                item.status == ProductStatus.outOfStock
-                                    ? 'SIN STOCK'
+                              child: Builder(builder: (BuildContext context) {
+                                final AppLocalizations t = AppLocalizations.of(context);
+                                final String text = item.status == ProductStatus.outOfStock
+                                    ? t.statusOutOfStockShort
                                     : item.status == ProductStatus.expired
-                                        ? 'VENCIDO'
-                                        : '${item.daysLeft}d restantes',
-                                style: TextStyle(
-                                  fontSize: 9.5,
-                                  fontWeight: FontWeight.w700,
-                                  color: statusColor,
-                                  letterSpacing: 0.2,
-                                ),
-                              ),
+                                        ? t.statusExpiredShort
+                                        : t.statusDaysLeft(item.daysLeft);
+                                return Text(
+                                  text,
+                                  style: TextStyle(
+                                    fontSize: 9.5,
+                                    fontWeight: FontWeight.w700,
+                                    color: statusColor,
+                                    letterSpacing: 0.2,
+                                  ),
+                                );
+                              }),
                             ),
                           ],
                         ),
@@ -461,7 +454,7 @@ class _StatusBadge extends StatelessWidget {
           Icon(status.icon, size: 9, color: statusColor),
           const SizedBox(width: 3),
           Text(
-            status.label.toUpperCase(),
+            status.label(context).toUpperCase(),
             style: TextStyle(
               color: statusColor,
               fontSize: 8,

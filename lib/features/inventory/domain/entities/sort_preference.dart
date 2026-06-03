@@ -1,20 +1,5 @@
 enum SortCriteria { expiryDate, name, quantity, category }
 
-extension SortCriteriaLabel on SortCriteria {
-  String get label {
-    switch (this) {
-      case SortCriteria.expiryDate:
-        return 'Fecha de vencimiento';
-      case SortCriteria.name:
-        return 'Nombre A-Z';
-      case SortCriteria.quantity:
-        return 'Cantidad';
-      case SortCriteria.category:
-        return 'Categoría';
-    }
-  }
-}
-
 class SortPreference {
   const SortPreference({
     this.criteria = SortCriteria.expiryDate,

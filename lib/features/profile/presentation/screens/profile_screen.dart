@@ -4,10 +4,13 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../app/router/app_router.dart';
 import '../../../../core/design/design_system.dart';
+import '../../../../l10n/generated/app_localizations.dart';
 import '../../../auth/domain/entities/app_user.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
 import '../../../inventory/domain/entities/inventory_item.dart';
 import '../../../inventory/presentation/providers/inventory_providers.dart';
+import '../../../settings/domain/entities/app_language.dart';
+import '../../../settings/presentation/providers/settings_providers.dart';
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
@@ -15,6 +18,7 @@ class ProfileScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final PaletteSpec p = context.palette;
+    final AppLocalizations t = AppLocalizations.of(context);
     final AsyncValue<AppUser?> userAsync = ref.watch(authStateProvider);
     final AsyncValue<List<InventoryItem>> itemsAsync =
         ref.watch(inventoryItemsProvider);
@@ -36,7 +40,7 @@ class ProfileScreen extends ConsumerWidget {
       backgroundColor: p.bg,
       body: CustomScrollView(
         slivers: <Widget>[
-          _ProfileHero(user: user),
+          _ProfileHero(user: user, t: t),
           SliverPadding(
             padding: const EdgeInsets.fromLTRB(
               AppSpacing.lg,
@@ -50,15 +54,16 @@ class ProfileScreen extends ConsumerWidget {
                   totalProducts: totalProducts,
                   totalCategories: totalCategories,
                   withPhoto: withPhoto,
+                  t: t,
                 ),
                 const SizedBox(height: AppSpacing.md),
-                _AccountCard(user: user),
+                _AccountCard(user: user, t: t),
                 const SizedBox(height: AppSpacing.md),
-                _PreferencesCard(),
+                const _PreferencesCard(),
                 const SizedBox(height: AppSpacing.md),
-                _AboutCard(),
+                const _AboutCard(),
                 const SizedBox(height: AppSpacing.lg),
-                _LogoutButton(),
+                const _LogoutButton(),
               ]),
             ),
           ),
@@ -69,16 +74,17 @@ class ProfileScreen extends ConsumerWidget {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Hero: gradient + avatar grande + nombre + email
+// Hero
 // ─────────────────────────────────────────────────────────────────────────────
 class _ProfileHero extends StatelessWidget {
-  const _ProfileHero({required this.user});
+  const _ProfileHero({required this.user, required this.t});
   final AppUser? user;
+  final AppLocalizations t;
 
   @override
   Widget build(BuildContext context) {
     final double topPad = MediaQuery.paddingOf(context).top;
-    final String displayName = user?.displayName ?? 'Usuario';
+    final String displayName = user?.displayName ?? t.profileUserFallback;
     final String email = user?.email ?? '';
     final String? photoUrl = user?.photoUrl;
     final String initial = user?.initials ?? '?';
@@ -112,7 +118,7 @@ class _ProfileHero extends StatelessWidget {
                 ),
                 const Spacer(),
                 Text(
-                  'Mi perfil',
+                  t.profileTitle,
                   style: AppTypography.headingSm.copyWith(
                     color: Colors.white,
                     fontWeight: FontWeight.w800,
@@ -193,7 +199,7 @@ class _ProfileHero extends StatelessWidget {
                   ),
                   const SizedBox(width: 4),
                   Text(
-                    isGoogle ? 'Cuenta Google' : 'Cuenta con correo',
+                    isGoogle ? t.profileAccountGoogle : t.profileAccountEmail,
                     style: AppTypography.labelSm.copyWith(
                       color: Colors.white,
                       fontWeight: FontWeight.w700,
@@ -333,11 +339,13 @@ class _StatsCard extends StatelessWidget {
     required this.totalProducts,
     required this.totalCategories,
     required this.withPhoto,
+    required this.t,
   });
 
   final int totalProducts;
   final int totalCategories;
   final int withPhoto;
+  final AppLocalizations t;
 
   @override
   Widget build(BuildContext context) {
@@ -358,7 +366,7 @@ class _StatsCard extends StatelessWidget {
           Expanded(
             child: _StatTile(
               value: '$totalProducts',
-              label: 'Productos',
+              label: t.profileStatsProducts,
               icon: Icons.inventory_2_outlined,
               color: p.brandPrimary,
             ),
@@ -367,7 +375,7 @@ class _StatsCard extends StatelessWidget {
           Expanded(
             child: _StatTile(
               value: '$totalCategories',
-              label: 'Categorías',
+              label: t.profileStatsCategories,
               icon: Icons.category_outlined,
               color: AppColors.warningStrong,
             ),
@@ -376,7 +384,7 @@ class _StatsCard extends StatelessWidget {
           Expanded(
             child: _StatTile(
               value: '$withPhoto',
-              label: 'Con foto',
+              label: t.profileStatsWithPhoto,
               icon: Icons.photo_camera_outlined,
               color: AppColors.successStrong,
             ),
@@ -451,35 +459,36 @@ class _VerticalDivider extends StatelessWidget {
 // Account card
 // ─────────────────────────────────────────────────────────────────────────────
 class _AccountCard extends StatelessWidget {
-  const _AccountCard({required this.user});
+  const _AccountCard({required this.user, required this.t});
   final AppUser? user;
+  final AppLocalizations t;
 
   @override
   Widget build(BuildContext context) {
     return _SectionCard(
-      title: 'Tu cuenta',
-      subtitle: 'Información del usuario conectado',
+      title: t.profileAccountTitle,
+      subtitle: t.profileAccountSubtitle,
       icon: Icons.person_outline_rounded,
       child: Column(
         children: <Widget>[
           _InfoRow(
             icon: Icons.email_outlined,
-            label: 'Correo electrónico',
+            label: t.profileAccountEmailLabel,
             value: user?.email ?? '—',
           ),
-          _RowDivider(),
+          const _RowDivider(),
           _InfoRow(
             icon: Icons.badge_outlined,
-            label: 'Nombre',
+            label: t.profileAccountNameLabel,
             value: user?.displayName ?? '—',
           ),
-          _RowDivider(),
+          const _RowDivider(),
           _InfoRow(
             icon: Icons.verified_user_outlined,
-            label: 'Tipo de cuenta',
+            label: t.profileAccountTypeLabel,
             value: user?.provider == AppAuthProvider.google
-                ? 'Google'
-                : 'Correo y contraseña',
+                ? t.profileAccountTypeGoogle
+                : t.profileAccountTypePassword,
           ),
         ],
       ),
@@ -488,57 +497,207 @@ class _AccountCard extends StatelessWidget {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Preferences card
+// Preferences card (sin tema; solo notificaciones + idioma funcional)
 // ─────────────────────────────────────────────────────────────────────────────
-class _PreferencesCard extends StatelessWidget {
+class _PreferencesCard extends ConsumerWidget {
+  const _PreferencesCard();
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final AppLocalizations t = AppLocalizations.of(context);
+    final AppLanguage current = ref.watch(languageProvider);
+    final String langLabel = current == AppLanguage.english
+        ? t.languageEnglish
+        : t.languageSpanish;
+
     return _SectionCard(
-      title: 'Preferencias',
-      subtitle: 'Personaliza la app a tu gusto',
+      title: t.profilePrefsTitle,
+      subtitle: t.profilePrefsSubtitle,
       icon: Icons.tune_rounded,
       child: Column(
         children: <Widget>[
           _ActionRow(
             icon: Icons.notifications_outlined,
-            label: 'Alertas y notificaciones',
+            label: t.profilePrefsNotifications,
             trailing: Icons.chevron_right_rounded,
             onTap: () {
               AppHaptics.tap();
               context.push(AppRoutes.notificationSettings);
             },
           ),
-          _RowDivider(),
-          _ActionRow(
-            icon: Icons.dark_mode_outlined,
-            label: 'Tema',
-            valueChip: 'Automático',
-            onTap: () {
-              AppHaptics.tap();
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  behavior: SnackBarBehavior.floating,
-                  content: Text('Pronto: selector de tema'),
-                ),
-              );
-            },
-          ),
-          _RowDivider(),
+          const _RowDivider(),
           _ActionRow(
             icon: Icons.language_outlined,
-            label: 'Idioma',
-            valueChip: 'Español',
+            label: t.profilePrefsLanguage,
+            valueChip: langLabel,
             onTap: () {
               AppHaptics.tap();
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  behavior: SnackBarBehavior.floating,
-                  content: Text('Pronto: más idiomas'),
-                ),
-              );
+              _showLanguageSheet(context, ref);
             },
           ),
         ],
+      ),
+    );
+  }
+
+  Future<void> _showLanguageSheet(BuildContext context, WidgetRef ref) async {
+    final AppLocalizations t = AppLocalizations.of(context);
+    final ScaffoldMessengerState messenger = ScaffoldMessenger.of(context);
+
+    final AppLanguage? picked = await showModalBottomSheet<AppLanguage>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (BuildContext ctx) => _LanguageSheet(
+        current: ref.read(languageProvider),
+      ),
+    );
+    if (picked == null) return;
+
+    await ref.read(languageProvider.notifier).set(picked);
+    messenger
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          duration: const Duration(seconds: 2),
+          behavior: SnackBarBehavior.floating,
+          margin: const EdgeInsets.all(16),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
+          content: Text(t.languageSavedSnack),
+        ),
+      );
+  }
+}
+
+class _LanguageSheet extends StatelessWidget {
+  const _LanguageSheet({required this.current});
+  final AppLanguage current;
+
+  @override
+  Widget build(BuildContext context) {
+    final PaletteSpec p = context.palette;
+    final AppLocalizations t = AppLocalizations.of(context);
+
+    return Container(
+      decoration: BoxDecoration(
+        color: p.surface,
+        borderRadius: const BorderRadius.vertical(
+          top: Radius.circular(AppRadius.xxl),
+        ),
+      ),
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.lg,
+        AppSpacing.md,
+        AppSpacing.lg,
+        AppSpacing.lg,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: <Widget>[
+          Center(
+            child: Container(
+              width: 36,
+              height: 4,
+              decoration: BoxDecoration(
+                color: p.outline,
+                borderRadius: AppRadius.brPill,
+              ),
+            ),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          Text(
+            t.languageSheetTitle,
+            style: AppTypography.headingSm.copyWith(
+              color: p.textBody,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            t.languageSheetSubtitle,
+            style: AppTypography.bodyXs.copyWith(color: p.textMuted),
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          _LangOption(
+            language: AppLanguage.spanish,
+            label: t.languageSpanish,
+            flag: '🇪🇸',
+            isCurrent: current == AppLanguage.spanish,
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          _LangOption(
+            language: AppLanguage.english,
+            label: t.languageEnglish,
+            flag: '🇬🇧',
+            isCurrent: current == AppLanguage.english,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _LangOption extends StatelessWidget {
+  const _LangOption({
+    required this.language,
+    required this.label,
+    required this.flag,
+    required this.isCurrent,
+  });
+
+  final AppLanguage language;
+  final String label;
+  final String flag;
+  final bool isCurrent;
+
+  @override
+  Widget build(BuildContext context) {
+    final PaletteSpec p = context.palette;
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: AppRadius.brLg,
+        onTap: () {
+          AppHaptics.tap();
+          Navigator.of(context).pop(language);
+        },
+        child: Container(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.md,
+            vertical: AppSpacing.md,
+          ),
+          decoration: BoxDecoration(
+            color: isCurrent ? p.brandTintSoft : p.surfaceMuted,
+            borderRadius: AppRadius.brLg,
+            border: Border.all(
+              color: isCurrent ? p.brandPrimary : p.outline,
+              width: isCurrent ? 1.5 : 1,
+            ),
+          ),
+          child: Row(
+            children: <Widget>[
+              Text(flag, style: const TextStyle(fontSize: 24)),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: Text(
+                  label,
+                  style: AppTypography.bodyMd.copyWith(
+                    color: p.textBody,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+              if (isCurrent)
+                Icon(
+                  Icons.check_circle_rounded,
+                  color: p.brandPrimary,
+                  size: 20,
+                ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -547,48 +706,44 @@ class _PreferencesCard extends StatelessWidget {
 // ─────────────────────────────────────────────────────────────────────────────
 // About card
 // ─────────────────────────────────────────────────────────────────────────────
+/// Versión visible al usuario. Mantener sincronizada con `version:` en pubspec.yaml.
+const String _kAppVersion = '0.1.0';
+
 class _AboutCard extends StatelessWidget {
+  const _AboutCard();
+
   @override
   Widget build(BuildContext context) {
+    final AppLocalizations t = AppLocalizations.of(context);
     return _SectionCard(
-      title: 'Acerca de',
-      subtitle: 'Información de la aplicación',
+      title: t.profileAboutTitle,
+      subtitle: t.profileAboutSubtitle,
       icon: Icons.info_outline_rounded,
       child: Column(
         children: <Widget>[
-          const _InfoRow(
+          _InfoRow(
             icon: Icons.tag_rounded,
-            label: 'Versión',
-            value: '0.1.0',
+            label: t.profileAboutVersion,
+            value: _kAppVersion,
           ),
-          _RowDivider(),
+          const _RowDivider(),
           _ActionRow(
             icon: Icons.description_outlined,
-            label: 'Términos y condiciones',
-            trailing: Icons.open_in_new_rounded,
+            label: t.profileAboutTerms,
+            trailing: Icons.chevron_right_rounded,
             onTap: () {
               AppHaptics.tap();
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  behavior: SnackBarBehavior.floating,
-                  content: Text('Pronto disponible'),
-                ),
-              );
+              context.push(AppRoutes.legalTerms);
             },
           ),
-          _RowDivider(),
+          const _RowDivider(),
           _ActionRow(
             icon: Icons.privacy_tip_outlined,
-            label: 'Política de privacidad',
-            trailing: Icons.open_in_new_rounded,
+            label: t.profileAboutPrivacy,
+            trailing: Icons.chevron_right_rounded,
             onTap: () {
               AppHaptics.tap();
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  behavior: SnackBarBehavior.floating,
-                  content: Text('Pronto disponible'),
-                ),
-              );
+              context.push(AppRoutes.legalPrivacy);
             },
           ),
         ],
@@ -716,6 +871,8 @@ class _ActionRow extends StatelessWidget {
 }
 
 class _RowDivider extends StatelessWidget {
+  const _RowDivider();
+
   @override
   Widget build(BuildContext context) {
     final PaletteSpec p = context.palette;
@@ -731,13 +888,16 @@ class _RowDivider extends StatelessWidget {
 // Logout button
 // ─────────────────────────────────────────────────────────────────────────────
 class _LogoutButton extends ConsumerWidget {
+  const _LogoutButton();
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final AppLocalizations t = AppLocalizations.of(context);
     return Material(
       color: Colors.transparent,
       child: InkWell(
         borderRadius: AppRadius.brXl,
-        onTap: () => _confirmLogout(context, ref),
+        onTap: () => _confirmLogout(context, ref, t),
         child: Container(
           padding: const EdgeInsets.all(AppSpacing.md),
           decoration: BoxDecoration(
@@ -763,10 +923,10 @@ class _LogoutButton extends ConsumerWidget {
                 ),
               ),
               const SizedBox(width: AppSpacing.md),
-              const Expanded(
+              Expanded(
                 child: Text(
-                  'Cerrar sesión',
-                  style: TextStyle(
+                  t.profileLogout,
+                  style: const TextStyle(
                     color: AppColors.dangerStrong,
                     fontWeight: FontWeight.w800,
                     fontSize: 14.5,
@@ -785,7 +945,11 @@ class _LogoutButton extends ConsumerWidget {
     );
   }
 
-  Future<void> _confirmLogout(BuildContext context, WidgetRef ref) async {
+  Future<void> _confirmLogout(
+    BuildContext context,
+    WidgetRef ref,
+    AppLocalizations t,
+  ) async {
     AppHaptics.warning();
     final PaletteSpec p = context.palette;
     final bool? confirm = await showDialog<bool>(
@@ -794,24 +958,24 @@ class _LogoutButton extends ConsumerWidget {
         shape: const RoundedRectangleBorder(borderRadius: AppRadius.brXl),
         backgroundColor: p.surface,
         title: Text(
-          'Cerrar sesión',
+          t.profileLogoutConfirmTitle,
           style: AppTypography.headingSm.copyWith(color: p.textBody),
         ),
         content: Text(
-          '¿Seguro que quieres cerrar tu sesión? Tendrás que iniciar sesión de nuevo.',
+          t.profileLogoutConfirmBody,
           style: AppTypography.bodyMd.copyWith(color: p.textBody),
         ),
         actions: <Widget>[
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('Cancelar'),
+            child: Text(t.commonCancel),
           ),
           FilledButton(
             onPressed: () => Navigator.of(ctx).pop(true),
             style: FilledButton.styleFrom(
               backgroundColor: AppColors.dangerStrong,
             ),
-            child: const Text('Cerrar sesión'),
+            child: Text(t.profileLogout),
           ),
         ],
       ),

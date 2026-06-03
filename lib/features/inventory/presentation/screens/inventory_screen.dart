@@ -6,8 +6,11 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../app/router/app_router.dart';
 import '../../../../core/design/design_system.dart';
+import '../../../../core/i18n/category_l10n.dart';
+import '../../../../core/i18n/sort_l10n.dart';
 import '../../../../core/presentation/widgets/app_background.dart';
 import '../../../../core/presentation/widgets/offline_banner.dart';
+import '../../../../l10n/generated/app_localizations.dart';
 import '../../domain/entities/inventory_item.dart';
 import '../models/pantry_card_item.dart';
 import '../../domain/entities/sort_preference.dart';
@@ -28,17 +31,9 @@ class InventoryScreen extends ConsumerStatefulWidget {
 }
 
 class _InventoryScreenState extends ConsumerState<InventoryScreen> {
-  final List<String> _chips = <String>[
-    'Todos',
-    'Lácteos',
-    'Carnes',
-    'Frutas y verduras',
-    'Enlatados',
-    'Bebidas',
-    'Snacks',
-    'Cereales',
-    'Condimentos',
-  ];
+  // Claves canónicas en español (deben coincidir con item.category en BD).
+  // El UI usa categoryLabel() para mostrar la versión localizada.
+  static const List<String> _chips = pantryCategoryKeys;
 
   int _selectedChip = 0;
   String _searchQuery = '';
@@ -67,6 +62,7 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
     final AsyncValue<List<InventoryItem>> asyncItems = ref.watch(inventoryItemsProvider);
     ref.watch(lowStockWatcherProvider);
     final PaletteSpec p = context.palette;
+    final AppLocalizations t = AppLocalizations.of(context);
 
     final double topPad = MediaQuery.paddingOf(context).top;
 
@@ -136,12 +132,12 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
                       Text(
-                        'Mi despensa',
+                        t.inventoryTitle,
                         style: AppTypography.displayHero.copyWith(color: Colors.white),
                       ),
                       const SizedBox(height: AppSpacing.xs + 2),
                       Text(
-                        'Organiza · Controla · Ahorra',
+                        t.inventoryTagline,
                         style: AppTypography.bodySm.copyWith(
                           color: Colors.white.withValues(alpha: 0.65),
                           letterSpacing: 0.3,
@@ -163,13 +159,13 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
                           );
                         },
                         decoration: InputDecoration(
-                          hintText: 'Busca en tu despensa...',
+                          hintText: t.inventorySearchHint,
                           hintStyle: AppTypography.bodyMd.copyWith(color: p.textMuted),
                           prefixIcon: Icon(Icons.search_rounded, color: p.textMuted),
                           suffixIcon: _searchCtrl.text.isNotEmpty
                               ? IconButton(
                                   icon: const Icon(Icons.close_rounded, size: 18),
-                                  tooltip: 'Limpiar búsqueda',
+                                  tooltip: t.inventoryClearSearch,
                                   color: p.textMuted,
                                   onPressed: () {
                                     _searchCtrl.clear();
@@ -236,7 +232,7 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
                                     ),
                                     const SizedBox(width: AppSpacing.xs),
                                     Text(
-                                      sortPref.criteria.label,
+                                      sortPref.criteria.label(context),
                                       style: AppTypography.labelSm.copyWith(
                                         color: p.brandPrimary,
                                         fontWeight: FontWeight.w600,
@@ -259,7 +255,9 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
                       ),
                       const SizedBox(height: AppSpacing.sm + 2),
                       InventoryCategoryChips(
-                        categories: _chips,
+                        categories: _chips
+                            .map((String c) => categoryLabel(context, c))
+                            .toList(growable: false),
                         selectedIndex: _selectedChip,
                         onSelected: (int index) =>
                             setState(() => _selectedChip = index),
@@ -314,8 +312,8 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
                             const SizedBox(height: AppSpacing.md),
                             Text(
                               _searchQuery.isEmpty
-                                  ? 'Tu despensa está vacía'
-                                  : 'Sin resultados para "$_searchQuery"',
+                                  ? t.inventoryEmptyTitle
+                                  : t.inventorySearchNoResults(_searchQuery),
                               style: AppTypography.bodyLg.copyWith(
                                 color: p.textMuted,
                                 fontWeight: FontWeight.w600,
@@ -324,8 +322,8 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
                             const SizedBox(height: AppSpacing.sm),
                             Text(
                               _searchQuery.isEmpty
-                                  ? 'Toca el botón central para escanear tu primer producto'
-                                  : 'Intenta con otro nombre, marca o categoría',
+                                  ? t.inventoryEmptyHint
+                                  : t.inventorySearchTryOther,
                               style: AppTypography.bodySm.copyWith(
                                 color: p.textMuted.withValues(alpha: 0.6),
                               ),
@@ -354,14 +352,14 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
                               color: AppColors.dangerStrong,
                               borderRadius: AppRadius.brXl,
                             ),
-                            child: const Column(
+                            child: Column(
                               mainAxisSize: MainAxisSize.min,
                               children: <Widget>[
-                                Icon(Icons.delete_outline, color: Colors.white, size: 28),
-                                SizedBox(height: AppSpacing.xs),
+                                const Icon(Icons.delete_outline, color: Colors.white, size: 28),
+                                const SizedBox(height: AppSpacing.xs),
                                 Text(
-                                  'Eliminar',
-                                  style: TextStyle(
+                                  t.commonDelete,
+                                  style: const TextStyle(
                                     color: Colors.white,
                                     fontSize: 12,
                                     fontWeight: FontWeight.w600,
@@ -378,21 +376,21 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
                                 shape: const RoundedRectangleBorder(
                                   borderRadius: AppRadius.brXl,
                                 ),
-                                title: const Text('Eliminar producto'),
+                                title: Text(t.inventoryDeleteTitle),
                                 content: Text(
-                                  '¿Seguro que quieres eliminar "${item.name}" de tu despensa?',
+                                  t.inventoryDeleteBody(item.name),
                                 ),
                                 actions: <Widget>[
                                   TextButton(
                                     onPressed: () => Navigator.of(ctx).pop(false),
-                                    child: const Text('Cancelar'),
+                                    child: Text(t.commonCancel),
                                   ),
                                   FilledButton(
                                     style: FilledButton.styleFrom(
                                       backgroundColor: AppColors.dangerStrong,
                                     ),
                                     onPressed: () => Navigator.of(ctx).pop(true),
-                                    child: const Text('Eliminar'),
+                                    child: Text(t.commonDelete),
                                   ),
                                 ],
                               ),
@@ -419,12 +417,12 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
                                       borderRadius: AppRadius.brMd,
                                     ),
                                     content: Text(
-                                      '"${item.name}" eliminado',
+                                      t.inventoryDeletedSnack(item.name),
                                       style: const TextStyle(
                                           fontWeight: FontWeight.w600),
                                     ),
                                     action: SnackBarAction(
-                                      label: 'Deshacer',
+                                      label: t.commonUndo,
                                       onPressed: () {
                                         ref
                                             .read(
@@ -456,7 +454,7 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
                   hasScrollBody: false,
                   child: Center(
                     child: Text(
-                      'No se pudo cargar el inventario',
+                      t.inventoryLoadError,
                       style: AppTypography.bodyMd.copyWith(
                         color: Theme.of(context).colorScheme.error,
                         fontWeight: FontWeight.w600,
@@ -489,23 +487,22 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
   Future<void> _handleDecrement(InventoryItem item) async {
     if (item.quantity <= 1) {
       AppHaptics.warning();
+      final AppLocalizations t = AppLocalizations.of(context);
       final bool? confirmed = await showDialog<bool>(
         context: context,
         builder: (BuildContext ctx) => AlertDialog(
           shape: const RoundedRectangleBorder(borderRadius: AppRadius.brXl),
-          title: const Text('¿Eliminar producto?'),
-          content: Text(
-            'La cantidad de "${item.name}" llegará a 0. ¿Quieres eliminarlo del inventario?',
-          ),
+          title: Text(t.inventoryConfirmDeleteTitle),
+          content: Text(t.inventoryConfirmDeleteBody(item.name)),
           actions: <Widget>[
             TextButton(
               onPressed: () => Navigator.of(ctx).pop(false),
-              child: const Text('Cancelar'),
+              child: Text(t.commonCancel),
             ),
             FilledButton(
               style: FilledButton.styleFrom(backgroundColor: AppColors.dangerStrong),
               onPressed: () => Navigator.of(ctx).pop(true),
-              child: const Text('Eliminar'),
+              child: Text(t.commonDelete),
             ),
           ],
         ),
@@ -535,10 +532,13 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
       progress = 1.0;
     }
 
+    final AppLocalizations t = AppLocalizations.of(context);
     return PantryCardItem(
       name: item.name,
-      category: item.category ?? 'Sin categoría',
-      quantity: '${item.quantity} ${item.quantity == 1 ? 'unidad' : 'unidades'}',
+      // La categoría canónica (en español) se preserva si existe; solo
+      // localizamos el placeholder cuando no hay categoría asignada.
+      category: item.category ?? t.categoryUncategorized,
+      quantity: '${item.quantity} ${item.quantity == 1 ? t.unitOne : t.unitMany}',
       rawQuantity: item.quantity,
       daysLeft: daysLeft,
       progress: progress,

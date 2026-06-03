@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../app/router/app_router.dart';
 import '../../../../core/design/design_system.dart';
+import '../../../../l10n/generated/app_localizations.dart';
 import '../../domain/entities/shopping_list_item.dart';
 import '../../domain/repositories/shopping_list_repository.dart';
 import '../providers/shopping_list_providers.dart';
@@ -126,6 +127,7 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
     AppHaptics.warning();
     await ref.read(shoppingListRepositoryProvider).deleteItem(item.id);
     if (!mounted) return;
+    final AppLocalizations t = AppLocalizations.of(context);
     final ScaffoldMessengerState messenger = ScaffoldMessenger.of(context);
     messenger.hideCurrentSnackBar();
     final ScaffoldFeatureController<SnackBar, SnackBarClosedReason> controller =
@@ -136,9 +138,9 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
         margin: const EdgeInsets.all(16),
         shape:
             RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-        content: Text('Eliminaste "${item.name}"'),
+        content: Text(t.cartDeletedSnack(item.name)),
         action: SnackBarAction(
-          label: 'Deshacer',
+          label: t.commonUndo,
           onPressed: () async {
             AppHaptics.tap();
             await ref
@@ -171,6 +173,7 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
 
     await ref.read(shoppingListRepositoryProvider).clearCompleted();
     if (!mounted) return;
+    final AppLocalizations t = AppLocalizations.of(context);
     final ScaffoldMessengerState messenger = ScaffoldMessenger.of(context);
     messenger.hideCurrentSnackBar();
     final ScaffoldFeatureController<SnackBar, SnackBarClosedReason> controller =
@@ -181,13 +184,9 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
         margin: const EdgeInsets.all(16),
         shape:
             RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-        content: Text(
-          snapshot.length == 1
-              ? 'Borraste 1 conseguido'
-              : 'Borraste ${snapshot.length} conseguidos',
-        ),
+        content: Text(t.cartClearedSnack(snapshot.length)),
         action: SnackBarAction(
-          label: 'Deshacer',
+          label: t.commonUndo,
           onPressed: () async {
             AppHaptics.tap();
             final ShoppingListRepository repo =
@@ -219,6 +218,7 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
   @override
   Widget build(BuildContext context) {
     final PaletteSpec p = context.palette;
+    final AppLocalizations t = AppLocalizations.of(context);
     final AsyncValue<List<ShoppingListItem>> async =
         ref.watch(shoppingListProvider);
 
@@ -228,7 +228,7 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (Object e, _) => Center(
           child: Text(
-            'No se pudo cargar la lista',
+            t.commonError,
             style: AppTypography.bodyMd.copyWith(color: p.textMuted),
           ),
         ),
@@ -255,6 +255,7 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
                 total: items.length,
                 pending: pending.length,
                 done: done.length,
+                t: t,
                 onClearDone: done.isEmpty ? null : _clearDoneWithUndo,
               ),
               SliverToBoxAdapter(
@@ -274,15 +275,15 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
               if (items.isEmpty)
                 SliverFillRemaining(
                   hasScrollBody: false,
-                  child: _Empty(palette: p),
+                  child: _Empty(palette: p, t: t),
                 )
               else ...<Widget>[
                 if (pending.isNotEmpty)
                   ..._buildPendingSlivers(pendingGrouped, p),
                 if (done.isNotEmpty) ...<Widget>[
                   _SectionHeader(
-                    title: 'Ya tienes',
-                    caption: 'Marcados como conseguidos',
+                    title: t.cartSectionDone,
+                    caption: t.cartSectionDoneSubtitle,
                     color: AppColors.successStrong,
                     count: done.length,
                   ),
@@ -318,13 +319,14 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
             return (a.key ?? '').compareTo(b.key ?? '');
           });
 
+    final AppLocalizations t = AppLocalizations.of(context);
     return <Widget>[
       for (final MapEntry<String?, List<ShoppingListItem>> e in entries) ...<Widget>[
         _SectionHeader(
-          title: e.key ?? 'Por comprar',
+          title: e.key ?? t.cartSectionToBuy,
           caption: e.key == null
-              ? 'Agregados manualmente'
-              : 'Faltan para preparar esta receta',
+              ? t.cartSectionManual
+              : t.cartSectionRecipe,
           color: e.key == null ? p.brandPrimary : AppColors.warningStrong,
           count: e.value.length,
           onMarkAll: () => _markSectionDone(e.value),
@@ -348,24 +350,23 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
   }
 
   Future<bool?> _confirmClear(BuildContext context) {
+    final AppLocalizations t = AppLocalizations.of(context);
     return showDialog<bool>(
       context: context,
       builder: (BuildContext ctx) => AlertDialog(
         shape: const RoundedRectangleBorder(borderRadius: AppRadius.brXl),
-        title: const Text('Quitar conseguidos'),
-        content: const Text(
-          '¿Quieres borrar todos los ítems que ya marcaste como conseguidos?',
-        ),
+        title: Text(t.cartClearDoneTitle),
+        content: Text(t.cartClearDoneBody),
         actions: <Widget>[
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('Cancelar'),
+            child: Text(t.commonCancel),
           ),
           FilledButton(
             style: FilledButton.styleFrom(
                 backgroundColor: AppColors.dangerStrong),
             onPressed: () => Navigator.of(ctx).pop(true),
-            child: const Text('Borrar'),
+            child: Text(t.commonDelete),
           ),
         ],
       ),
@@ -381,12 +382,14 @@ class _Hero extends StatelessWidget {
     required this.total,
     required this.pending,
     required this.done,
+    required this.t,
     required this.onClearDone,
   });
 
   final int total;
   final int pending;
   final int done;
+  final AppLocalizations t;
   final VoidCallback? onClearDone;
 
   @override
@@ -424,14 +427,14 @@ class _Hero extends StatelessWidget {
                 if (onClearDone != null)
                   _CircleBtn(
                     icon: Icons.cleaning_services_rounded,
-                    tooltip: 'Borrar conseguidos',
+                    tooltip: t.cartClearDoneTooltip,
                     onTap: onClearDone!,
                   ),
               ],
             ),
             const SizedBox(height: AppSpacing.lg),
             Text(
-              'Lista de compras',
+              t.cartTitle,
               style: AppTypography.displaySm.copyWith(
                 color: Colors.white,
                 fontWeight: FontWeight.w800,
@@ -440,12 +443,10 @@ class _Hero extends StatelessWidget {
             const SizedBox(height: AppSpacing.xs),
             Text(
               total == 0
-                  ? 'Aún no has añadido nada'
+                  ? t.cartEmpty
                   : pending == 0
-                      ? '¡Todo conseguido!'
-                      : pending == 1
-                          ? '1 ítem por comprar'
-                          : '$pending ítems por comprar',
+                      ? t.cartAllDone
+                      : t.cartPendingCount(pending),
               style: AppTypography.bodySm.copyWith(
                 color: Colors.white.withValues(alpha: 0.85),
               ),
@@ -455,7 +456,7 @@ class _Hero extends StatelessWidget {
               children: <Widget>[
                 Expanded(
                   child: _SummaryChip(
-                    label: 'Total',
+                    label: t.cartStatTotal,
                     count: total,
                     icon: Icons.shopping_basket_outlined,
                     accent: Colors.white,
@@ -464,7 +465,7 @@ class _Hero extends StatelessWidget {
                 const SizedBox(width: AppSpacing.sm),
                 Expanded(
                   child: _SummaryChip(
-                    label: 'Pendientes',
+                    label: t.cartStatPending,
                     count: pending,
                     icon: Icons.radio_button_unchecked_rounded,
                     accent: const Color(0xFFFFE0B2),
@@ -473,7 +474,7 @@ class _Hero extends StatelessWidget {
                 const SizedBox(width: AppSpacing.sm),
                 Expanded(
                   child: _SummaryChip(
-                    label: 'Conseguidos',
+                    label: t.cartStatDone,
                     count: done,
                     icon: Icons.check_circle_outline_rounded,
                     accent: const Color(0xFFC8E6C9),
@@ -600,7 +601,7 @@ class _QuickAdd extends StatelessWidget {
               textInputAction: TextInputAction.done,
               onSubmitted: (_) => onSubmit(),
               decoration: InputDecoration(
-                hintText: 'Añadir ítem (ej. Leche 2 L, 3 huevos)',
+                hintText: AppLocalizations.of(context).cartQuickAddHint,
                 hintStyle: AppTypography.bodyMd.copyWith(
                   color: p.textMuted,
                 ),
@@ -773,7 +774,7 @@ class _SectionHeader extends StatelessWidget {
                           Icon(Icons.done_all_rounded, size: 14, color: color),
                           const SizedBox(width: 4),
                           Text(
-                            'Todos',
+                            AppLocalizations.of(context).cartMarkAll,
                             style: AppTypography.labelSm.copyWith(
                               color: color,
                               fontWeight: FontWeight.w800,
@@ -919,7 +920,7 @@ class _ItemTile extends ConsumerWidget {
                   size: 18,
                   color: p.textMuted,
                 ),
-                tooltip: 'Editar',
+                tooltip: AppLocalizations.of(context).cartEditTooltip,
                 onPressed: () {
                   AppHaptics.tap();
                   onEdit();
@@ -964,8 +965,9 @@ class _CheckBubble extends StatelessWidget {
 // Empty state
 // ─────────────────────────────────────────────────────────────────────────────
 class _Empty extends StatelessWidget {
-  const _Empty({required this.palette});
+  const _Empty({required this.palette, required this.t});
   final PaletteSpec palette;
+  final AppLocalizations t;
 
   @override
   Widget build(BuildContext context) {
@@ -990,13 +992,12 @@ class _Empty extends StatelessWidget {
             ),
             const SizedBox(height: AppSpacing.lg),
             Text(
-              'Tu lista está vacía',
+              t.cartEmptyTitle,
               style: AppTypography.headingMd.copyWith(color: palette.textBody),
             ),
             const SizedBox(height: AppSpacing.sm),
             Text(
-              'Añade ítems con el campo de arriba o desde una receta usando '
-              '"Añadir faltantes a la lista".',
+              t.cartEmptyHint,
               textAlign: TextAlign.center,
               style: AppTypography.bodySm.copyWith(
                 color: palette.textMuted,
@@ -1067,6 +1068,7 @@ class _EditItemSheetState extends State<_EditItemSheet> {
   @override
   Widget build(BuildContext context) {
     final PaletteSpec p = context.palette;
+    final AppLocalizations t = AppLocalizations.of(context);
     return Padding(
       padding: EdgeInsets.only(
         bottom: MediaQuery.viewInsetsOf(context).bottom,
@@ -1103,7 +1105,7 @@ class _EditItemSheetState extends State<_EditItemSheet> {
               children: <Widget>[
                 Expanded(
                   child: Text(
-                    'Editar ítem',
+                    t.cartEditItemTitle,
                     style: AppTypography.headingSm.copyWith(
                       color: p.textBody,
                       fontWeight: FontWeight.w800,
@@ -1113,7 +1115,7 @@ class _EditItemSheetState extends State<_EditItemSheet> {
                 IconButton(
                   icon: const Icon(Icons.delete_outline_rounded, size: 22),
                   color: AppColors.dangerStrong,
-                  tooltip: 'Eliminar de la lista',
+                  tooltip: t.cartDeleteItemTooltip,
                   onPressed: _requestDelete,
                 ),
               ],
@@ -1125,7 +1127,7 @@ class _EditItemSheetState extends State<_EditItemSheet> {
               textCapitalization: TextCapitalization.sentences,
               textInputAction: TextInputAction.next,
               decoration: InputDecoration(
-                labelText: 'Nombre',
+                labelText: t.cartEditNameLabel,
                 border: OutlineInputBorder(
                   borderRadius: AppRadius.brLg,
                   borderSide: BorderSide(color: p.outline),
@@ -1142,8 +1144,8 @@ class _EditItemSheetState extends State<_EditItemSheet> {
               textInputAction: TextInputAction.done,
               onSubmitted: (_) => _save(),
               decoration: InputDecoration(
-                labelText: 'Cantidad (opcional)',
-                hintText: 'Ej. 2 L, 500 g, 3 unidades',
+                labelText: t.cartEditQtyLabel,
+                hintText: t.cartEditQtyHint,
                 border: OutlineInputBorder(
                   borderRadius: AppRadius.brLg,
                   borderSide: BorderSide(color: p.outline),
@@ -1168,7 +1170,7 @@ class _EditItemSheetState extends State<_EditItemSheet> {
                       ),
                     ),
                     child: Text(
-                      'Cancelar',
+                      t.commonCancel,
                       style: TextStyle(color: p.textBody),
                     ),
                   ),
@@ -1184,9 +1186,9 @@ class _EditItemSheetState extends State<_EditItemSheet> {
                         borderRadius: AppRadius.brLg,
                       ),
                     ),
-                    child: const Text(
-                      'Guardar',
-                      style: TextStyle(fontWeight: FontWeight.w700),
+                    child: Text(
+                      t.commonSave,
+                      style: const TextStyle(fontWeight: FontWeight.w700),
                     ),
                   ),
                 ),

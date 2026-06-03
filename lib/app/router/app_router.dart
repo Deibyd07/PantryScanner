@@ -15,6 +15,7 @@ import '../../features/product_form/presentation/screens/product_form_screen.dar
 import '../../features/recipes/presentation/screens/recipe_detail_screen.dart';
 import '../../features/recipes/presentation/screens/recipes_screen.dart';
 import '../../features/scanner/presentation/screens/scanner_screen.dart';
+import '../../features/settings/presentation/screens/legal_screen.dart';
 import '../../features/shopping_list/presentation/screens/shopping_list_screen.dart';
 
 class AppRoutes {
@@ -27,6 +28,8 @@ class AppRoutes {
   static const String recipes = '/recipes';
   static const String productDetail = '/product';
   static const String shoppingList = '/shopping-list';
+  static const String legalTerms = '/legal/terms';
+  static const String legalPrivacy = '/legal/privacy';
 
   // Auth routes
   static const String login = '/login';
@@ -160,6 +163,20 @@ GoRouter createAppRouter(Ref ref) {
         name: 'shopping-list',
         builder: (BuildContext context, GoRouterState state) {
           return const ShoppingListScreen();
+        },
+      ),
+      GoRoute(
+        path: AppRoutes.legalTerms,
+        name: 'legal-terms',
+        builder: (BuildContext context, GoRouterState state) {
+          return LegalScreen.terms(context);
+        },
+      ),
+      GoRoute(
+        path: AppRoutes.legalPrivacy,
+        name: 'legal-privacy',
+        builder: (BuildContext context, GoRouterState state) {
+          return LegalScreen.privacy(context);
         },
       ),
     ],

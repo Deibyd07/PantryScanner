@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/design/design_system.dart';
+import '../../../../l10n/generated/app_localizations.dart';
 
 class InventoryBottomNav extends StatelessWidget {
   const InventoryBottomNav({
@@ -19,6 +20,7 @@ class InventoryBottomNav extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final PaletteSpec p = context.palette;
+    final AppLocalizations t = AppLocalizations.of(context);
 
     return Stack(
       clipBehavior: Clip.none,
@@ -39,11 +41,11 @@ class InventoryBottomNav extends StatelessWidget {
               height: 60,
               child: Row(
                 children: <Widget>[
-                  const Expanded(child: _NavItem(icon: Icons.inventory_2_rounded, label: 'Despensa', active: true)),
-                  Expanded(child: _NavItem(icon: Icons.restaurant_menu_outlined, label: 'Recetas', onTap: onRecipesTap)),
+                  Expanded(child: _NavItem(icon: Icons.inventory_2_rounded, label: t.navPantry, active: true)),
+                  Expanded(child: _NavItem(icon: Icons.restaurant_menu_outlined, label: t.navRecipes, onTap: onRecipesTap)),
                   const SizedBox(width: 72),
-                  Expanded(child: _NavItem(icon: Icons.tune_rounded, label: 'Alertas', onTap: onNotifTap)),
-                  Expanded(child: _NavItem(icon: Icons.person_outline_rounded, label: 'Perfil', onTap: onProfileTap)),
+                  Expanded(child: _NavItem(icon: Icons.tune_rounded, label: t.navAlerts, onTap: onNotifTap)),
+                  Expanded(child: _NavItem(icon: Icons.person_outline_rounded, label: t.navProfile, onTap: onProfileTap)),
                 ],
               ),
             ),
