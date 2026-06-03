@@ -9,8 +9,8 @@ import '../../../../core/design/design_system.dart';
 import '../../../../core/presentation/widgets/app_background.dart';
 import '../../../../core/presentation/widgets/offline_banner.dart';
 import '../../domain/entities/inventory_item.dart';
-import '../models/pantry_card_item.dart';
 import '../../domain/entities/sort_preference.dart';
+import '../models/pantry_card_item.dart';
 import '../providers/inventory_providers.dart';
 import '../providers/sort_providers.dart';
 import '../widgets/inventory_bottom_nav.dart';
@@ -19,6 +19,7 @@ import '../widgets/inventory_insights_card.dart';
 import '../widgets/inventory_product_card.dart';
 import '../widgets/inventory_top_bar.dart';
 import '../widgets/sort_bottom_sheet.dart';
+
 
 class InventoryScreen extends ConsumerStatefulWidget {
   const InventoryScreen({super.key});
@@ -299,38 +300,10 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
                   if (filtered.isEmpty) {
                     return SliverFillRemaining(
                       hasScrollBody: false,
-                      child: Padding(
-                        padding: const EdgeInsets.only(top: AppSpacing.xxl),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          children: <Widget>[
-                            Icon(
-                              Icons.inventory_2_outlined,
-                              size: 64,
-                              color: p.textMuted.withValues(alpha: 0.35),
-                            ),
-                            const SizedBox(height: AppSpacing.md),
-                            Text(
-                              _searchQuery.isEmpty
-                                  ? 'Tu despensa está vacía'
-                                  : 'Sin resultados para "$_searchQuery"',
-                              style: AppTypography.bodyLg.copyWith(
-                                color: p.textMuted,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            const SizedBox(height: AppSpacing.sm),
-                            Text(
-                              _searchQuery.isEmpty
-                                  ? 'Toca el botón central para escanear tu primer producto'
-                                  : 'Intenta con otro nombre, marca o categoría',
-                              style: AppTypography.bodySm.copyWith(
-                                color: p.textMuted.withValues(alpha: 0.6),
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
-                          ],
-                        ),
+                      child: _buildEmptyState(
+                        context: context,
+                        rows: rows,
+                        selectedCategory: selectedCategory,
                       ),
                     );
                   }
@@ -536,4 +509,81 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
       imageUrl: item.imageUrl ?? '',
     );
   }
+
+  // ── SUB-24.2 / SUB-24.3 / SUB-24.4 — Estado vacío contextual ───────────────
+
+  /// Devuelve el `EmptyState` adecuado según el contexto:
+  ///   1. Pantalla totalmente vacía (sin productos en BD)
+  ///   2. Búsqueda sin resultados
+  ///   3. Categoría sin productos
+  Widget _buildEmptyState({
+    required BuildContext context,
+    required List<InventoryItem> rows,
+    required String selectedCategory,
+  }) {
+    // SUB-24.2 — Despensa totalmente vacía (BD vacía)
+    if (rows.isEmpty) {
+      return EmptyState(
+        icon: Icons.inventory_2_outlined,
+        title: 'Tu despensa está vacía',
+        description:
+            '¡Comienza agregando tu primer producto! Escanea el código de barras o búscalo manualmente.',
+        ctaText: 'Escanear mi primer producto',
+        ctaIcon: Icons.qr_code_scanner_rounded,
+        onCtaPressed: () => context.push(AppRoutes.scanner),
+      );
+    }
+
+    // SUB-24.3 — Búsqueda sin resultados
+    if (_searchQuery.isNotEmpty) {
+      return EmptyState(
+        icon: Icons.search_off_rounded,
+        title: 'Sin resultados para "$_searchQuery"',
+        description:
+            'Intenta buscar con otro nombre, marca o categoría. Recuerda que puedes también agregar el producto manualmente.',
+        iconColor: AppColors.neutralStrong,
+      );
+    }
+
+    // SUB-24.4 — Categoría sin productos
+    final String categoryLabel = selectedCategory.isEmpty
+        ? 'esta categoría'
+        : selectedCategory[0].toUpperCase() + selectedCategory.substring(1);
+
+    return EmptyState(
+      icon: _categoryIcon(selectedCategory),
+      title: 'Nada en $categoryLabel',
+      description:
+          '¿Tienes productos de esta categoría? Agrégalos escaneando su código de barras o usando el formulario.',
+      ctaText: 'Agregar producto',
+      ctaIcon: Icons.add_rounded,
+      onCtaPressed: () => context.push(AppRoutes.productForm),
+      iconColor: AppColors.warningStrong,
+    );
+  }
+
+  /// Ícono representativo para cada categoría.
+  IconData _categoryIcon(String category) {
+    switch (category.toLowerCase()) {
+      case 'lácteos':
+        return Icons.egg_outlined;
+      case 'carnes':
+        return Icons.set_meal_outlined;
+      case 'frutas y verduras':
+        return Icons.eco_outlined;
+      case 'enlatados':
+        return Icons.lunch_dining_outlined;
+      case 'bebidas':
+        return Icons.local_drink_outlined;
+      case 'snacks':
+        return Icons.cookie_outlined;
+      case 'cereales':
+        return Icons.breakfast_dining_outlined;
+      case 'condimentos':
+        return Icons.soup_kitchen_outlined;
+      default:
+        return Icons.category_outlined;
+    }
+  }
 }
+
