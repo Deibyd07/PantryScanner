@@ -19,7 +19,7 @@ class AppDatabase {
 
     _db = await openDatabase(
       dbPath,
-      version: 5,
+      version: 6,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -59,6 +59,7 @@ class AppDatabase {
 
     await _createNotificationSettingsTable(db);
     await _seedNotificationSettings(db);
+    await _createShoppingListTable(db);
   }
 
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
@@ -109,6 +110,30 @@ class AppDatabase {
         'ALTER TABLE inventory_items ADD COLUMN min_stock INTEGER NOT NULL DEFAULT 1',
       );
     }
+
+    if (oldVersion < 6) {
+      await _createShoppingListTable(db);
+    }
+  }
+
+  Future<void> _createShoppingListTable(Database db) async {
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS shopping_list_items (
+        id              INTEGER PRIMARY KEY AUTOINCREMENT,
+        name            TEXT    NOT NULL,
+        normalized_name TEXT    NOT NULL,
+        quantity        TEXT,
+        source_recipe   TEXT,
+        source_title    TEXT,
+        is_checked      INTEGER NOT NULL DEFAULT 0,
+        created_at      INTEGER NOT NULL,
+        checked_at      INTEGER
+      )
+    ''');
+    await db.execute('''
+      CREATE INDEX IF NOT EXISTS idx_shopping_list_dedupe
+        ON shopping_list_items (normalized_name, source_recipe)
+    ''');
   }
 
   Future<void> _createNotificationSettingsTable(Database db) async {
