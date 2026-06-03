@@ -75,15 +75,33 @@ class SqliteInventoryRepository implements InventoryRepository {
   }
 
   Future<void> _cacheProduct(InventoryItem item) async {
-    if (item.barcode.isEmpty) return;
+    await cacheProductMetadata(
+      barcode: item.barcode,
+      name: item.name,
+      brand: item.brand,
+      category: item.category,
+      imageUrl: item.imageUrl,
+    );
+  }
+
+  /// Public helper to store product metadata (e.g. from a remote API lookup)
+  /// in the local cache for offline reuse.
+  Future<void> cacheProductMetadata({
+    required String barcode,
+    required String name,
+    String? brand,
+    String? category,
+    String? imageUrl,
+  }) async {
+    if (barcode.isEmpty) return;
     await _database.insert(
       'product_cache',
       <String, dynamic>{
-        'barcode': item.barcode,
-        'name': item.name,
-        'brand': item.brand,
-        'category': item.category,
-        'image_url': item.imageUrl,
+        'barcode': barcode,
+        'name': name,
+        'brand': brand,
+        'category': category,
+        'image_url': imageUrl,
         'updated_at': DateTime.now().millisecondsSinceEpoch,
       },
       conflictAlgorithm: ConflictAlgorithm.replace,
@@ -99,6 +117,7 @@ class SqliteInventoryRepository implements InventoryRepository {
       brand: row['brand'] as String?,
       category: row['category'] as String?,
       quantity: row['quantity'] as int,
+      minStock: row['min_stock'] as int? ?? 1,
       expiryDate: row['expiry_date'] != null
           ? DateTime.fromMillisecondsSinceEpoch(row['expiry_date'] as int)
           : null,
@@ -120,6 +139,7 @@ class SqliteInventoryRepository implements InventoryRepository {
       'brand': item.brand,
       'category': item.category,
       'quantity': item.quantity,
+      'min_stock': item.minStock,
       'expiry_date': item.expiryDate?.millisecondsSinceEpoch,
       'image_url': item.imageUrl,
       'notes': item.notes,

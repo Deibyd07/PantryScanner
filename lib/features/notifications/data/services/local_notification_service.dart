@@ -33,6 +33,10 @@ class LocalNotificationService {
   static const String _channelDesc =
       'Notificaciones de productos próximos a vencer';
 
+  static const String _lowStockChannelId = 'pantry_low_stock';
+  static const String _lowStockChannelName = 'Alertas de stock bajo';
+  static const int _lowStockNotificationId = 2001;
+
   // ── Initialization ──────────────────────────────────────────────────────────
 
   /// Must be called once during app startup (before any scheduling).
@@ -187,6 +191,65 @@ class LocalNotificationService {
   Future<void> cancelAll() async {
     _ensureInitialized();
     await _plugin.cancelAll();
+  }
+
+  /// Shows (or updates) the grouped low-stock notification.
+  /// Pass an empty list to cancel it.
+  Future<void> showLowStockNotification(List<String> productNames) async {
+    _ensureInitialized();
+
+    if (productNames.isEmpty) {
+      await _plugin.cancel(_lowStockNotificationId);
+      return;
+    }
+
+    final String title = productNames.length == 1
+        ? 'Stock bajo: ${productNames.first}'
+        : '${productNames.length} productos con stock bajo';
+
+    final String body = productNames.length == 1
+        ? 'Está llegando a su cantidad mínima.'
+        : productNames.join(', ');
+
+    final AndroidNotificationDetails android = AndroidNotificationDetails(
+      _lowStockChannelId,
+      _lowStockChannelName,
+      channelDescription: 'Productos que alcanzaron el stock mínimo',
+      importance: Importance.high,
+      priority: Priority.high,
+      styleInformation: productNames.length > 1
+          ? InboxStyleInformation(
+              productNames,
+              contentTitle: title,
+              summaryText: '${productNames.length} productos',
+            )
+          : null,
+      actions: const <AndroidNotificationAction>[
+        AndroidNotificationAction(
+          'dismiss_low_stock',
+          'Ya lo compré',
+          cancelNotification: true,
+        ),
+        AndroidNotificationAction(
+          'open_pantry',
+          'Ver despensa',
+        ),
+      ],
+    );
+
+    const DarwinNotificationDetails ios = DarwinNotificationDetails(
+      presentAlert: true,
+      presentBadge: true,
+      presentSound: false,
+    );
+
+    await _plugin.show(
+      _lowStockNotificationId,
+      title,
+      body,
+      NotificationDetails(android: android, iOS: ios),
+      payload: 'low_stock',
+    );
   }
 
   // ── Helpers ─────────────────────────────────────────────────────────────────

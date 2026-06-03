@@ -1,83 +1,72 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'inventory_tokens.dart';
+import '../../../../core/design/design_system.dart';
+import '../../domain/entities/inventory_item.dart';
+import '../providers/inventory_providers.dart';
 
-class InventoryInsightsCard extends StatelessWidget {
+class InventoryInsightsCard extends ConsumerWidget {
   const InventoryInsightsCard({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final PaletteSpec p = context.palette;
+    final AsyncValue<List<InventoryItem>> asyncItems =
+        ref.watch(inventoryItemsProvider);
+
+    final _InsightsMetrics metrics = asyncItems.maybeWhen(
+      data: _InsightsMetrics.fromItems,
+      orElse: () => const _InsightsMetrics(),
+    );
+
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(AppSpacing.ml),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(24),
-        gradient: LinearGradient(
-          colors: <Color>[
-            Colors.white.withValues(alpha: 0.80),
-            const Color(0xFFFFEDEB).withValues(alpha: 0.60),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        border: Border.all(color: InventoryTokens.outline.withValues(alpha: 0.35)),
+        color: p.surface,
+        borderRadius: AppRadius.brXxl,
+        boxShadow: AppElevation.modal,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
+          Text(
+            'Resumen inteligente',
+            style: AppTypography.headingSm.copyWith(color: p.textBody),
+          ),
+          const SizedBox(height: AppSpacing.xxs),
+          Text(
+            _buildSubtitle(metrics),
+            style: AppTypography.bodyXs.copyWith(color: p.textMuted),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          Container(height: 1, color: p.divider),
+          const SizedBox(height: AppSpacing.md),
           Row(
             children: <Widget>[
-              Container(
-                width: 56,
-                height: 56,
-                decoration: const BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: InventoryTokens.accentContainer,
-                ),
-                child: const Icon(Icons.auto_awesome, color: InventoryTokens.accentOnContainer),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Text(
-                      'Resumen inteligente',
-                      style: GoogleFonts.epilogue(
-                        fontSize: 24,
-                        fontWeight: FontWeight.w800,
-                        color: InventoryTokens.primary,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    const Text(
-                      '3 productos vencen en menos de 48 horas',
-                      style: TextStyle(
-                        color: InventoryTokens.textBody,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 18),
-          const Row(
-            children: <Widget>[
               Expanded(
                 child: _MetricTile(
-                  value: '12%',
-                  label: 'Tasa de desperdicio',
-                  color: InventoryTokens.tertiary,
+                  value: metrics.expiredCount.toString(),
+                  label: 'Vencidos',
+                  icon: Icons.error_outline_rounded,
+                  color: AppColors.dangerStrong,
                 ),
               ),
-              SizedBox(width: 12),
+              _VerticalDivider(color: p.divider),
               Expanded(
                 child: _MetricTile(
-                  value: '84',
-                  label: 'Total de productos',
-                  color: InventoryTokens.secondary,
+                  value: metrics.totalCount.toString(),
+                  label: 'Productos',
+                  icon: Icons.inventory_2_outlined,
+                  color: p.brandPrimary,
+                ),
+              ),
+              _VerticalDivider(color: p.divider),
+              Expanded(
+                child: _MetricTile(
+                  value: metrics.expiringSoonCount.toString(),
+                  label: 'Por vencer',
+                  icon: Icons.timer_outlined,
+                  color: AppColors.warningStrong,
                 ),
               ),
             ],
@@ -86,50 +75,117 @@ class InventoryInsightsCard extends StatelessWidget {
       ),
     );
   }
+
+  String _buildSubtitle(_InsightsMetrics m) {
+    if (m.totalCount == 0) {
+      return 'Aún no tienes productos en tu despensa';
+    }
+    if (m.expiringSoonCount == 0 && m.expiredCount == 0) {
+      return 'Todo en orden: nada por vencer pronto';
+    }
+    if (m.expiredCount > 0 && m.expiringSoonCount > 0) {
+      return '${m.expiredCount} vencidos · ${m.expiringSoonCount} por vencer pronto';
+    }
+    if (m.expiredCount > 0) {
+      return '${m.expiredCount} ${m.expiredCount == 1 ? "producto vencido" : "productos vencidos"}';
+    }
+    return '${m.expiringSoonCount} ${m.expiringSoonCount == 1 ? "producto vence" : "productos vencen"} pronto';
+  }
+}
+
+class _InsightsMetrics {
+  const _InsightsMetrics({
+    this.totalCount = 0,
+    this.expiringSoonCount = 0,
+    this.expiredCount = 0,
+  });
+
+  factory _InsightsMetrics.fromItems(List<InventoryItem> items) {
+    int expiring = 0;
+    int expired = 0;
+    for (final InventoryItem item in items) {
+      switch (item.status) {
+        case ProductStatus.expiringSoon:
+          expiring++;
+          break;
+        case ProductStatus.expired:
+          expired++;
+          break;
+        case ProductStatus.normal:
+        case ProductStatus.outOfStock:
+          break;
+      }
+    }
+    return _InsightsMetrics(
+      totalCount: items.length,
+      expiringSoonCount: expiring,
+      expiredCount: expired,
+    );
+  }
+
+  final int totalCount;
+  final int expiringSoonCount;
+  final int expiredCount;
+}
+
+class _VerticalDivider extends StatelessWidget {
+  const _VerticalDivider({required this.color});
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 1,
+      height: 56,
+      margin: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
+      color: color,
+    );
+  }
 }
 
 class _MetricTile extends StatelessWidget {
   const _MetricTile({
     required this.value,
     required this.label,
+    required this.icon,
     required this.color,
   });
 
   final String value;
   final String label;
+  final IconData icon;
   final Color color;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 70,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16),
-        color: const Color(0xFFFFEDEB),
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: <Widget>[
-          Text(
-            value,
-            style: GoogleFonts.epilogue(
-              fontSize: 26,
-              fontWeight: FontWeight.w900,
-              color: color,
-              letterSpacing: -1,
-            ),
+    final PaletteSpec p = context.palette;
+
+    return Column(
+      children: <Widget>[
+        Container(
+          width: 36,
+          height: 36,
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.1),
+            borderRadius: AppRadius.brMs,
           ),
-          Text(
-            label.toUpperCase(),
-            style: const TextStyle(
-              fontSize: 10,
-              fontWeight: FontWeight.w800,
-              letterSpacing: 1.1,
-              color: InventoryTokens.textMuted,
-            ),
+          child: Icon(icon, size: 18, color: color),
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        Text(
+          value,
+          style: AppTypography.headingLg.copyWith(color: color),
+        ),
+        const SizedBox(height: AppSpacing.xxs),
+        Text(
+          label,
+          style: AppTypography.labelTab.copyWith(
+            color: p.textMuted,
+            fontWeight: FontWeight.w600,
           ),
-        ],
-      ),
+          textAlign: TextAlign.center,
+        ),
+      ],
     );
   }
 }

@@ -36,6 +36,7 @@ class AppDatabase {
         brand       TEXT,
         category    TEXT,
         quantity    INTEGER NOT NULL DEFAULT 1,
+        min_stock   INTEGER NOT NULL DEFAULT 1,
         expiry_date INTEGER,
         image_url   TEXT,
         notes       TEXT,
@@ -106,6 +107,9 @@ class AppDatabase {
 
     if (oldVersion < 5) {
       await _createSentNotificationsTable(db);
+      await db.execute(
+        'ALTER TABLE inventory_items ADD COLUMN min_stock INTEGER NOT NULL DEFAULT 1',
+      );
     }
   }
 

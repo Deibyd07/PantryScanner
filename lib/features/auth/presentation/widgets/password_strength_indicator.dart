@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 
-/// Animated password-strength indicator bar.
-/// Shows a colored bar that grows from 0 → 100 % based on [strength].
+import '../../../../core/design/design_system.dart';
+
+/// Indicador animado de fortaleza de contraseña (0–100%).
 class PasswordStrengthIndicator extends StatelessWidget {
   const PasswordStrengthIndicator({
     super.key,
@@ -10,7 +11,6 @@ class PasswordStrengthIndicator extends StatelessWidget {
 
   final String password;
 
-  /// Returns a value between 0.0 and 1.0.
   double get strength {
     if (password.isEmpty) return 0;
     double s = 0;
@@ -27,10 +27,10 @@ class PasswordStrengthIndicator extends StatelessWidget {
 
   Color get _color {
     final double s = strength;
-    if (s <= 0.25) return const Color(0xFFFF4B4B);
-    if (s <= 0.5) return const Color(0xFFFF9F43);
-    if (s <= 0.75) return const Color(0xFFFECA57);
-    return const Color(0xFF2EA87E);
+    if (s <= 0.25) return AppColors.dangerStrong;
+    if (s <= 0.5) return AppColors.warningSoft;
+    if (s <= 0.75) return AppColors.warningStrong;
+    return AppColors.successStrong;
   }
 
   String get _label {
@@ -45,30 +45,28 @@ class PasswordStrengthIndicator extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (password.isEmpty) return const SizedBox.shrink();
+    final PaletteSpec p = context.palette;
 
     return Padding(
-      padding: const EdgeInsets.only(top: 8),
+      padding: const EdgeInsets.only(top: AppSpacing.sm),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          // Animated bar
           ClipRRect(
-            borderRadius: BorderRadius.circular(4),
+            borderRadius: AppRadius.brXs,
             child: SizedBox(
               height: 4,
               child: Stack(
                 children: <Widget>[
-                  Container(
-                    color: Colors.white.withOpacity(0.1),
-                  ),
+                  Container(color: p.outline.withValues(alpha: 0.5)),
                   AnimatedFractionallySizedBox(
-                    duration: const Duration(milliseconds: 300),
+                    duration: AppDuration.debounce,
                     curve: Curves.easeOut,
                     widthFactor: strength,
                     child: Container(
                       decoration: BoxDecoration(
                         color: _color,
-                        borderRadius: BorderRadius.circular(4),
+                        borderRadius: AppRadius.brXs,
                       ),
                     ),
                   ),
@@ -76,14 +74,10 @@ class PasswordStrengthIndicator extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: AppSpacing.xs),
           AnimatedDefaultTextStyle(
-            duration: const Duration(milliseconds: 200),
-            style: TextStyle(
-              color: _color,
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
-            ),
+            duration: AppDuration.normal,
+            style: AppTypography.labelXs.copyWith(color: _color),
             child: Text(_label),
           ),
         ],

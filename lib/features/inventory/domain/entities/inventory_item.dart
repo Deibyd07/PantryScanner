@@ -20,6 +20,7 @@ class InventoryItem {
     this.expiryDate,
     this.imageUrl,
     this.notes,
+    this.minStock = 1,
   });
 
   final int id;
@@ -35,6 +36,43 @@ class InventoryItem {
   final DateTime createdAt;
   final DateTime updatedAt;
   final bool isDeleted;
+  final int minStock;
+
+  bool get isLowStock => quantity > 0 && quantity <= minStock;
+
+  InventoryItem copyWith({
+    int? id,
+    String? syncId,
+    String? barcode,
+    String? name,
+    String? brand,
+    String? category,
+    int? quantity,
+    DateTime? expiryDate,
+    String? imageUrl,
+    String? notes,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+    bool? isDeleted,
+    int? minStock,
+  }) {
+    return InventoryItem(
+      id: id ?? this.id,
+      syncId: syncId ?? this.syncId,
+      barcode: barcode ?? this.barcode,
+      name: name ?? this.name,
+      brand: brand ?? this.brand,
+      category: category ?? this.category,
+      quantity: quantity ?? this.quantity,
+      expiryDate: expiryDate ?? this.expiryDate,
+      imageUrl: imageUrl ?? this.imageUrl,
+      notes: notes ?? this.notes,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? DateTime.now(),
+      isDeleted: isDeleted ?? this.isDeleted,
+      minStock: minStock ?? this.minStock,
+    );
+  }
 
   ProductStatus get status {
     if (quantity <= 0) {

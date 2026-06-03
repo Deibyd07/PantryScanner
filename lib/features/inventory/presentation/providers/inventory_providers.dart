@@ -8,8 +8,10 @@ import '../../domain/entities/inventory_item.dart';
 import '../../domain/repositories/inventory_repository.dart';
 import '../../domain/usecases/delete_inventory_item_usecase.dart';
 import '../../domain/usecases/save_inventory_item_usecase.dart';
+import '../../domain/usecases/update_inventory_item_quantity_usecase.dart';
 import '../../domain/usecases/watch_inventory_items_usecase.dart';
 import '../../../../core/sync/inventory_sync_service.dart';
+import '../../../notifications/data/services/low_stock_notification_service.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // WEB DEMO — InMemory singleton repository
@@ -189,9 +191,25 @@ final Provider<DeleteInventoryItemUseCase> deleteInventoryItemUseCaseProvider =
   return DeleteInventoryItemUseCase(ref.watch(inventoryRepositoryProvider));
 });
 
+final Provider<UpdateInventoryItemQuantityUseCase>
+    updateInventoryItemQuantityUseCaseProvider =
+    Provider<UpdateInventoryItemQuantityUseCase>((ref) {
+  return UpdateInventoryItemQuantityUseCase(
+      ref.watch(inventoryRepositoryProvider));
+});
+
 final StreamProvider<List<InventoryItem>> inventoryItemsProvider =
     StreamProvider<List<InventoryItem>>((ref) {
   return ref.watch(watchInventoryItemsUseCaseProvider).call();
+});
+
+/// Starts the low-stock watcher. Watch this provider from the inventory screen.
+final Provider<void> lowStockWatcherProvider = Provider<void>((Ref ref) {
+  if (kIsWeb) return;
+  final Stream<List<InventoryItem>> stream =
+      ref.watch(watchInventoryItemsUseCaseProvider).call();
+  LowStockNotificationService.instance.startWatching(stream);
+  ref.onDispose(LowStockNotificationService.instance.stopWatching);
 });
 
 /// Returns the full existing InventoryItem if found by barcode.
