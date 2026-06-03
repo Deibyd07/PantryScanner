@@ -1,9 +1,75 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../../../app/router/app_router.dart';
 import '../../../../core/design/design_system.dart';
 import '../../domain/entities/shopping_list_item.dart';
+import '../../domain/repositories/shopping_list_repository.dart';
 import '../providers/shopping_list_providers.dart';
+
+/// Resultado del parser de quick-add.
+typedef _ParsedAdd = ({String name, String? quantity});
+
+/// Heurística para separar nombre y cantidad de un input libre.
+/// Ejemplos:
+///   "Leche 2 L"          -> name=Leche, qty=2 L
+///   "3 huevos"           -> name=huevos, qty=3
+///   "1 paquete de pan"   -> name=pan, qty=1 paquete
+///   "Aceite de oliva"    -> name=Aceite de oliva, qty=null
+_ParsedAdd _parseQuickAdd(String input) {
+  final String s = input.trim();
+  if (s.isEmpty) return (name: s, quantity: null);
+
+  const Set<String> units = <String>{
+    'l', 'ml', 'kg', 'g', 'mg', 'oz', 'lb',
+    'cda', 'cdas', 'cdita', 'cditas',
+    'taza', 'tazas',
+    'unidad', 'unidades', 'u', 'pza', 'pzas',
+    'paq', 'paquete', 'paquetes',
+    'lata', 'latas', 'botella', 'botellas',
+    'docena', 'docenas',
+    'caja', 'cajas', 'bolsa', 'bolsas',
+  };
+
+  // Trailing: "Leche 2 L" / "Pan 500 g" / "Manzanas 6"
+  final RegExpMatch? trailing = RegExp(
+    r'^(.+?)\s+(\d+(?:[.,]\d+)?)\s*([a-záéíóúñ]+)?$',
+    caseSensitive: false,
+  ).firstMatch(s);
+  if (trailing != null) {
+    final String namePart = trailing.group(1)!.trim();
+    final String num = trailing.group(2)!;
+    final String? unitRaw = trailing.group(3);
+    if (unitRaw == null) {
+      return (name: namePart, quantity: num);
+    }
+    if (units.contains(unitRaw.toLowerCase())) {
+      return (name: namePart, quantity: '$num $unitRaw');
+    }
+    // No es unidad reconocida: queda como parte del nombre.
+  }
+
+  // Leading: "3 huevos" / "1 paquete de tortillas" / "2L leche"
+  final RegExpMatch? leading = RegExp(
+    r'^(\d+(?:[.,]\d+)?)\s*([a-záéíóúñ]+)?\s+(?:de\s+)?(.+)$',
+    caseSensitive: false,
+  ).firstMatch(s);
+  if (leading != null) {
+    final String num = leading.group(1)!;
+    final String? unitRaw = leading.group(2);
+    final String rest = leading.group(3)!.trim();
+    if (unitRaw != null && units.contains(unitRaw.toLowerCase())) {
+      return (name: rest, quantity: '$num $unitRaw');
+    }
+    if (unitRaw == null) {
+      return (name: rest, quantity: num);
+    }
+  }
+
+  return (name: s, quantity: null);
+}
 
 class ShoppingListScreen extends ConsumerStatefulWidget {
   const ShoppingListScreen({super.key});
@@ -24,10 +90,130 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
   Future<void> _addQuick() async {
     final String text = _quickAddCtrl.text.trim();
     if (text.isEmpty) return;
+    final _ParsedAdd parsed = _parseQuickAdd(text);
     AppHaptics.confirm();
-    await ref.read(shoppingListRepositoryProvider).addItem(name: text);
+    await ref.read(shoppingListRepositoryProvider).addItem(
+          name: parsed.name,
+          quantity: parsed.quantity,
+        );
     _quickAddCtrl.clear();
     if (mounted) FocusScope.of(context).unfocus();
+  }
+
+  Future<void> _showEditSheet(BuildContext context, ShoppingListItem item) async {
+    final _EditResult? result = await showModalBottomSheet<_EditResult>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      useRootNavigator: true,
+      builder: (BuildContext ctx) => _EditItemSheet(item: item),
+    );
+
+    if (result == null || !mounted) return;
+    if (result.delete) {
+      await _deleteWithUndo(item);
+      return;
+    }
+    AppHaptics.confirm();
+    await ref.read(shoppingListRepositoryProvider).updateItem(
+          item.id,
+          name: result.name,
+          quantity: result.quantity,
+        );
+  }
+
+  Future<void> _deleteWithUndo(ShoppingListItem item) async {
+    AppHaptics.warning();
+    await ref.read(shoppingListRepositoryProvider).deleteItem(item.id);
+    if (!mounted) return;
+    final ScaffoldMessengerState messenger = ScaffoldMessenger.of(context);
+    messenger.hideCurrentSnackBar();
+    final ScaffoldFeatureController<SnackBar, SnackBarClosedReason> controller =
+        messenger.showSnackBar(
+      SnackBar(
+        duration: const Duration(seconds: 3),
+        behavior: SnackBarBehavior.floating,
+        margin: const EdgeInsets.all(16),
+        shape:
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        content: Text('Eliminaste "${item.name}"'),
+        action: SnackBarAction(
+          label: 'Deshacer',
+          onPressed: () async {
+            AppHaptics.tap();
+            await ref
+                .read(shoppingListRepositoryProvider)
+                .restoreItem(item);
+          },
+        ),
+      ),
+    );
+    Future<void>.delayed(const Duration(seconds: 3), () {
+      try {
+        controller.close();
+      } catch (_) {/* ya cerrado */}
+    });
+  }
+
+  Future<void> _clearDoneWithUndo() async {
+    AppHaptics.warning();
+    final bool? ok = await _confirmClear(context);
+    if (ok != true || !mounted) return;
+
+    // Snapshot fresco del estado actual (no del que capturó build).
+    final List<ShoppingListItem> snapshot = ref
+            .read(shoppingListProvider)
+            .valueOrNull
+            ?.where((ShoppingListItem i) => i.isChecked)
+            .toList() ??
+        const <ShoppingListItem>[];
+    if (snapshot.isEmpty) return;
+
+    await ref.read(shoppingListRepositoryProvider).clearCompleted();
+    if (!mounted) return;
+    final ScaffoldMessengerState messenger = ScaffoldMessenger.of(context);
+    messenger.hideCurrentSnackBar();
+    final ScaffoldFeatureController<SnackBar, SnackBarClosedReason> controller =
+        messenger.showSnackBar(
+      SnackBar(
+        duration: const Duration(seconds: 3),
+        behavior: SnackBarBehavior.floating,
+        margin: const EdgeInsets.all(16),
+        shape:
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        content: Text(
+          snapshot.length == 1
+              ? 'Borraste 1 conseguido'
+              : 'Borraste ${snapshot.length} conseguidos',
+        ),
+        action: SnackBarAction(
+          label: 'Deshacer',
+          onPressed: () async {
+            AppHaptics.tap();
+            final ShoppingListRepository repo =
+                ref.read(shoppingListRepositoryProvider);
+            for (final ShoppingListItem it in snapshot) {
+              await repo.restoreItem(it);
+            }
+          },
+        ),
+      ),
+    );
+    // Cierre forzado a los 3s: protege contra el caso donde `duration`
+    // del SnackBar no se respeta (timers de a11y, focus, etc.).
+    Future<void>.delayed(const Duration(seconds: 3), () {
+      try {
+        controller.close();
+      } catch (_) {/* ya cerrado */}
+    });
+  }
+
+  Future<void> _markSectionDone(List<ShoppingListItem> pending) async {
+    if (pending.isEmpty) return;
+    AppHaptics.confirm();
+    await ref.read(shoppingListRepositoryProvider).markManyChecked(
+          pending.map((ShoppingListItem i) => i.id).toList(),
+        );
   }
 
   @override
@@ -69,17 +255,7 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
                 total: items.length,
                 pending: pending.length,
                 done: done.length,
-                onClearDone: done.isEmpty
-                    ? null
-                    : () async {
-                        AppHaptics.warning();
-                        final bool? ok = await _confirmClear(context);
-                        if (ok == true) {
-                          await ref
-                              .read(shoppingListRepositoryProvider)
-                              .clearCompleted();
-                        }
-                      },
+                onClearDone: done.isEmpty ? null : _clearDoneWithUndo,
               ),
               SliverToBoxAdapter(
                 child: Padding(
@@ -110,7 +286,13 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
                     color: AppColors.successStrong,
                     count: done.length,
                   ),
-                  _ItemsList(items: done, palette: p),
+                  _ItemsList(
+                    items: done,
+                    palette: p,
+                    onDelete: _deleteWithUndo,
+                    onEdit: (ShoppingListItem item) =>
+                        _showEditSheet(context, item),
+                  ),
                 ],
                 const SliverToBoxAdapter(
                   child: SizedBox(height: AppSpacing.xxl),
@@ -145,8 +327,22 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
               : 'Faltan para preparar esta receta',
           color: e.key == null ? p.brandPrimary : AppColors.warningStrong,
           count: e.value.length,
+          onMarkAll: () => _markSectionDone(e.value),
+          onRecipeTap: e.key == null
+              ? null
+              : () {
+                  final String? recipeId = e.value.first.sourceRecipeId;
+                  if (recipeId == null) return;
+                  AppHaptics.tap();
+                  context.push('${AppRoutes.recipes}/$recipeId');
+                },
         ),
-        _ItemsList(items: e.value, palette: p),
+        _ItemsList(
+          items: e.value,
+          palette: p,
+          onDelete: _deleteWithUndo,
+          onEdit: (ShoppingListItem item) => _showEditSheet(context, item),
+        ),
       ],
     ];
   }
@@ -404,7 +600,7 @@ class _QuickAdd extends StatelessWidget {
               textInputAction: TextInputAction.done,
               onSubmitted: (_) => onSubmit(),
               decoration: InputDecoration(
-                hintText: 'Añadir ítem (ej. Leche, Pan...)',
+                hintText: 'Añadir ítem (ej. Leche 2 L, 3 huevos)',
                 hintStyle: AppTypography.bodyMd.copyWith(
                   color: p.textMuted,
                 ),
@@ -449,16 +645,74 @@ class _SectionHeader extends StatelessWidget {
     required this.caption,
     required this.color,
     required this.count,
+    this.onMarkAll,
+    this.onRecipeTap,
   });
 
   final String title;
   final String caption;
   final Color color;
   final int count;
+  final VoidCallback? onMarkAll;
+  final VoidCallback? onRecipeTap;
 
   @override
   Widget build(BuildContext context) {
     final PaletteSpec p = context.palette;
+
+    final Widget titleAndCaption = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        Row(
+          children: <Widget>[
+            Flexible(
+              child: Text(
+                title,
+                style: AppTypography.headingSm.copyWith(
+                  color: p.textBody,
+                  fontWeight: FontWeight.w800,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            const SizedBox(width: AppSpacing.sm),
+            Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 7,
+                vertical: 1,
+              ),
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.13),
+                borderRadius: AppRadius.brPill,
+              ),
+              child: Text(
+                '$count',
+                style: AppTypography.labelSm.copyWith(
+                  color: color,
+                  fontWeight: FontWeight.w800,
+                  fontSize: 11,
+                ),
+              ),
+            ),
+            if (onRecipeTap != null) ...<Widget>[
+              const SizedBox(width: 6),
+              Icon(
+                Icons.open_in_new_rounded,
+                size: 13,
+                color: p.textMuted,
+              ),
+            ],
+          ],
+        ),
+        const SizedBox(height: 1),
+        Text(
+          caption,
+          style: AppTypography.bodyXs.copyWith(color: p.textMuted),
+        ),
+      ],
+    );
+
     return SliverToBoxAdapter(
       child: Padding(
         padding: const EdgeInsets.fromLTRB(
@@ -479,51 +733,59 @@ class _SectionHeader extends StatelessWidget {
             ),
             const SizedBox(width: AppSpacing.ms),
             Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  Row(
-                    children: <Widget>[
-                      Flexible(
-                        child: Text(
-                          title,
-                          style: AppTypography.headingSm.copyWith(
-                            color: p.textBody,
-                            fontWeight: FontWeight.w800,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                      const SizedBox(width: AppSpacing.sm),
-                      Container(
+              child: onRecipeTap == null
+                  ? titleAndCaption
+                  : InkWell(
+                      borderRadius: AppRadius.brMd,
+                      onTap: onRecipeTap,
+                      child: Padding(
                         padding: const EdgeInsets.symmetric(
-                          horizontal: 7,
-                          vertical: 1,
+                          vertical: 2,
+                          horizontal: 2,
                         ),
-                        decoration: BoxDecoration(
-                          color: color.withValues(alpha: 0.13),
-                          borderRadius: AppRadius.brPill,
-                        ),
-                        child: Text(
-                          '$count',
-                          style: AppTypography.labelSm.copyWith(
-                            color: color,
-                            fontWeight: FontWeight.w800,
-                            fontSize: 11,
-                          ),
+                        child: titleAndCaption,
+                      ),
+                    ),
+            ),
+            if (onMarkAll != null)
+              Padding(
+                padding: const EdgeInsets.only(left: AppSpacing.sm),
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    borderRadius: AppRadius.brPill,
+                    onTap: onMarkAll,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.sm + 2,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: color.withValues(alpha: 0.12),
+                        borderRadius: AppRadius.brPill,
+                        border: Border.all(
+                          color: color.withValues(alpha: 0.35),
                         ),
                       ),
-                    ],
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: <Widget>[
+                          Icon(Icons.done_all_rounded, size: 14, color: color),
+                          const SizedBox(width: 4),
+                          Text(
+                            'Todos',
+                            style: AppTypography.labelSm.copyWith(
+                              color: color,
+                              fontWeight: FontWeight.w800,
+                              fontSize: 11,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
-                  const SizedBox(height: 1),
-                  Text(
-                    caption,
-                    style: AppTypography.bodyXs.copyWith(color: p.textMuted),
-                  ),
-                ],
+                ),
               ),
-            ),
           ],
         ),
       ),
@@ -535,10 +797,17 @@ class _SectionHeader extends StatelessWidget {
 // Items list
 // ─────────────────────────────────────────────────────────────────────────────
 class _ItemsList extends ConsumerWidget {
-  const _ItemsList({required this.items, required this.palette});
+  const _ItemsList({
+    required this.items,
+    required this.palette,
+    required this.onDelete,
+    required this.onEdit,
+  });
 
   final List<ShoppingListItem> items;
   final PaletteSpec palette;
+  final ValueChanged<ShoppingListItem> onDelete;
+  final ValueChanged<ShoppingListItem> onEdit;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -562,11 +831,17 @@ class _ItemsList extends ConsumerWidget {
               child: const Icon(Icons.delete_outline,
                   color: Colors.white, size: 24),
             ),
+            // Defer to next frame: el Dismissible se desmonta limpio
+            // antes de que el stream emita y el padre reconstruya.
             onDismissed: (_) {
-              AppHaptics.error();
-              ref.read(shoppingListRepositoryProvider).deleteItem(item.id);
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                onDelete(item);
+              });
             },
-            child: _ItemTile(item: item),
+            child: _ItemTile(
+              item: item,
+              onEdit: () => onEdit(item),
+            ),
           );
         },
       ),
@@ -575,8 +850,9 @@ class _ItemsList extends ConsumerWidget {
 }
 
 class _ItemTile extends ConsumerWidget {
-  const _ItemTile({required this.item});
+  const _ItemTile({required this.item, required this.onEdit});
   final ShoppingListItem item;
+  final VoidCallback onEdit;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -592,6 +868,10 @@ class _ItemTile extends ConsumerWidget {
           ref
               .read(shoppingListRepositoryProvider)
               .toggleChecked(item.id, isChecked: !checked);
+        },
+        onLongPress: () {
+          HapticFeedback.mediumImpact();
+          onEdit();
         },
         child: Container(
           padding: const EdgeInsets.all(AppSpacing.md),
@@ -612,9 +892,7 @@ class _ItemTile extends ConsumerWidget {
                     Text(
                       item.name,
                       style: AppTypography.bodyMd.copyWith(
-                        color: checked
-                            ? p.textMuted
-                            : p.textBody,
+                        color: checked ? p.textMuted : p.textBody,
                         fontWeight: FontWeight.w700,
                         decoration: checked
                             ? TextDecoration.lineThrough
@@ -634,6 +912,18 @@ class _ItemTile extends ConsumerWidget {
                       ),
                   ],
                 ),
+              ),
+              IconButton(
+                icon: Icon(
+                  Icons.edit_outlined,
+                  size: 18,
+                  color: p.textMuted,
+                ),
+                tooltip: 'Editar',
+                onPressed: () {
+                  AppHaptics.tap();
+                  onEdit();
+                },
               ),
             ],
           ),
@@ -712,6 +1002,195 @@ class _Empty extends StatelessWidget {
                 color: palette.textMuted,
                 height: 1.5,
               ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Edit sheet — StatefulWidget para manejar controllers de forma segura
+// ─────────────────────────────────────────────────────────────────────────────
+class _EditResult {
+  const _EditResult.save({required this.name, required this.quantity})
+      : delete = false;
+  const _EditResult.delete()
+      : name = '',
+        quantity = null,
+        delete = true;
+  final String name;
+  final String? quantity;
+  final bool delete;
+}
+
+class _EditItemSheet extends StatefulWidget {
+  const _EditItemSheet({required this.item});
+  final ShoppingListItem item;
+
+  @override
+  State<_EditItemSheet> createState() => _EditItemSheetState();
+}
+
+class _EditItemSheetState extends State<_EditItemSheet> {
+  late final TextEditingController _nameCtrl;
+  late final TextEditingController _qtyCtrl;
+
+  @override
+  void initState() {
+    super.initState();
+    _nameCtrl = TextEditingController(text: widget.item.name);
+    _qtyCtrl = TextEditingController(text: widget.item.quantity ?? '');
+  }
+
+  @override
+  void dispose() {
+    _nameCtrl.dispose();
+    _qtyCtrl.dispose();
+    super.dispose();
+  }
+
+  void _save() {
+    final String name = _nameCtrl.text.trim();
+    if (name.isEmpty) return;
+    final String qty = _qtyCtrl.text.trim();
+    Navigator.of(context).pop(
+      _EditResult.save(name: name, quantity: qty.isEmpty ? null : qty),
+    );
+  }
+
+  void _requestDelete() {
+    Navigator.of(context).pop(const _EditResult.delete());
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final PaletteSpec p = context.palette;
+    return Padding(
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.viewInsetsOf(context).bottom,
+      ),
+      child: Container(
+        decoration: BoxDecoration(
+          color: p.surface,
+          borderRadius: const BorderRadius.vertical(
+            top: Radius.circular(AppRadius.xxl),
+          ),
+        ),
+        padding: const EdgeInsets.fromLTRB(
+          AppSpacing.lg,
+          AppSpacing.md,
+          AppSpacing.lg,
+          AppSpacing.lg,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: <Widget>[
+            Center(
+              child: Container(
+                width: 36,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: p.outline,
+                  borderRadius: AppRadius.brPill,
+                ),
+              ),
+            ),
+            const SizedBox(height: AppSpacing.md),
+            Row(
+              children: <Widget>[
+                Expanded(
+                  child: Text(
+                    'Editar ítem',
+                    style: AppTypography.headingSm.copyWith(
+                      color: p.textBody,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.delete_outline_rounded, size: 22),
+                  color: AppColors.dangerStrong,
+                  tooltip: 'Eliminar de la lista',
+                  onPressed: _requestDelete,
+                ),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            TextField(
+              controller: _nameCtrl,
+              autofocus: true,
+              textCapitalization: TextCapitalization.sentences,
+              textInputAction: TextInputAction.next,
+              decoration: InputDecoration(
+                labelText: 'Nombre',
+                border: OutlineInputBorder(
+                  borderRadius: AppRadius.brLg,
+                  borderSide: BorderSide(color: p.outline),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: AppRadius.brLg,
+                  borderSide: BorderSide(color: p.outline),
+                ),
+              ),
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            TextField(
+              controller: _qtyCtrl,
+              textInputAction: TextInputAction.done,
+              onSubmitted: (_) => _save(),
+              decoration: InputDecoration(
+                labelText: 'Cantidad (opcional)',
+                hintText: 'Ej. 2 L, 500 g, 3 unidades',
+                border: OutlineInputBorder(
+                  borderRadius: AppRadius.brLg,
+                  borderSide: BorderSide(color: p.outline),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: AppRadius.brLg,
+                  borderSide: BorderSide(color: p.outline),
+                ),
+              ),
+            ),
+            const SizedBox(height: AppSpacing.lg),
+            Row(
+              children: <Widget>[
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      side: BorderSide(color: p.outline),
+                      shape: const RoundedRectangleBorder(
+                        borderRadius: AppRadius.brLg,
+                      ),
+                    ),
+                    child: Text(
+                      'Cancelar',
+                      style: TextStyle(color: p.textBody),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.sm),
+                Expanded(
+                  child: FilledButton(
+                    onPressed: _save,
+                    style: FilledButton.styleFrom(
+                      backgroundColor: p.brandPrimary,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: const RoundedRectangleBorder(
+                        borderRadius: AppRadius.brLg,
+                      ),
+                    ),
+                    child: const Text(
+                      'Guardar',
+                      style: TextStyle(fontWeight: FontWeight.w700),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ],
         ),

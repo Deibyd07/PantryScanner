@@ -22,25 +22,37 @@ class ShoppingListItem {
   final DateTime createdAt;
   final DateTime? checkedAt;
 
+  // Sentinel para distinguir "no se pasó argumento" de "se pasó null
+  // explícitamente". Sin esto, copyWith no puede limpiar un campo nullable.
+  static const Object _unset = Object();
+
   ShoppingListItem copyWith({
     int? id,
     String? name,
-    String? quantity,
-    String? sourceRecipeId,
-    String? sourceTitle,
+    Object? quantity = _unset,
+    Object? sourceRecipeId = _unset,
+    Object? sourceTitle = _unset,
     bool? isChecked,
     DateTime? createdAt,
-    DateTime? checkedAt,
+    Object? checkedAt = _unset,
   }) {
     return ShoppingListItem(
       id: id ?? this.id,
       name: name ?? this.name,
-      quantity: quantity ?? this.quantity,
-      sourceRecipeId: sourceRecipeId ?? this.sourceRecipeId,
-      sourceTitle: sourceTitle ?? this.sourceTitle,
+      quantity: identical(quantity, _unset)
+          ? this.quantity
+          : quantity as String?,
+      sourceRecipeId: identical(sourceRecipeId, _unset)
+          ? this.sourceRecipeId
+          : sourceRecipeId as String?,
+      sourceTitle: identical(sourceTitle, _unset)
+          ? this.sourceTitle
+          : sourceTitle as String?,
       isChecked: isChecked ?? this.isChecked,
       createdAt: createdAt ?? this.createdAt,
-      checkedAt: checkedAt ?? this.checkedAt,
+      checkedAt: identical(checkedAt, _unset)
+          ? this.checkedAt
+          : checkedAt as DateTime?,
     );
   }
 }

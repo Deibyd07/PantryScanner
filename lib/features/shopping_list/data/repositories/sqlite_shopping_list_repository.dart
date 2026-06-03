@@ -110,30 +110,54 @@ class SqliteShoppingListRepository implements ShoppingListRepository {
   @override
   Future<int> addItems({required List<ShoppingListItemDraft> drafts}) async {
     int added = 0;
-    for (final ShoppingListItemDraft d in drafts) {
-      final String normalized = _normalize(d.name);
-      final List<Map<String, dynamic>> existing = await _database.query(
-        'shopping_list_items',
-        where: 'normalized_name = ? AND IFNULL(source_recipe, "") = IFNULL(?, "") AND is_checked = 0',
-        whereArgs: <dynamic>[normalized, d.sourceRecipeId],
-        limit: 1,
-      );
-      if (existing.isNotEmpty) continue;
+    await _database.transaction((Transaction txn) async {
+      for (final ShoppingListItemDraft d in drafts) {
+        if (d.name.trim().isEmpty) continue;
+        final String normalized = _normalize(d.name);
+        final List<Map<String, dynamic>> existing = await txn.query(
+          'shopping_list_items',
+          where:
+              'normalized_name = ? AND IFNULL(source_recipe, "") = IFNULL(?, "") AND is_checked = 0',
+          whereArgs: <dynamic>[normalized, d.sourceRecipeId],
+          limit: 1,
+        );
+        if (existing.isNotEmpty) continue;
 
-      final int now = DateTime.now().millisecondsSinceEpoch;
-      await _database.insert('shopping_list_items', <String, dynamic>{
-        'name': d.name.trim(),
-        'normalized_name': normalized,
-        'quantity': d.quantity,
-        'source_recipe': d.sourceRecipeId,
-        'source_title': d.sourceTitle,
-        'is_checked': 0,
-        'created_at': now,
-      });
-      added++;
-    }
+        final int now = DateTime.now().millisecondsSinceEpoch;
+        await txn.insert('shopping_list_items', <String, dynamic>{
+          'name': d.name.trim(),
+          'normalized_name': normalized,
+          'quantity': d.quantity,
+          'source_recipe': d.sourceRecipeId,
+          'source_title': d.sourceTitle,
+          'is_checked': 0,
+          'created_at': now,
+        });
+        added++;
+      }
+    });
     if (added > 0) await _emit();
     return added;
+  }
+
+  @override
+  Future<void> updateItem(
+    int id, {
+    required String name,
+    required String? quantity,
+  }) async {
+    if (name.trim().isEmpty) return;
+    await _database.update(
+      'shopping_list_items',
+      <String, dynamic>{
+        'name': name.trim(),
+        'normalized_name': _normalize(name),
+        'quantity': quantity,
+      },
+      where: 'id = ?',
+      whereArgs: <dynamic>[id],
+    );
+    await _emit();
   }
 
   @override
@@ -152,6 +176,23 @@ class SqliteShoppingListRepository implements ShoppingListRepository {
   }
 
   @override
+  Future<void> markManyChecked(List<int> ids) async {
+    if (ids.isEmpty) return;
+    final int now = DateTime.now().millisecondsSinceEpoch;
+    final String placeholders = List<String>.filled(ids.length, '?').join(',');
+    await _database.update(
+      'shopping_list_items',
+      <String, dynamic>{
+        'is_checked': 1,
+        'checked_at': now,
+      },
+      where: 'id IN ($placeholders) AND is_checked = 0',
+      whereArgs: ids,
+    );
+    await _emit();
+  }
+
+  @override
   Future<void> deleteItem(int id) async {
     await _database.delete(
       'shopping_list_items',
@@ -159,6 +200,22 @@ class SqliteShoppingListRepository implements ShoppingListRepository {
       whereArgs: <dynamic>[id],
     );
     await _emit();
+  }
+
+  @override
+  Future<int> restoreItem(ShoppingListItem item) async {
+    final int id = await _database.insert('shopping_list_items', <String, dynamic>{
+      'name': item.name,
+      'normalized_name': _normalize(item.name),
+      'quantity': item.quantity,
+      'source_recipe': item.sourceRecipeId,
+      'source_title': item.sourceTitle,
+      'is_checked': item.isChecked ? 1 : 0,
+      'created_at': item.createdAt.millisecondsSinceEpoch,
+      'checked_at': item.checkedAt?.millisecondsSinceEpoch,
+    });
+    await _emit();
+    return id;
   }
 
   @override
