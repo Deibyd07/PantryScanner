@@ -80,11 +80,13 @@ class InventoryProductCard extends StatelessWidget {
     required this.item,
     this.onIncrement,
     this.onDecrement,
+    this.onTap,
   });
 
   final PantryCardItem item;
   final VoidCallback? onIncrement;
   final VoidCallback? onDecrement;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -95,7 +97,18 @@ class InventoryProductCard extends StatelessWidget {
 
     return Opacity(
       opacity: isDimmed ? 0.7 : 1.0,
-      child: Container(
+      child: Material(
+        color: p.surface,
+        borderRadius: AppRadius.brXl,
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onTap == null
+              ? null
+              : () {
+                  AppHaptics.tap();
+                  onTap!();
+                },
+          child: Container(
         height: 116,
         decoration: BoxDecoration(
           color: p.surface,
@@ -214,6 +227,8 @@ class InventoryProductCard extends StatelessWidget {
               ),
             ),
           ],
+        ),
+          ),
         ),
       ),
     );
