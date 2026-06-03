@@ -8,6 +8,7 @@ import 'package:intl/intl.dart';
 
 import '../../../../app/router/app_router.dart';
 import '../../../../core/design/design_system.dart';
+import '../../../shopping_list/presentation/providers/shopping_list_providers.dart';
 import '../../domain/entities/inventory_item.dart';
 import '../providers/inventory_providers.dart';
 
@@ -672,36 +673,109 @@ class _ActionsCard extends ConsumerWidget {
   const _ActionsCard({required this.item});
   final InventoryItem item;
 
+  bool get _needsReplenish =>
+      item.status == ProductStatus.outOfStock ||
+      item.status == ProductStatus.expired ||
+      item.quantity <= item.minStock;
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final PaletteSpec p = context.palette;
     return Column(
       children: <Widget>[
-        SizedBox(
-          width: double.infinity,
-          height: 52,
-          child: ElevatedButton.icon(
-            onPressed: () {
-              AppHaptics.tap();
-              context.push(
-                '${AppRoutes.productForm}?barcode=${item.barcode}',
-              );
-            },
-            icon: const Icon(Icons.edit_rounded, size: 20),
-            label: const Text('Editar producto'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: p.brandPrimary,
-              foregroundColor: Colors.white,
-              elevation: 0,
-              shape: const RoundedRectangleBorder(
-                borderRadius: AppRadius.brLg,
-              ),
-              textStyle: AppTypography.bodyMd.copyWith(
-                fontWeight: FontWeight.w700,
+        if (_needsReplenish) ...<Widget>[
+          SizedBox(
+            width: double.infinity,
+            height: 52,
+            child: ElevatedButton.icon(
+              onPressed: () => _addToShoppingList(context, ref),
+              icon: const Icon(Icons.add_shopping_cart_rounded, size: 20),
+              label: const Text('Reponer · añadir al carrito'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: p.brandPrimary,
+                foregroundColor: Colors.white,
+                elevation: 0,
+                shape: const RoundedRectangleBorder(
+                  borderRadius: AppRadius.brLg,
+                ),
+                textStyle: AppTypography.bodyMd.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
               ),
             ),
           ),
-        ),
+          const SizedBox(height: AppSpacing.sm),
+          SizedBox(
+            width: double.infinity,
+            height: 52,
+            child: OutlinedButton.icon(
+              onPressed: () {
+                AppHaptics.tap();
+                context.push(
+                  '${AppRoutes.productForm}?barcode=${item.barcode}',
+                );
+              },
+              icon: const Icon(Icons.edit_rounded, size: 20),
+              label: const Text('Editar producto'),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: p.brandPrimary,
+                side: BorderSide(color: p.brandPrimary.withValues(alpha: 0.5)),
+                shape: const RoundedRectangleBorder(
+                  borderRadius: AppRadius.brLg,
+                ),
+                textStyle: AppTypography.bodyMd.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          ),
+        ] else ...<Widget>[
+          SizedBox(
+            width: double.infinity,
+            height: 52,
+            child: ElevatedButton.icon(
+              onPressed: () {
+                AppHaptics.tap();
+                context.push(
+                  '${AppRoutes.productForm}?barcode=${item.barcode}',
+                );
+              },
+              icon: const Icon(Icons.edit_rounded, size: 20),
+              label: const Text('Editar producto'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: p.brandPrimary,
+                foregroundColor: Colors.white,
+                elevation: 0,
+                shape: const RoundedRectangleBorder(
+                  borderRadius: AppRadius.brLg,
+                ),
+                textStyle: AppTypography.bodyMd.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          SizedBox(
+            width: double.infinity,
+            height: 52,
+            child: OutlinedButton.icon(
+              onPressed: () => _addToShoppingList(context, ref),
+              icon: const Icon(Icons.add_shopping_cart_rounded, size: 20),
+              label: const Text('Añadir al carrito'),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: p.textBody,
+                side: BorderSide(color: p.outline),
+                shape: const RoundedRectangleBorder(
+                  borderRadius: AppRadius.brLg,
+                ),
+                textStyle: AppTypography.bodyMd.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          ),
+        ],
         const SizedBox(height: AppSpacing.sm),
         SizedBox(
           width: double.infinity,
@@ -726,6 +800,47 @@ class _ActionsCard extends ConsumerWidget {
         ),
       ],
     );
+  }
+
+  Future<void> _addToShoppingList(BuildContext context, WidgetRef ref) async {
+    AppHaptics.confirm();
+    final String target = item.name.toLowerCase().trim();
+    final bool alreadyExisted = ref
+            .read(shoppingListProvider)
+            .valueOrNull
+            ?.any((i) =>
+                !i.isChecked &&
+                i.sourceRecipeId == null &&
+                i.name.toLowerCase().trim() == target) ??
+        false;
+    await ref.read(shoppingListRepositoryProvider).addItem(name: item.name);
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          duration: const Duration(seconds: 4),
+          behavior: SnackBarBehavior.floating,
+          margin: const EdgeInsets.all(16),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
+          backgroundColor: alreadyExisted
+              ? const Color(0xFFB45309)
+              : const Color(0xFF166534),
+          content: Text(
+            alreadyExisted
+                ? 'Ya tenías "${item.name}" en tu carrito'
+                : 'Añadiste "${item.name}" al carrito',
+            style: const TextStyle(color: Colors.white),
+          ),
+          action: SnackBarAction(
+            label: 'Ver',
+            textColor: Colors.white,
+            onPressed: () => context.push(AppRoutes.shoppingList),
+          ),
+        ),
+      );
   }
 
   Future<void> _confirmDelete(BuildContext context, WidgetRef ref) async {
