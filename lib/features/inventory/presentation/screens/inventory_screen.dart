@@ -401,34 +401,40 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
                           },
                           onDismissed: (_) {
                             AppHaptics.error();
-                            ref
-                                .read(deleteInventoryItemUseCaseProvider)
-                                .call(item.id);
-
-                            ScaffoldMessenger.of(context)
-                              ..hideCurrentSnackBar()
-                              ..showSnackBar(
-                                SnackBar(
-                                  duration: const Duration(seconds: 5),
-                                  behavior: SnackBarBehavior.floating,
-                                  shape: const RoundedRectangleBorder(
-                                    borderRadius: AppRadius.brMd,
+                            // Defer al siguiente frame: el Dismissible se
+                            // desmonta limpio antes de que el stream emita y
+                            // dispare el rebuild que evidencia el race.
+                            WidgetsBinding.instance.addPostFrameCallback((_) {
+                              ref
+                                  .read(deleteInventoryItemUseCaseProvider)
+                                  .call(item.id);
+                              if (!context.mounted) return;
+                              ScaffoldMessenger.of(context)
+                                ..hideCurrentSnackBar()
+                                ..showSnackBar(
+                                  SnackBar(
+                                    duration: const Duration(seconds: 5),
+                                    behavior: SnackBarBehavior.floating,
+                                    shape: const RoundedRectangleBorder(
+                                      borderRadius: AppRadius.brMd,
+                                    ),
+                                    content: Text(
+                                      '"${item.name}" eliminado',
+                                      style: const TextStyle(
+                                          fontWeight: FontWeight.w600),
+                                    ),
+                                    action: SnackBarAction(
+                                      label: 'Deshacer',
+                                      onPressed: () {
+                                        ref
+                                            .read(
+                                                saveInventoryItemUseCaseProvider)
+                                            .call(item);
+                                      },
+                                    ),
                                   ),
-                                  content: Text(
-                                    '"${item.name}" eliminado',
-                                    style: const TextStyle(
-                                        fontWeight: FontWeight.w600),
-                                  ),
-                                  action: SnackBarAction(
-                                    label: 'Deshacer',
-                                    onPressed: () {
-                                      ref
-                                          .read(saveInventoryItemUseCaseProvider)
-                                          .call(item);
-                                    },
-                                  ),
-                                ),
-                              );
+                                );
+                            });
                           },
                           child: InventoryProductCard(
                             item: _toPantryCard(item),
