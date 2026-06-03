@@ -32,6 +32,7 @@ dependencies:
   # Networking
   dio: ^5.7.0
   connectivity_plus: ^6.1.4
+  cached_network_image: ^3.4.1
 
   # Scanner / device features
   mobile_scanner: ^5.2.3
@@ -55,6 +56,7 @@ flutter:
 
   assets:
     - assets/images/
+    - assets/images/recipes/
     - assets/branding/
 
 flutter_launcher_icons:

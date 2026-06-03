@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../app/router/app_router.dart';
 import '../../../../core/design/design_system.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
+import '../../../shopping_list/presentation/providers/shopping_list_providers.dart';
 
 class InventoryTopBar extends ConsumerWidget {
   const InventoryTopBar({super.key});
@@ -71,6 +72,15 @@ class InventoryTopBar extends ConsumerWidget {
             ],
           ),
           const Spacer(),
+          // Carrito de lista de compras (con badge de pendientes)
+          _CartButton(
+            count: ref.watch(shoppingListPendingCountProvider),
+            onTap: () {
+              AppHaptics.tap();
+              context.push(AppRoutes.shoppingList);
+            },
+          ),
+          const SizedBox(width: AppSpacing.xs),
           // Botón notificaciones recibidas (inbox)
           IconButton(
             onPressed: () {
@@ -186,6 +196,67 @@ class InventoryTopBar extends ConsumerWidget {
           ),
           const SizedBox(width: AppSpacing.xs),
         ],
+      ),
+    );
+  }
+}
+
+class _CartButton extends StatelessWidget {
+  const _CartButton({required this.count, required this.onTap});
+
+  final int count;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Tooltip(
+      message: 'Lista de compras',
+      child: SizedBox(
+        width: 36,
+        height: 36,
+        child: Stack(
+          clipBehavior: Clip.none,
+          alignment: Alignment.center,
+          children: <Widget>[
+            IconButton(
+              onPressed: onTap,
+              icon: Icon(
+                Icons.shopping_basket_outlined,
+                size: 22,
+                color: Colors.white.withValues(alpha: 0.9),
+              ),
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+            ),
+            if (count > 0)
+              Positioned(
+                top: 2,
+                right: 0,
+                child: Container(
+                  constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: AppColors.brandPrimary.withValues(alpha: 0.0),
+                      width: 0,
+                    ),
+                  ),
+                  alignment: Alignment.center,
+                  child: Text(
+                    count > 99 ? '99+' : '$count',
+                    style: const TextStyle(
+                      color: AppColors.brandPrimary,
+                      fontWeight: FontWeight.w800,
+                      fontSize: 10,
+                      height: 1.2,
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }

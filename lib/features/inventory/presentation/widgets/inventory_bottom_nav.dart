@@ -8,11 +8,13 @@ class InventoryBottomNav extends StatelessWidget {
     this.onScanTap,
     this.onNotifTap,
     this.onProfileTap,
+    this.onRecipesTap,
   });
 
   final VoidCallback? onScanTap;
   final VoidCallback? onNotifTap;
   final VoidCallback? onProfileTap;
+  final VoidCallback? onRecipesTap;
 
   @override
   Widget build(BuildContext context) {
@@ -38,7 +40,7 @@ class InventoryBottomNav extends StatelessWidget {
               child: Row(
                 children: <Widget>[
                   const Expanded(child: _NavItem(icon: Icons.inventory_2_rounded, label: 'Despensa', active: true)),
-                  const Expanded(child: _NavItem(icon: Icons.restaurant_menu_outlined, label: 'Recetas')),
+                  Expanded(child: _NavItem(icon: Icons.restaurant_menu_outlined, label: 'Recetas', onTap: onRecipesTap)),
                   const SizedBox(width: 72),
                   Expanded(child: _NavItem(icon: Icons.tune_rounded, label: 'Alertas', onTap: onNotifTap)),
                   Expanded(child: _NavItem(icon: Icons.person_outline_rounded, label: 'Perfil', onTap: onProfileTap)),
