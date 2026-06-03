@@ -103,6 +103,7 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
         onScanTap: () => context.push(AppRoutes.scanner),
         onNotifTap: () => context.push(AppRoutes.notificationSettings),
         onProfileTap: () => context.push(AppRoutes.profile),
+        onRecipesTap: () => context.push(AppRoutes.recipes),
       ),
       body: Stack(
         children: <Widget>[
@@ -433,6 +434,8 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
                             item: _toPantryCard(item),
                             onIncrement: () => _handleIncrement(item),
                             onDecrement: () => _handleDecrement(item),
+                            onTap: () => context
+                                .push('${AppRoutes.productDetail}/${item.id}'),
                           ),
                         );
                       },

@@ -12,7 +12,10 @@ import '../../features/notifications/presentation/screens/notification_settings_
 import '../../features/notifications/presentation/screens/notifications_inbox_screen.dart';
 import '../../features/profile/presentation/screens/profile_screen.dart';
 import '../../features/product_form/presentation/screens/product_form_screen.dart';
+import '../../features/recipes/presentation/screens/recipe_detail_screen.dart';
+import '../../features/recipes/presentation/screens/recipes_screen.dart';
 import '../../features/scanner/presentation/screens/scanner_screen.dart';
+import '../../features/shopping_list/presentation/screens/shopping_list_screen.dart';
 
 class AppRoutes {
   static const String inventory = '/';
@@ -21,7 +24,9 @@ class AppRoutes {
   static const String notificationSettings = '/notification-settings';
   static const String notificationsInbox = '/notifications-inbox';
   static const String profile = '/profile';
+  static const String recipes = '/recipes';
   static const String productDetail = '/product';
+  static const String shoppingList = '/shopping-list';
 
   // Auth routes
   static const String login = '/login';
@@ -131,6 +136,30 @@ GoRouter createAppRouter(Ref ref) {
         builder: (BuildContext context, GoRouterState state) {
           final int id = int.tryParse(state.pathParameters['id'] ?? '') ?? 0;
           return ProductDetailScreen(itemId: id);
+        },
+      ),
+      GoRoute(
+        path: AppRoutes.recipes,
+        name: 'recipes',
+        builder: (BuildContext context, GoRouterState state) {
+          return const RecipesScreen();
+        },
+        routes: <RouteBase>[
+          GoRoute(
+            path: ':id',
+            name: 'recipe-detail',
+            builder: (BuildContext context, GoRouterState state) {
+              final String id = state.pathParameters['id'] ?? '';
+              return RecipeDetailScreen(recipeId: id);
+            },
+          ),
+        ],
+      ),
+      GoRoute(
+        path: AppRoutes.shoppingList,
+        name: 'shopping-list',
+        builder: (BuildContext context, GoRouterState state) {
+          return const ShoppingListScreen();
         },
       ),
     ],
