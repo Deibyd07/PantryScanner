@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:pantry_scanner/app/pantry_scanner_app.dart';
 import 'package:pantry_scanner/features/auth/domain/entities/app_user.dart';
 import 'package:pantry_scanner/features/auth/presentation/providers/auth_providers.dart';
+import 'package:pantry_scanner/features/inventory/presentation/providers/inventory_providers.dart';
 import 'package:pantry_scanner/features/notifications/data/services/noop_notification_scheduler.dart';
 import 'package:pantry_scanner/features/notifications/presentation/providers/notification_settings_providers.dart';
 
@@ -17,6 +18,8 @@ void main() {
           notificationSchedulerProvider.overrideWithValue(
             const NoopNotificationScheduler(),
           ),
+          // Prevent low-stock notifications from triggering native methods in tests
+          lowStockWatcherProvider.overrideWithValue(null),
           // Emit null (unauthenticated) to avoid Firebase calls in tests
           authStateProvider.overrideWith(
             (ref) => Stream<AppUser?>.value(null),
