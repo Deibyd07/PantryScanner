@@ -13,7 +13,26 @@
       "PowerShell(Get-Process *)",
       "PowerShell(Stop-Process *)",
       "WebFetch(domain:raw.githubusercontent.com)",
-      "WebFetch(domain:api.github.com)"
+      "WebFetch(domain:api.github.com)",
+      "Bash(flutter run *)",
+      "WebFetch(domain:commons.wikimedia.org)",
+      "WebFetch(domain:upload.wikimedia.org)",
+      "WebFetch(domain:www.themealdb.com)",
+      "Bash(flutter emulators *)",
+      "Bash(taskkill /F /IM adb.exe)",
+      "Bash(taskkill /F /IM flutter.bat)",
+      "Bash(taskkill /F /IM dart.exe)",
+      "Bash(powershell -Command 'Get-Process | Where-Object { $_.ProcessName -match '\\\\''flutter|dart|adb'\\\\'' } | Stop-Process -Force -ErrorAction SilentlyContinue; Write-Host '\\\\''done'\\\\''')",
+      "Bash(cp lib/app/router/app_router.dart /tmp/router_full.dart)",
+      "Bash(git reset *)",
+      "Bash(powershell -Command 'Get-Process | Where-Object { $_.ProcessName -match '\\\\''flutter|dart'\\\\'' } | Stop-Process -Force -ErrorAction SilentlyContinue; Write-Host done')",
+      "Bash(C:\\\\Users\\\\Deibyd\\\\AppData\\\\Local\\\\Android\\\\Sdk\\\\platform-tools\\\\adb.exe -s emulator-5554 shell pm clear com.example.pantry_scanner)",
+      "Bash(C:\\\\Users\\\\Deibyd\\\\AppData\\\\Local\\\\Android\\\\Sdk\\\\platform-tools\\\\adb.exe -s emulator-5554 uninstall com.example.pantry_scanner)",
+      "Bash(C:/Users/Deibyd/AppData/Local/Android/Sdk/platform-tools/adb.exe -s emulator-5554 shell getprop sys.boot_completed)",
+      "Bash(flutter pub *)",
+      "Bash(flutter gen-l10n *)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)"
     ]
   }
 }

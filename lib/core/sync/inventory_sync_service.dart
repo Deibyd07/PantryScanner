@@ -10,6 +10,7 @@ import '../../features/auth/presentation/providers/auth_providers.dart';
 import '../../features/inventory/data/repositories/sqlite_inventory_repository.dart';
 import '../../features/inventory/domain/entities/inventory_item.dart';
 import '../network/connectivity_provider.dart';
+import 'sync_status_provider.dart';
 
 class InventorySyncService {
   InventorySyncService(this.ref, this.localRepo) {
@@ -91,6 +92,7 @@ class InventorySyncService {
   Future<void> _pushToCloud() async {
     if (_isSyncing || _currentUid == null || !_isOnline) return;
     _isSyncing = true;
+    syncBegin(ref);
     try {
       final String uid = _currentUid!;
       final List<InventoryItem> localItems =
@@ -140,6 +142,7 @@ class InventorySyncService {
     } catch (e) {
       debugPrint('Sync push error: $e');
     } finally {
+      syncEnd(ref);
       _isSyncing = false;
     }
   }

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../app/router/app_router.dart';
 import '../../../../core/design/design_system.dart';
+import '../../../../core/sync/sync_status_provider.dart';
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
 import '../../../shopping_list/presentation/providers/shopping_list_providers.dart';
@@ -33,7 +34,7 @@ class InventoryTopBar extends ConsumerWidget {
             width: 36,
             height: 36,
             padding: const EdgeInsets.all(1),
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               color: Colors.white,
               borderRadius: AppRadius.brMs,
               boxShadow: AppElevation.heroIcon,
@@ -74,6 +75,8 @@ class InventoryTopBar extends ConsumerWidget {
             ],
           ),
           const Spacer(),
+          // Indicador de sincronización (aparece solo cuando hay ops activas)
+          _SyncIcon(status: ref.watch(syncStatusProvider)),
           // Carrito de lista de compras (con badge de pendientes)
           _CartButton(
             count: ref.watch(shoppingListPendingCountProvider),
@@ -199,6 +202,30 @@ class InventoryTopBar extends ConsumerWidget {
           ),
           const SizedBox(width: AppSpacing.xs),
         ],
+      ),
+    );
+  }
+}
+
+// ── Indicador de sync ─────────────────────────────────────────────────────────
+class _SyncIcon extends StatelessWidget {
+  const _SyncIcon({required this.status});
+  final SyncStatus status;
+
+  @override
+  Widget build(BuildContext context) {
+    if (status != SyncStatus.syncing) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.only(right: AppSpacing.xs),
+      child: SizedBox(
+        width: 18,
+        height: 18,
+        child: CircularProgressIndicator(
+          strokeWidth: 2,
+          valueColor: AlwaysStoppedAnimation<Color>(
+            Colors.white.withValues(alpha: 0.75),
+          ),
+        ),
       ),
     );
   }

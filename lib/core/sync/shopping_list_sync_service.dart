@@ -10,6 +10,7 @@ import '../../features/auth/presentation/providers/auth_providers.dart';
 import '../../features/shopping_list/data/repositories/sqlite_shopping_list_repository.dart';
 import '../../features/shopping_list/domain/entities/shopping_list_item.dart';
 import '../network/connectivity_provider.dart';
+import 'sync_status_provider.dart';
 
 class ShoppingListSyncService {
   ShoppingListSyncService(this.ref, this.localRepo) {
@@ -90,6 +91,7 @@ class ShoppingListSyncService {
   Future<void> _pushToCloud(List<ShoppingListItem> items) async {
     if (_isSyncing || _currentUid == null || !_isOnline) return;
     _isSyncing = true;
+    syncBegin(ref);
     try {
       final String uid = _currentUid!;
       final CollectionReference<Map<String, dynamic>> col = _firestore
@@ -139,6 +141,7 @@ class ShoppingListSyncService {
     } catch (e) {
       debugPrint('[ShoppingListSync] Push error: $e');
     } finally {
+      syncEnd(ref);
       _isSyncing = false;
     }
   }

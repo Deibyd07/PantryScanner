@@ -59,25 +59,25 @@ class AppTheme {
       ),
 
       // ── Input fields ─────────────────────────────────────────────────────
-      inputDecorationTheme: InputDecorationTheme(
-        border: const OutlineInputBorder(
+      inputDecorationTheme: const InputDecorationTheme(
+        border: OutlineInputBorder(
           borderRadius: BorderRadius.all(Radius.circular(24)),
         ),
-        focusedBorder: const OutlineInputBorder(
+        focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.all(Radius.circular(24)),
           borderSide: BorderSide(color: _primary, width: 2),
         ),
-        labelStyle: const TextStyle(color: _primary),
+        labelStyle: TextStyle(color: _primary),
         prefixIconColor: _primary,
       ),
 
       // ── Chips ─────────────────────────────────────────────────────────────
-      chipTheme: ChipThemeData(
+      chipTheme: const ChipThemeData(
         selectedColor: _primary,
         checkmarkColor: Colors.white,
-        labelStyle: const TextStyle(fontWeight: FontWeight.w600),
-        shape: const StadiumBorder(),
-        side: const BorderSide(color: Color(0xFFFFBDBA)),
+        labelStyle: TextStyle(fontWeight: FontWeight.w600),
+        shape: StadiumBorder(),
+        side: BorderSide(color: Color(0xFFFFBDBA)),
       ),
 
       // ── Floating Action Button ─────────────────────────────────────────

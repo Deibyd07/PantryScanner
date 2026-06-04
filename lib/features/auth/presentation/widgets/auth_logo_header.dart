@@ -60,7 +60,7 @@ class _AuthLogoHeaderState extends State<AuthLogoHeader>
                 ),
                 boxShadow: <BoxShadow>[
                   BoxShadow(
-                    color: const Color(0xFF2EA87E).withOpacity(0.4),
+                    color: const Color(0xFF2EA87E).withValues(alpha: 0.4),
                     blurRadius: 24,
                     spreadRadius: 4,
                   ),
@@ -86,7 +86,7 @@ class _AuthLogoHeaderState extends State<AuthLogoHeader>
             Text(
               'Tu despensa inteligente',
               style: TextStyle(
-                color: Colors.white.withOpacity(0.6),
+                color: Colors.white.withValues(alpha: 0.6),
                 fontSize: 14,
                 fontWeight: FontWeight.w400,
               ),

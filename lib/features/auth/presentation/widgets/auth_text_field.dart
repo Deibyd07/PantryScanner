@@ -51,12 +51,12 @@ class _AuthTextFieldState extends State<AuthTextField> {
         filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
         child: Container(
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.1),
+            color: Colors.white.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
               color: _hasError
-                  ? const Color(0xFFFF4B4B).withOpacity(0.6)
-                  : Colors.white.withOpacity(0.18),
+                  ? const Color(0xFFFF4B4B).withValues(alpha: 0.6)
+                  : Colors.white.withValues(alpha: 0.18),
               width: 1.2,
             ),
           ),
@@ -76,7 +76,7 @@ class _AuthTextFieldState extends State<AuthTextField> {
             decoration: InputDecoration(
               labelText: widget.label,
               labelStyle: TextStyle(
-                color: Colors.white.withOpacity(0.65),
+                color: Colors.white.withValues(alpha: 0.65),
                 fontSize: 14,
                 fontWeight: FontWeight.w400,
               ),
@@ -89,7 +89,7 @@ class _AuthTextFieldState extends State<AuthTextField> {
               ),
               prefixIcon: Icon(
                 widget.icon,
-                color: Colors.white.withOpacity(0.55),
+                color: Colors.white.withValues(alpha: 0.55),
                 size: 20,
               ),
               suffixIcon: widget.obscureText
@@ -98,7 +98,7 @@ class _AuthTextFieldState extends State<AuthTextField> {
                         _obscured
                             ? Icons.visibility_off_rounded
                             : Icons.visibility_rounded,
-                        color: Colors.white.withOpacity(0.5),
+                        color: Colors.white.withValues(alpha: 0.5),
                         size: 20,
                       ),
                       onPressed: () => setState(() => _obscured = !_obscured),
