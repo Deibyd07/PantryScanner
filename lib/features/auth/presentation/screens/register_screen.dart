@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/design/design_system.dart';
+import '../../../../l10n/generated/app_localizations.dart';
 import '../../data/repositories/firebase_auth_repository.dart';
 import '../providers/auth_providers.dart';
 import '../widgets/password_strength_indicator.dart';
@@ -92,7 +93,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
     } on AuthException catch (e) {
       if (mounted) _showError(e.message);
     } catch (_) {
-      if (mounted) _showError('Error inesperado. Intenta de nuevo.');
+      if (mounted) _showError(AppLocalizations.of(context).authUnexpectedError);
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -123,10 +124,11 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
   @override
   Widget build(BuildContext context) {
     final PaletteSpec p = context.palette;
+    final AppLocalizations t = AppLocalizations.of(context);
 
     return SplitHeroScaffold(
       heroHeight: 180,
-      heroContent: FadeTransition(opacity: _heroFade, child: _buildHero()),
+      heroContent: FadeTransition(opacity: _heroFade, child: _buildHero(t)),
       formContent: SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(
           AppSpacing.lg,
@@ -137,7 +139,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            // Back button + title
             Row(
               children: <Widget>[
                 _BackButton(isLoading: _isLoading, palette: p),
@@ -146,14 +147,14 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
                     Text(
-                      'Crear cuenta',
+                      t.authCreateAccount,
                       style: AppTypography.displayMd.copyWith(
                         color: p.textBody,
                         fontSize: 22,
                       ),
                     ),
                     Text(
-                      'Completa tus datos para registrarte',
+                      t.authCreateAccountSub,
                       style: AppTypography.bodyXs.copyWith(color: p.textMuted),
                     ),
                   ],
@@ -168,7 +169,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
-                    // Name
                     _animatedItem(
                       index: 0,
                       child: TextFormField(
@@ -177,16 +177,15 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                         textInputAction: TextInputAction.next,
                         textCapitalization: TextCapitalization.words,
                         autofillHints: const <String>[AutofillHints.name],
-                        validator: (v) => (v == null || v.trim().isEmpty) ? 'Ingresa tu nombre' : null,
+                        validator: (v) => (v == null || v.trim().isEmpty) ? t.authNameRequired : null,
                         style: AppTypography.bodyMd.copyWith(color: p.textBody, fontWeight: FontWeight.w600),
                         cursorColor: p.brandPrimary,
-                        decoration: _field(p, label: 'Nombre completo', icon: Icons.person_outline_rounded),
+                        decoration: _field(p, label: t.authFullNameLabel, icon: Icons.person_outline_rounded),
                         onFieldSubmitted: (_) => _emailFocus.requestFocus(),
                       ),
                     ),
                     const SizedBox(height: AppSpacing.md - 2),
 
-                    // Email
                     _animatedItem(
                       index: 1,
                       child: TextFormField(
@@ -198,13 +197,12 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                         validator: _validateEmail,
                         style: AppTypography.bodyMd.copyWith(color: p.textBody, fontWeight: FontWeight.w600),
                         cursorColor: p.brandPrimary,
-                        decoration: _field(p, label: 'Correo electrónico', icon: Icons.email_outlined),
+                        decoration: _field(p, label: t.authEmailLabel, icon: Icons.email_outlined),
                         onFieldSubmitted: (_) => _passwordFocus.requestFocus(),
                       ),
                     ),
                     const SizedBox(height: AppSpacing.md - 2),
 
-                    // Password + strength
                     _animatedItem(
                       index: 2,
                       child: Column(
@@ -221,7 +219,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                             cursorColor: p.brandPrimary,
                             decoration: _field(
                               p,
-                              label: 'Contraseña',
+                              label: t.authPasswordLabel,
                               icon: Icons.lock_outline_rounded,
                               suffixIcon: IconButton(
                                 onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
@@ -240,7 +238,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                     ),
                     const SizedBox(height: AppSpacing.md - 2),
 
-                    // Confirm password
                     _animatedItem(
                       index: 3,
                       child: TextFormField(
@@ -250,15 +247,16 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                         textInputAction: TextInputAction.done,
                         autofillHints: const <String>[AutofillHints.newPassword],
                         validator: (v) {
-                          if (v == null || v.isEmpty) return 'Confirma tu contraseña';
-                          if (v != _passwordCtrl.text) return 'Las contraseñas no coinciden';
+                          final AppLocalizations lt = AppLocalizations.of(context);
+                          if (v == null || v.isEmpty) return lt.authConfirmPasswordRequired;
+                          if (v != _passwordCtrl.text) return lt.authPasswordMismatch;
                           return null;
                         },
                         style: AppTypography.bodyMd.copyWith(color: p.textBody, fontWeight: FontWeight.w600),
                         cursorColor: p.brandPrimary,
                         decoration: _field(
                           p,
-                          label: 'Confirmar contraseña',
+                          label: t.authConfirmPasswordLabel,
                           icon: Icons.lock_outline_rounded,
                           suffixIcon: IconButton(
                             onPressed: () => setState(() => _obscureConfirm = !_obscureConfirm),
@@ -274,11 +272,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                     ),
                     const SizedBox(height: AppSpacing.lg),
 
-                    // Register button
                     _animatedItem(
                       index: 4,
                       child: BrandGradientButton(
-                        label: 'Crear cuenta',
+                        label: t.authCreateAccount,
                         isLoading: _isLoading,
                         onPressed: _isLoading ? null : _register,
                       ),
@@ -289,7 +286,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: <Widget>[
                         Text(
-                          '¿Ya tienes cuenta? ',
+                          t.authAlreadyHaveAccount,
                           style: AppTypography.bodyMd.copyWith(
                             color: p.textMuted.withValues(alpha: 0.8),
                           ),
@@ -303,7 +300,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                             tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                           ),
                           child: Text(
-                            'Iniciar sesión',
+                            t.authSignInBtn,
                             style: AppTypography.bodyMd.copyWith(
                               fontWeight: FontWeight.w700,
                               color: p.brandPrimary,
@@ -322,7 +319,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
     );
   }
 
-  Widget _buildHero() {
+  Widget _buildHero(AppLocalizations t) {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: <Widget>[
@@ -338,12 +335,12 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
         ),
         const SizedBox(height: AppSpacing.ms),
         Text(
-          'PantryScanner',
+          t.appName,
           style: AppTypography.displaySm.copyWith(color: Colors.white, fontSize: 20),
         ),
         const SizedBox(height: 3),
         Text(
-          'Únete y organiza tu despensa',
+          t.authRegisterHeroSub,
           style: AppTypography.bodyXs.copyWith(
             color: Colors.white.withValues(alpha: 0.72),
           ),
@@ -409,17 +406,19 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
   }
 
   String? _validateEmail(String? value) {
-    if (value == null || value.trim().isEmpty) return 'Ingresa tu correo electrónico';
+    final AppLocalizations t = AppLocalizations.of(context);
+    if (value == null || value.trim().isEmpty) return t.authEmailRequired;
     final RegExp emailRegex = RegExp(r'^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$');
-    if (!emailRegex.hasMatch(value.trim())) return 'Formato de correo inválido';
+    if (!emailRegex.hasMatch(value.trim())) return t.authEmailInvalid;
     return null;
   }
 
   String? _validatePassword(String? value) {
-    if (value == null || value.isEmpty) return 'Ingresa una contraseña';
-    if (value.length < 8) return 'Mínimo 8 caracteres';
-    if (!RegExp(r'[A-Z]').hasMatch(value)) return 'Debe incluir al menos 1 mayúscula';
-    if (!RegExp(r'[0-9]').hasMatch(value)) return 'Debe incluir al menos 1 número';
+    final AppLocalizations t = AppLocalizations.of(context);
+    if (value == null || value.isEmpty) return t.authPasswordRequired;
+    if (value.length < 8) return t.authPasswordMin;
+    if (!RegExp(r'[A-Z]').hasMatch(value)) return t.authPasswordUppercase;
+    if (!RegExp(r'[0-9]').hasMatch(value)) return t.authPasswordNumber;
     return null;
   }
 }

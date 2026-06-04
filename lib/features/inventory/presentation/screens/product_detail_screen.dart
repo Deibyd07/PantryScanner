@@ -8,6 +8,9 @@ import 'package:intl/intl.dart';
 
 import '../../../../app/router/app_router.dart';
 import '../../../../core/design/design_system.dart';
+import '../../../../core/i18n/category_l10n.dart';
+import '../../../../core/i18n/status_l10n.dart';
+import '../../../../l10n/generated/app_localizations.dart';
 import '../../../shopping_list/presentation/providers/shopping_list_providers.dart';
 import '../../domain/entities/inventory_item.dart';
 import '../providers/inventory_providers.dart';
@@ -23,13 +26,14 @@ class ProductDetailScreen extends ConsumerWidget {
     final AsyncValue<List<InventoryItem>> async =
         ref.watch(inventoryItemsProvider);
 
+    final AppLocalizations t = AppLocalizations.of(context);
     return Scaffold(
       backgroundColor: p.bg,
       body: async.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (Object e, _) => Center(
           child: Text(
-            'No se pudo cargar el producto',
+            t.productDetailLoadError,
             style: AppTypography.bodyMd.copyWith(color: p.textMuted),
           ),
         ),
@@ -72,7 +76,7 @@ class _NotFound extends StatelessWidget {
                 size: 64, color: palette.textMuted.withValues(alpha: 0.35)),
             const SizedBox(height: AppSpacing.md),
             Text(
-              'Este producto ya no está en tu despensa',
+              AppLocalizations.of(context).productDetailNotInPantry,
               textAlign: TextAlign.center,
               style: AppTypography.bodyLg.copyWith(color: palette.textMuted),
             ),
@@ -181,7 +185,7 @@ class _Hero extends StatelessWidget {
               children: <Widget>[
                 if (item.category != null && item.category!.isNotEmpty)
                   Text(
-                    item.category!.toUpperCase(),
+                    categoryLabel(context, item.category!).toUpperCase(),
                     style: AppTypography.labelSm.copyWith(
                       color: Colors.white.withValues(alpha: 0.85),
                       fontWeight: FontWeight.w700,
@@ -307,7 +311,7 @@ class _StatusBadge extends StatelessWidget {
           Icon(_statusIcon(status), size: 13, color: Colors.white),
           const SizedBox(width: 5),
           Text(
-            _statusLabel(status),
+            status.label(context),
             style: AppTypography.labelSm.copyWith(
               color: Colors.white,
               fontWeight: FontWeight.w800,
@@ -329,6 +333,7 @@ class _StatsRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final AppLocalizations t = AppLocalizations.of(context);
     final int? daysLeft =
         item.expiryDate?.difference(DateTime.now()).inDays;
 
@@ -338,7 +343,9 @@ class _StatsRow extends StatelessWidget {
           child: _StatTile(
             icon: Icons.inventory_2_outlined,
             value: '${item.quantity}',
-            unit: item.quantity == 1 ? 'unidad' : 'unidades',
+            unit: item.quantity == 1
+                ? t.productDetailUnitOne
+                : t.productDetailUnitMany,
           ),
         ),
         const SizedBox(width: AppSpacing.sm),
@@ -351,14 +358,14 @@ class _StatsRow extends StatelessWidget {
                     ? '${daysLeft.abs()}'
                     : '$daysLeft',
             unit: daysLeft == null
-                ? 'sin vencimiento'
+                ? t.productDetailNoExpiryShort
                 : daysLeft < 0
-                    ? 'días vencido'
+                    ? t.productDetailDaysExpiredMany
                     : daysLeft == 0
-                        ? 'vence hoy'
+                        ? t.productDetailExpiresToday
                         : daysLeft == 1
-                            ? 'día restante'
-                            : 'días restantes',
+                            ? t.productDetailDayLeft
+                            : t.productDetailDaysLeftMany,
             color: daysLeft != null && daysLeft <= 0
                 ? AppColors.dangerStrong
                 : daysLeft != null && daysLeft <= 3
@@ -371,7 +378,7 @@ class _StatsRow extends StatelessWidget {
           child: _StatTile(
             icon: Icons.notifications_active_outlined,
             value: '${item.minStock}',
-            unit: 'stock mín.',
+            unit: t.productDetailMinStockShort,
           ),
         ),
       ],
@@ -443,10 +450,11 @@ class _QuantityCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final AppLocalizations t = AppLocalizations.of(context);
     return _SectionCard(
-      title: 'Cantidad',
+      title: t.productDetailQtyCardTitle,
       icon: Icons.tune_rounded,
-      caption: 'Ajusta cuántas unidades tienes',
+      caption: t.productDetailQtyCardCaption,
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
         child: Row(
@@ -488,24 +496,23 @@ class _QuantityCard extends ConsumerWidget {
   Future<void> _decrement(BuildContext context, WidgetRef ref) async {
     if (item.quantity <= 1) {
       AppHaptics.warning();
+      final AppLocalizations t = AppLocalizations.of(context);
       final bool? confirmed = await showDialog<bool>(
         context: context,
         builder: (BuildContext ctx) => AlertDialog(
           shape: const RoundedRectangleBorder(borderRadius: AppRadius.brXl),
-          title: const Text('¿Eliminar producto?'),
-          content: Text(
-            'La cantidad de "${item.name}" llegará a 0. ¿Quieres eliminarlo del inventario?',
-          ),
+          title: Text(t.inventoryConfirmDeleteTitle),
+          content: Text(t.inventoryConfirmDeleteBody(item.name)),
           actions: <Widget>[
             TextButton(
               onPressed: () => Navigator.of(ctx).pop(false),
-              child: const Text('Cancelar'),
+              child: Text(t.commonCancel),
             ),
             FilledButton(
               style: FilledButton.styleFrom(
                   backgroundColor: AppColors.dangerStrong),
               onPressed: () => Navigator.of(ctx).pop(true),
-              child: const Text('Eliminar'),
+              child: Text(t.commonDelete),
             ),
           ],
         ),
@@ -561,40 +568,47 @@ class _DetailsCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final PaletteSpec p = context.palette;
+    final AppLocalizations t = AppLocalizations.of(context);
+    final String locale = Localizations.localeOf(context).languageCode;
+    final DateFormat fmt = DateFormat.yMMMd(locale);
     final List<_DetailRow> rows = <_DetailRow>[
       _DetailRow(
         icon: Icons.qr_code_2_rounded,
-        label: 'Código de barras',
-        value: item.barcode.isEmpty ? 'Sin código' : item.barcode,
+        label: t.productDetailRowBarcode,
+        value: item.barcode.isEmpty
+            ? t.productDetailRowBarcodeMissing
+            : item.barcode,
       ),
       _DetailRow(
         icon: Icons.category_outlined,
-        label: 'Categoría',
-        value: item.category ?? 'Sin categoría',
+        label: t.productDetailRowCategory,
+        value: item.category == null
+            ? t.categoryUncategorized
+            : categoryLabel(context, item.category!),
       ),
       _DetailRow(
         icon: Icons.event_outlined,
-        label: 'Vencimiento',
+        label: t.productDetailRowExpiry,
         value: item.expiryDate == null
-            ? 'No registrado'
-            : DateFormat('d MMM y', 'es').format(item.expiryDate!),
+            ? t.productDetailRowExpiryMissing
+            : fmt.format(item.expiryDate!),
       ),
       _DetailRow(
         icon: Icons.add_circle_outline_rounded,
-        label: 'Agregado',
-        value: DateFormat('d MMM y', 'es').format(item.createdAt),
+        label: t.productDetailRowAdded,
+        value: fmt.format(item.createdAt),
       ),
       _DetailRow(
         icon: Icons.update_rounded,
-        label: 'Última edición',
-        value: DateFormat('d MMM y', 'es').format(item.updatedAt),
+        label: t.productDetailRowUpdated,
+        value: fmt.format(item.updatedAt),
       ),
     ];
 
     return _SectionCard(
-      title: 'Detalles',
+      title: t.productDetailDetailsCardTitle,
       icon: Icons.info_outline_rounded,
-      caption: 'Información del producto',
+      caption: t.productDetailDetailsCardCaption,
       child: Column(
         children: <Widget>[
           for (int i = 0; i < rows.length; i++) ...<Widget>[
@@ -651,10 +665,11 @@ class _NotesCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final PaletteSpec p = context.palette;
+    final AppLocalizations t = AppLocalizations.of(context);
     return _SectionCard(
-      title: 'Notas',
+      title: t.productDetailNotesCardTitle,
       icon: Icons.notes_rounded,
-      caption: 'Tus apuntes sobre este producto',
+      caption: t.productDetailNotesCardCaption,
       child: Text(
         notes,
         style: AppTypography.bodyMd.copyWith(
@@ -681,6 +696,7 @@ class _ActionsCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final PaletteSpec p = context.palette;
+    final AppLocalizations t = AppLocalizations.of(context);
     return Column(
       children: <Widget>[
         if (_needsReplenish) ...<Widget>[
@@ -690,7 +706,7 @@ class _ActionsCard extends ConsumerWidget {
             child: ElevatedButton.icon(
               onPressed: () => _addToShoppingList(context, ref),
               icon: const Icon(Icons.add_shopping_cart_rounded, size: 20),
-              label: const Text('Reponer · añadir al carrito'),
+              label: Text(t.productDetailActionReplenish),
               style: ElevatedButton.styleFrom(
                 backgroundColor: p.brandPrimary,
                 foregroundColor: Colors.white,
@@ -716,7 +732,7 @@ class _ActionsCard extends ConsumerWidget {
                 );
               },
               icon: const Icon(Icons.edit_rounded, size: 20),
-              label: const Text('Editar producto'),
+              label: Text(t.productDetailActionEdit),
               style: OutlinedButton.styleFrom(
                 foregroundColor: p.brandPrimary,
                 side: BorderSide(color: p.brandPrimary.withValues(alpha: 0.5)),
@@ -741,7 +757,7 @@ class _ActionsCard extends ConsumerWidget {
                 );
               },
               icon: const Icon(Icons.edit_rounded, size: 20),
-              label: const Text('Editar producto'),
+              label: Text(t.productDetailActionEdit),
               style: ElevatedButton.styleFrom(
                 backgroundColor: p.brandPrimary,
                 foregroundColor: Colors.white,
@@ -762,7 +778,7 @@ class _ActionsCard extends ConsumerWidget {
             child: OutlinedButton.icon(
               onPressed: () => _addToShoppingList(context, ref),
               icon: const Icon(Icons.add_shopping_cart_rounded, size: 20),
-              label: const Text('Añadir al carrito'),
+              label: Text(t.productDetailActionAddToCart),
               style: OutlinedButton.styleFrom(
                 foregroundColor: p.textBody,
                 side: BorderSide(color: p.outline),
@@ -783,7 +799,7 @@ class _ActionsCard extends ConsumerWidget {
           child: OutlinedButton.icon(
             onPressed: () => _confirmDelete(context, ref),
             icon: const Icon(Icons.delete_outline_rounded, size: 20),
-            label: const Text('Eliminar producto'),
+            label: Text(t.productDetailActionDelete),
             style: OutlinedButton.styleFrom(
               foregroundColor: AppColors.dangerStrong,
               side: BorderSide(
@@ -815,6 +831,7 @@ class _ActionsCard extends ConsumerWidget {
         false;
     await ref.read(shoppingListRepositoryProvider).addItem(name: item.name);
     if (!context.mounted) return;
+    final AppLocalizations t = AppLocalizations.of(context);
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
       ..showSnackBar(
@@ -830,12 +847,12 @@ class _ActionsCard extends ConsumerWidget {
               : const Color(0xFF166534),
           content: Text(
             alreadyExisted
-                ? 'Ya tenías "${item.name}" en tu carrito'
-                : 'Añadiste "${item.name}" al carrito',
+                ? t.productDetailCartAlreadyHad(item.name)
+                : t.productDetailCartAdded(item.name),
             style: const TextStyle(color: Colors.white),
           ),
           action: SnackBarAction(
-            label: 'Ver',
+            label: t.commonSee,
             textColor: Colors.white,
             onPressed: () => context.push(AppRoutes.shoppingList),
           ),
@@ -845,24 +862,23 @@ class _ActionsCard extends ConsumerWidget {
 
   Future<void> _confirmDelete(BuildContext context, WidgetRef ref) async {
     AppHaptics.warning();
+    final AppLocalizations t = AppLocalizations.of(context);
     final bool? confirmed = await showDialog<bool>(
       context: context,
       builder: (BuildContext ctx) => AlertDialog(
         shape: const RoundedRectangleBorder(borderRadius: AppRadius.brXl),
-        title: const Text('Eliminar producto'),
-        content: Text(
-          '¿Seguro que quieres eliminar "${item.name}" de tu despensa?',
-        ),
+        title: Text(t.inventoryDeleteTitle),
+        content: Text(t.inventoryDeleteBody(item.name)),
         actions: <Widget>[
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('Cancelar'),
+            child: Text(t.commonCancel),
           ),
           FilledButton(
             style: FilledButton.styleFrom(
                 backgroundColor: AppColors.dangerStrong),
             onPressed: () => Navigator.of(ctx).pop(true),
-            child: const Text('Eliminar'),
+            child: Text(t.commonDelete),
           ),
         ],
       ),
@@ -960,19 +976,6 @@ Color _statusColor(ProductStatus s) {
       return AppColors.neutralStrong;
     case ProductStatus.normal:
       return AppColors.successStrong;
-  }
-}
-
-String _statusLabel(ProductStatus s) {
-  switch (s) {
-    case ProductStatus.expired:
-      return 'Vencido';
-    case ProductStatus.expiringSoon:
-      return 'Vence pronto';
-    case ProductStatus.outOfStock:
-      return 'Sin stock';
-    case ProductStatus.normal:
-      return 'Fresco';
   }
 }
 

@@ -200,6 +200,18 @@ abstract class AppLocalizations {
   /// **'Buscar'**
   String get commonSearch;
 
+  /// No description provided for @commonConfirm.
+  ///
+  /// In es, this message translates to:
+  /// **'Confirmar'**
+  String get commonConfirm;
+
+  /// No description provided for @commonCreate.
+  ///
+  /// In es, this message translates to:
+  /// **'Crear'**
+  String get commonCreate;
+
   /// No description provided for @navPantry.
   ///
   /// In es, this message translates to:
@@ -1237,6 +1249,1056 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'PantryScanner respeta tu privacidad. Recopilamos solo: tu correo electrónico (para autenticación), los productos que registras (almacenados localmente en tu dispositivo y sincronizados con Firebase asociados a tu cuenta), y configuraciones de la app (idioma, preferencias). No compartimos tu información con terceros con fines publicitarios. Puedes eliminar tu cuenta y todos los datos asociados contactando al equipo. Las imágenes de productos se almacenan localmente en tu dispositivo.'**
   String get legalPrivacyBody;
+
+  /// No description provided for @productFormHeroTitleAdd.
+  ///
+  /// In es, this message translates to:
+  /// **'Agregar producto'**
+  String get productFormHeroTitleAdd;
+
+  /// No description provided for @productFormHeroTitleEdit.
+  ///
+  /// In es, this message translates to:
+  /// **'Editar producto'**
+  String get productFormHeroTitleEdit;
+
+  /// No description provided for @productFormHeroSubtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Llena los datos y guarda en tu despensa'**
+  String get productFormHeroSubtitle;
+
+  /// No description provided for @productFormSectionPhoto.
+  ///
+  /// In es, this message translates to:
+  /// **'Foto del producto'**
+  String get productFormSectionPhoto;
+
+  /// No description provided for @productFormSectionBasic.
+  ///
+  /// In es, this message translates to:
+  /// **'Información básica'**
+  String get productFormSectionBasic;
+
+  /// No description provided for @productFormSectionCategory.
+  ///
+  /// In es, this message translates to:
+  /// **'Categoría'**
+  String get productFormSectionCategory;
+
+  /// No description provided for @productFormSectionQuantity.
+  ///
+  /// In es, this message translates to:
+  /// **'Cantidad'**
+  String get productFormSectionQuantity;
+
+  /// No description provided for @productFormSectionMinStock.
+  ///
+  /// In es, this message translates to:
+  /// **'Stock mínimo'**
+  String get productFormSectionMinStock;
+
+  /// No description provided for @productFormSectionExpiry.
+  ///
+  /// In es, this message translates to:
+  /// **'Fecha de vencimiento'**
+  String get productFormSectionExpiry;
+
+  /// No description provided for @productFormSectionNotes.
+  ///
+  /// In es, this message translates to:
+  /// **'Notas opcionales'**
+  String get productFormSectionNotes;
+
+  /// No description provided for @productFormMinStockHint.
+  ///
+  /// In es, this message translates to:
+  /// **'Recibirás una alerta cuando la cantidad llegue a este valor.'**
+  String get productFormMinStockHint;
+
+  /// No description provided for @productFormUnitsLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'Unidades en inventario'**
+  String get productFormUnitsLabel;
+
+  /// No description provided for @productFormMinStockLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'Cantidad mínima de alerta'**
+  String get productFormMinStockLabel;
+
+  /// No description provided for @productFormNoExpiry.
+  ///
+  /// In es, this message translates to:
+  /// **'Sin fecha de vencimiento'**
+  String get productFormNoExpiry;
+
+  /// No description provided for @productFormNotesLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'Notas (opcional)'**
+  String get productFormNotesLabel;
+
+  /// No description provided for @productFormNotesHint.
+  ///
+  /// In es, this message translates to:
+  /// **'Ej: Comprado en oferta, revisar antes de usar…'**
+  String get productFormNotesHint;
+
+  /// No description provided for @productFormSave.
+  ///
+  /// In es, this message translates to:
+  /// **'Guardar en inventario'**
+  String get productFormSave;
+
+  /// No description provided for @productFormSaveError.
+  ///
+  /// In es, this message translates to:
+  /// **'Error al guardar: {error}'**
+  String productFormSaveError(String error);
+
+  /// No description provided for @productFormSavedSnack.
+  ///
+  /// In es, this message translates to:
+  /// **'¡{name} agregado al inventario!'**
+  String productFormSavedSnack(String name);
+
+  /// No description provided for @productFormUpdatedSnack.
+  ///
+  /// In es, this message translates to:
+  /// **'¡{name} actualizado!'**
+  String productFormUpdatedSnack(String name);
+
+  /// No description provided for @productFormDatePickerHelp.
+  ///
+  /// In es, this message translates to:
+  /// **'Selecciona la fecha de vencimiento'**
+  String get productFormDatePickerHelp;
+
+  /// No description provided for @productFormNameLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'Nombre del producto'**
+  String get productFormNameLabel;
+
+  /// No description provided for @productFormNameHint.
+  ///
+  /// In es, this message translates to:
+  /// **'Ej: Leche entera, Arroz integral…'**
+  String get productFormNameHint;
+
+  /// No description provided for @productFormNameRequired.
+  ///
+  /// In es, this message translates to:
+  /// **'El nombre es obligatorio'**
+  String get productFormNameRequired;
+
+  /// No description provided for @productFormNameMin.
+  ///
+  /// In es, this message translates to:
+  /// **'El nombre debe tener al menos 2 caracteres'**
+  String get productFormNameMin;
+
+  /// No description provided for @productFormBarcodeLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'Código de barras'**
+  String get productFormBarcodeLabel;
+
+  /// No description provided for @productFormBarcodeScanned.
+  ///
+  /// In es, this message translates to:
+  /// **'Código escaneado'**
+  String get productFormBarcodeScanned;
+
+  /// No description provided for @productFormCreateNewCategory.
+  ///
+  /// In es, this message translates to:
+  /// **'Crear nueva'**
+  String get productFormCreateNewCategory;
+
+  /// No description provided for @productFormNewCategoryTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Nueva categoría'**
+  String get productFormNewCategoryTitle;
+
+  /// No description provided for @productFormNewCategoryHint.
+  ///
+  /// In es, this message translates to:
+  /// **'Nombre de la categoría'**
+  String get productFormNewCategoryHint;
+
+  /// No description provided for @productFormImagePickerTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Agregar foto del producto'**
+  String get productFormImagePickerTitle;
+
+  /// No description provided for @productFormTakePhoto.
+  ///
+  /// In es, this message translates to:
+  /// **'Tomar foto'**
+  String get productFormTakePhoto;
+
+  /// No description provided for @productFormTakePhotoSubtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Abre la cámara del dispositivo'**
+  String get productFormTakePhotoSubtitle;
+
+  /// No description provided for @productFormUploadImage.
+  ///
+  /// In es, this message translates to:
+  /// **'Subir imagen'**
+  String get productFormUploadImage;
+
+  /// No description provided for @productFormUploadFromGallery.
+  ///
+  /// In es, this message translates to:
+  /// **'Subir desde galería'**
+  String get productFormUploadFromGallery;
+
+  /// No description provided for @productFormUploadFromComputerSubtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Elige una imagen de tu computador'**
+  String get productFormUploadFromComputerSubtitle;
+
+  /// No description provided for @productFormUploadFromGallerySubtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Elige una imagen guardada'**
+  String get productFormUploadFromGallerySubtitle;
+
+  /// No description provided for @productFormCameraWebNotice.
+  ///
+  /// In es, this message translates to:
+  /// **'La cámara solo está disponible en la app móvil.'**
+  String get productFormCameraWebNotice;
+
+  /// No description provided for @productFormRemovePhoto.
+  ///
+  /// In es, this message translates to:
+  /// **'Quitar foto'**
+  String get productFormRemovePhoto;
+
+  /// No description provided for @productFormRemovePhotoSubtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Elimina la imagen seleccionada'**
+  String get productFormRemovePhotoSubtitle;
+
+  /// No description provided for @productFormChangePhoto.
+  ///
+  /// In es, this message translates to:
+  /// **'Cambiar foto'**
+  String get productFormChangePhoto;
+
+  /// No description provided for @productFormPhotoOptionsHint.
+  ///
+  /// In es, this message translates to:
+  /// **'Cámara · Galería · Opcional'**
+  String get productFormPhotoOptionsHint;
+
+  /// No description provided for @productFormImagePickerError.
+  ///
+  /// In es, this message translates to:
+  /// **'Error al abrir cámara/galería: {error}'**
+  String productFormImagePickerError(String error);
+
+  /// No description provided for @productLookupLoadingTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Buscando producto…'**
+  String get productLookupLoadingTitle;
+
+  /// No description provided for @productLookupLoadingSubtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Consultando base de datos global de alimentos.'**
+  String get productLookupLoadingSubtitle;
+
+  /// No description provided for @productLookupFoundTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Producto encontrado'**
+  String get productLookupFoundTitle;
+
+  /// No description provided for @productLookupFoundCacheSubtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Cargado desde la caché local. Revisa los datos antes de guardar.'**
+  String get productLookupFoundCacheSubtitle;
+
+  /// No description provided for @productLookupFoundApiSubtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Datos auto-completados desde OpenFoodFacts. Revisa antes de guardar.'**
+  String get productLookupFoundApiSubtitle;
+
+  /// No description provided for @productLookupNotFoundTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Producto no reconocido'**
+  String get productLookupNotFoundTitle;
+
+  /// No description provided for @productLookupNotFoundSubtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Completa los campos manualmente para agregarlo a tu despensa.'**
+  String get productLookupNotFoundSubtitle;
+
+  /// No description provided for @productLookupFoundSnack.
+  ///
+  /// In es, this message translates to:
+  /// **'Producto encontrado y autocompletado.'**
+  String get productLookupFoundSnack;
+
+  /// No description provided for @productLookupNotFoundSnack.
+  ///
+  /// In es, this message translates to:
+  /// **'Producto no reconocido. Ingrésalo manualmente.'**
+  String get productLookupNotFoundSnack;
+
+  /// No description provided for @productDetailLoadError.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo cargar el producto'**
+  String get productDetailLoadError;
+
+  /// No description provided for @productDetailNotInPantry.
+  ///
+  /// In es, this message translates to:
+  /// **'Este producto ya no está en tu despensa'**
+  String get productDetailNotInPantry;
+
+  /// No description provided for @productDetailUnitOne.
+  ///
+  /// In es, this message translates to:
+  /// **'unidad'**
+  String get productDetailUnitOne;
+
+  /// No description provided for @productDetailUnitMany.
+  ///
+  /// In es, this message translates to:
+  /// **'unidades'**
+  String get productDetailUnitMany;
+
+  /// No description provided for @productDetailNoExpiryShort.
+  ///
+  /// In es, this message translates to:
+  /// **'sin vencimiento'**
+  String get productDetailNoExpiryShort;
+
+  /// No description provided for @productDetailDaysExpiredMany.
+  ///
+  /// In es, this message translates to:
+  /// **'días vencido'**
+  String get productDetailDaysExpiredMany;
+
+  /// No description provided for @productDetailExpiresToday.
+  ///
+  /// In es, this message translates to:
+  /// **'vence hoy'**
+  String get productDetailExpiresToday;
+
+  /// No description provided for @productDetailDayLeft.
+  ///
+  /// In es, this message translates to:
+  /// **'día restante'**
+  String get productDetailDayLeft;
+
+  /// No description provided for @productDetailDaysLeftMany.
+  ///
+  /// In es, this message translates to:
+  /// **'días restantes'**
+  String get productDetailDaysLeftMany;
+
+  /// No description provided for @productDetailMinStockShort.
+  ///
+  /// In es, this message translates to:
+  /// **'stock mín.'**
+  String get productDetailMinStockShort;
+
+  /// No description provided for @productDetailQtyCardTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Cantidad'**
+  String get productDetailQtyCardTitle;
+
+  /// No description provided for @productDetailQtyCardCaption.
+  ///
+  /// In es, this message translates to:
+  /// **'Ajusta cuántas unidades tienes'**
+  String get productDetailQtyCardCaption;
+
+  /// No description provided for @productDetailDetailsCardTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Detalles'**
+  String get productDetailDetailsCardTitle;
+
+  /// No description provided for @productDetailDetailsCardCaption.
+  ///
+  /// In es, this message translates to:
+  /// **'Información del producto'**
+  String get productDetailDetailsCardCaption;
+
+  /// No description provided for @productDetailNotesCardTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Notas'**
+  String get productDetailNotesCardTitle;
+
+  /// No description provided for @productDetailNotesCardCaption.
+  ///
+  /// In es, this message translates to:
+  /// **'Tus apuntes sobre este producto'**
+  String get productDetailNotesCardCaption;
+
+  /// No description provided for @productDetailRowBarcode.
+  ///
+  /// In es, this message translates to:
+  /// **'Código de barras'**
+  String get productDetailRowBarcode;
+
+  /// No description provided for @productDetailRowBarcodeMissing.
+  ///
+  /// In es, this message translates to:
+  /// **'Sin código'**
+  String get productDetailRowBarcodeMissing;
+
+  /// No description provided for @productDetailRowCategory.
+  ///
+  /// In es, this message translates to:
+  /// **'Categoría'**
+  String get productDetailRowCategory;
+
+  /// No description provided for @productDetailRowExpiry.
+  ///
+  /// In es, this message translates to:
+  /// **'Vencimiento'**
+  String get productDetailRowExpiry;
+
+  /// No description provided for @productDetailRowExpiryMissing.
+  ///
+  /// In es, this message translates to:
+  /// **'No registrado'**
+  String get productDetailRowExpiryMissing;
+
+  /// No description provided for @productDetailRowAdded.
+  ///
+  /// In es, this message translates to:
+  /// **'Agregado'**
+  String get productDetailRowAdded;
+
+  /// No description provided for @productDetailRowUpdated.
+  ///
+  /// In es, this message translates to:
+  /// **'Última edición'**
+  String get productDetailRowUpdated;
+
+  /// No description provided for @productDetailActionReplenish.
+  ///
+  /// In es, this message translates to:
+  /// **'Reponer · añadir al carrito'**
+  String get productDetailActionReplenish;
+
+  /// No description provided for @productDetailActionEdit.
+  ///
+  /// In es, this message translates to:
+  /// **'Editar producto'**
+  String get productDetailActionEdit;
+
+  /// No description provided for @productDetailActionAddToCart.
+  ///
+  /// In es, this message translates to:
+  /// **'Añadir al carrito'**
+  String get productDetailActionAddToCart;
+
+  /// No description provided for @productDetailActionDelete.
+  ///
+  /// In es, this message translates to:
+  /// **'Eliminar producto'**
+  String get productDetailActionDelete;
+
+  /// No description provided for @productDetailCartAlreadyHad.
+  ///
+  /// In es, this message translates to:
+  /// **'Ya tenías \"{name}\" en tu carrito'**
+  String productDetailCartAlreadyHad(String name);
+
+  /// No description provided for @productDetailCartAdded.
+  ///
+  /// In es, this message translates to:
+  /// **'Añadiste \"{name}\" al carrito'**
+  String productDetailCartAdded(String name);
+
+  /// No description provided for @commonChange.
+  ///
+  /// In es, this message translates to:
+  /// **'Cambiar'**
+  String get commonChange;
+
+  /// No description provided for @notifHeroTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Alertas'**
+  String get notifHeroTitle;
+
+  /// No description provided for @notifHeroEnabledSubtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Configura cuándo y cómo recibir avisos de tu despensa.'**
+  String get notifHeroEnabledSubtitle;
+
+  /// No description provided for @notifHeroDisabledSubtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Las alertas están pausadas. Actívalas para no perder ningún producto.'**
+  String get notifHeroDisabledSubtitle;
+
+  /// No description provided for @notifViewInboxTooltip.
+  ///
+  /// In es, this message translates to:
+  /// **'Ver notificaciones recibidas'**
+  String get notifViewInboxTooltip;
+
+  /// No description provided for @notifConfigTooltip.
+  ///
+  /// In es, this message translates to:
+  /// **'Configurar alertas'**
+  String get notifConfigTooltip;
+
+  /// No description provided for @notifSaveError.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo guardar la configuración: {error}'**
+  String notifSaveError(String error);
+
+  /// No description provided for @notifLoadError.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo cargar la configuración.'**
+  String get notifLoadError;
+
+  /// No description provided for @notifPermissionDenied.
+  ///
+  /// In es, this message translates to:
+  /// **'Permiso denegado. Actívalo en la configuración del sistema.'**
+  String get notifPermissionDenied;
+
+  /// No description provided for @notifMasterEnabled.
+  ///
+  /// In es, this message translates to:
+  /// **'Alertas activas'**
+  String get notifMasterEnabled;
+
+  /// No description provided for @notifMasterDisabled.
+  ///
+  /// In es, this message translates to:
+  /// **'Alertas pausadas'**
+  String get notifMasterDisabled;
+
+  /// No description provided for @notifMasterEnabledSub.
+  ///
+  /// In es, this message translates to:
+  /// **'Te avisaremos antes de que algo se venza.'**
+  String get notifMasterEnabledSub;
+
+  /// No description provided for @notifMasterDisabledSub.
+  ///
+  /// In es, this message translates to:
+  /// **'Actívalas para recibir avisos de vencimiento.'**
+  String get notifMasterDisabledSub;
+
+  /// No description provided for @notifThresholdTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Umbral global'**
+  String get notifThresholdTitle;
+
+  /// No description provided for @notifThresholdSubtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Avisar X días antes de que algo se venza.'**
+  String get notifThresholdSubtitle;
+
+  /// No description provided for @notifDaysCount.
+  ///
+  /// In es, this message translates to:
+  /// **'{count, plural, =1{1 día} other{{count} días}}'**
+  String notifDaysCount(int count);
+
+  /// No description provided for @notifTimeCardTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Hora preferida'**
+  String get notifTimeCardTitle;
+
+  /// No description provided for @notifTimeCardSubtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Las alertas se enviarán a esta hora.'**
+  String get notifTimeCardSubtitle;
+
+  /// No description provided for @notifTimePickerHelp.
+  ///
+  /// In es, this message translates to:
+  /// **'Hora preferida para alertas'**
+  String get notifTimePickerHelp;
+
+  /// No description provided for @notifCategoryRulesTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Reglas por categoría'**
+  String get notifCategoryRulesTitle;
+
+  /// No description provided for @notifCategoryRulesSubtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Sobrescribe el umbral global para una categoría puntual.'**
+  String get notifCategoryRulesSubtitle;
+
+  /// No description provided for @notifChangeThresholdTooltip.
+  ///
+  /// In es, this message translates to:
+  /// **'Cambiar umbral'**
+  String get notifChangeThresholdTooltip;
+
+  /// No description provided for @notifUseGlobal.
+  ///
+  /// In es, this message translates to:
+  /// **'Usar global'**
+  String get notifUseGlobal;
+
+  /// No description provided for @notifLabelGlobal.
+  ///
+  /// In es, this message translates to:
+  /// **'Global'**
+  String get notifLabelGlobal;
+
+  /// No description provided for @notifInstantBanner.
+  ///
+  /// In es, this message translates to:
+  /// **'Los cambios se aplican al instante en tus alertas.'**
+  String get notifInstantBanner;
+
+  /// No description provided for @notifInboxTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Notificaciones'**
+  String get notifInboxTitle;
+
+  /// No description provided for @notifInboxLoadError.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudieron cargar las notificaciones'**
+  String get notifInboxLoadError;
+
+  /// No description provided for @notifInboxAllGood.
+  ///
+  /// In es, this message translates to:
+  /// **'Todo en orden por ahora'**
+  String get notifInboxAllGood;
+
+  /// No description provided for @notifInboxAttentionCount.
+  ///
+  /// In es, this message translates to:
+  /// **'{count, plural, =1{1 producto requiere tu atención} other{{count} productos requieren tu atención}}'**
+  String notifInboxAttentionCount(int count);
+
+  /// No description provided for @notifInboxChipExpired.
+  ///
+  /// In es, this message translates to:
+  /// **'Vencidos'**
+  String get notifInboxChipExpired;
+
+  /// No description provided for @notifInboxChipExpiring.
+  ///
+  /// In es, this message translates to:
+  /// **'Por vencer'**
+  String get notifInboxChipExpiring;
+
+  /// No description provided for @notifInboxChipLowStock.
+  ///
+  /// In es, this message translates to:
+  /// **'Stock bajo'**
+  String get notifInboxChipLowStock;
+
+  /// No description provided for @notifInboxSectionExpiredTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Vencidos'**
+  String get notifInboxSectionExpiredTitle;
+
+  /// No description provided for @notifInboxSectionExpiredCaption.
+  ///
+  /// In es, this message translates to:
+  /// **'Retíralos de tu despensa'**
+  String get notifInboxSectionExpiredCaption;
+
+  /// No description provided for @notifInboxSectionExpiringTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Por vencer pronto'**
+  String get notifInboxSectionExpiringTitle;
+
+  /// No description provided for @notifInboxSectionExpiringCaption.
+  ///
+  /// In es, this message translates to:
+  /// **'Consúmelos en los próximos días'**
+  String get notifInboxSectionExpiringCaption;
+
+  /// No description provided for @notifInboxSectionLowStockTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Stock bajo'**
+  String get notifInboxSectionLowStockTitle;
+
+  /// No description provided for @notifInboxSectionLowStockCaption.
+  ///
+  /// In es, this message translates to:
+  /// **'Pronto necesitarás reponerlos'**
+  String get notifInboxSectionLowStockCaption;
+
+  /// No description provided for @notifExpiredToday.
+  ///
+  /// In es, this message translates to:
+  /// **'Venció hoy'**
+  String get notifExpiredToday;
+
+  /// No description provided for @notifExpiredOneDay.
+  ///
+  /// In es, this message translates to:
+  /// **'Venció hace 1 día'**
+  String get notifExpiredOneDay;
+
+  /// No description provided for @notifExpiredManyDays.
+  ///
+  /// In es, this message translates to:
+  /// **'Venció hace {days} días'**
+  String notifExpiredManyDays(int days);
+
+  /// No description provided for @notifExpiresToday.
+  ///
+  /// In es, this message translates to:
+  /// **'Vence hoy'**
+  String get notifExpiresToday;
+
+  /// No description provided for @notifExpiresTomorrow.
+  ///
+  /// In es, this message translates to:
+  /// **'Vence mañana'**
+  String get notifExpiresTomorrow;
+
+  /// No description provided for @notifExpiresInDays.
+  ///
+  /// In es, this message translates to:
+  /// **'Vence en {days} días · {date}'**
+  String notifExpiresInDays(int days, String date);
+
+  /// No description provided for @notifLowStockRemaining.
+  ///
+  /// In es, this message translates to:
+  /// **'{count, plural, =1{Queda 1 unidad} other{Quedan {count} unidades}}'**
+  String notifLowStockRemaining(int count);
+
+  /// No description provided for @notifInboxEmptyTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Sin notificaciones'**
+  String get notifInboxEmptyTitle;
+
+  /// No description provided for @notifInboxEmptyBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Tu despensa está en orden. Cuando un producto esté por vencer o quede con poco stock, los avisos aparecerán aquí.'**
+  String get notifInboxEmptyBody;
+
+  /// No description provided for @scannerTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Escáner de productos'**
+  String get scannerTitle;
+
+  /// No description provided for @scannerManualBtn.
+  ///
+  /// In es, this message translates to:
+  /// **'Manual'**
+  String get scannerManualBtn;
+
+  /// No description provided for @scannerCameraError.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo iniciar la cámara. Verifica permisos e intenta de nuevo.'**
+  String get scannerCameraError;
+
+  /// No description provided for @scannerDetectedCode.
+  ///
+  /// In es, this message translates to:
+  /// **'Código detectado: {code}'**
+  String scannerDetectedCode(String code);
+
+  /// No description provided for @scannerInvalidCode.
+  ///
+  /// In es, this message translates to:
+  /// **'Código no reconocido. Usa un EAN-13 o UPC-A válido.'**
+  String get scannerInvalidCode;
+
+  /// No description provided for @scannerAddProduct.
+  ///
+  /// In es, this message translates to:
+  /// **'Agregar producto'**
+  String get scannerAddProduct;
+
+  /// No description provided for @scannerPermDisabledTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Permiso de cámara desactivado'**
+  String get scannerPermDisabledTitle;
+
+  /// No description provided for @scannerPermRequestTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Necesitamos acceso a la cámara'**
+  String get scannerPermRequestTitle;
+
+  /// No description provided for @scannerPermDisabledBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Activa el permiso de cámara en la configuración del sistema para volver a escanear códigos de barras.'**
+  String get scannerPermDisabledBody;
+
+  /// No description provided for @scannerPermRequestBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Usamos la cámara solo para leer códigos EAN-13 y UPC-A de tus productos. Puedes continuar con ingreso manual si prefieres.'**
+  String get scannerPermRequestBody;
+
+  /// No description provided for @scannerPermRequesting.
+  ///
+  /// In es, this message translates to:
+  /// **'Solicitando permiso…'**
+  String get scannerPermRequesting;
+
+  /// No description provided for @scannerPermAllow.
+  ///
+  /// In es, this message translates to:
+  /// **'Permitir cámara'**
+  String get scannerPermAllow;
+
+  /// No description provided for @scannerPermOpenSettings.
+  ///
+  /// In es, this message translates to:
+  /// **'Abrir configuración'**
+  String get scannerPermOpenSettings;
+
+  /// No description provided for @scannerManualEntry.
+  ///
+  /// In es, this message translates to:
+  /// **'Ingresar código manualmente'**
+  String get scannerManualEntry;
+
+  /// No description provided for @scannerGuideHint.
+  ///
+  /// In es, this message translates to:
+  /// **'Alinea el código dentro del marco'**
+  String get scannerGuideHint;
+
+  /// No description provided for @authEmailLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'Correo electrónico'**
+  String get authEmailLabel;
+
+  /// No description provided for @authPasswordLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'Contraseña'**
+  String get authPasswordLabel;
+
+  /// No description provided for @authEmailRequired.
+  ///
+  /// In es, this message translates to:
+  /// **'Ingresa tu correo electrónico'**
+  String get authEmailRequired;
+
+  /// No description provided for @authEmailInvalid.
+  ///
+  /// In es, this message translates to:
+  /// **'Formato de correo inválido'**
+  String get authEmailInvalid;
+
+  /// No description provided for @authPasswordRequired.
+  ///
+  /// In es, this message translates to:
+  /// **'Ingresa tu contraseña'**
+  String get authPasswordRequired;
+
+  /// No description provided for @authUnexpectedError.
+  ///
+  /// In es, this message translates to:
+  /// **'Error inesperado. Intenta de nuevo.'**
+  String get authUnexpectedError;
+
+  /// No description provided for @authWelcomeBack.
+  ///
+  /// In es, this message translates to:
+  /// **'Bienvenido de nuevo'**
+  String get authWelcomeBack;
+
+  /// No description provided for @authWelcomeBackSub.
+  ///
+  /// In es, this message translates to:
+  /// **'Ingresa tus datos para continuar'**
+  String get authWelcomeBackSub;
+
+  /// No description provided for @authSignInBtn.
+  ///
+  /// In es, this message translates to:
+  /// **'Iniciar sesión'**
+  String get authSignInBtn;
+
+  /// No description provided for @authForgotPassword.
+  ///
+  /// In es, this message translates to:
+  /// **'¿Olvidaste tu contraseña?'**
+  String get authForgotPassword;
+
+  /// No description provided for @authOrContinueWith.
+  ///
+  /// In es, this message translates to:
+  /// **'o continúa con'**
+  String get authOrContinueWith;
+
+  /// No description provided for @authNoAccount.
+  ///
+  /// In es, this message translates to:
+  /// **'¿No tienes cuenta? '**
+  String get authNoAccount;
+
+  /// No description provided for @authCreateAccount.
+  ///
+  /// In es, this message translates to:
+  /// **'Crear cuenta'**
+  String get authCreateAccount;
+
+  /// No description provided for @authCreateAccountSub.
+  ///
+  /// In es, this message translates to:
+  /// **'Completa tus datos para registrarte'**
+  String get authCreateAccountSub;
+
+  /// No description provided for @authFullNameLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'Nombre completo'**
+  String get authFullNameLabel;
+
+  /// No description provided for @authNameRequired.
+  ///
+  /// In es, this message translates to:
+  /// **'Ingresa tu nombre'**
+  String get authNameRequired;
+
+  /// No description provided for @authConfirmPasswordLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'Confirmar contraseña'**
+  String get authConfirmPasswordLabel;
+
+  /// No description provided for @authPasswordMin.
+  ///
+  /// In es, this message translates to:
+  /// **'Mínimo 8 caracteres'**
+  String get authPasswordMin;
+
+  /// No description provided for @authPasswordUppercase.
+  ///
+  /// In es, this message translates to:
+  /// **'Debe incluir al menos 1 mayúscula'**
+  String get authPasswordUppercase;
+
+  /// No description provided for @authPasswordNumber.
+  ///
+  /// In es, this message translates to:
+  /// **'Debe incluir al menos 1 número'**
+  String get authPasswordNumber;
+
+  /// No description provided for @authConfirmPasswordRequired.
+  ///
+  /// In es, this message translates to:
+  /// **'Confirma tu contraseña'**
+  String get authConfirmPasswordRequired;
+
+  /// No description provided for @authPasswordMismatch.
+  ///
+  /// In es, this message translates to:
+  /// **'Las contraseñas no coinciden'**
+  String get authPasswordMismatch;
+
+  /// No description provided for @authRegisterHeroSub.
+  ///
+  /// In es, this message translates to:
+  /// **'Únete y organiza tu despensa'**
+  String get authRegisterHeroSub;
+
+  /// No description provided for @authAlreadyHaveAccount.
+  ///
+  /// In es, this message translates to:
+  /// **'¿Ya tienes cuenta? '**
+  String get authAlreadyHaveAccount;
+
+  /// No description provided for @authRecoverTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Recuperar contraseña'**
+  String get authRecoverTitle;
+
+  /// No description provided for @authRecoverSub.
+  ///
+  /// In es, this message translates to:
+  /// **'Ingresa tu correo y te enviaremos un enlace para restablecerla.'**
+  String get authRecoverSub;
+
+  /// No description provided for @authSendResetLink.
+  ///
+  /// In es, this message translates to:
+  /// **'Enviar enlace'**
+  String get authSendResetLink;
+
+  /// No description provided for @authRememberedPassword.
+  ///
+  /// In es, this message translates to:
+  /// **'¿Recordaste tu contraseña? '**
+  String get authRememberedPassword;
+
+  /// No description provided for @authEmailSentTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'¡Correo enviado!'**
+  String get authEmailSentTitle;
+
+  /// No description provided for @authEmailSentBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Revisa tu bandeja de entrada en\n{email}\ny sigue el enlace para restablecer tu contraseña.'**
+  String authEmailSentBody(String email);
+
+  /// No description provided for @authBackToLogin.
+  ///
+  /// In es, this message translates to:
+  /// **'Volver al inicio de sesión'**
+  String get authBackToLogin;
+
+  /// No description provided for @authRecoverHeroSub.
+  ///
+  /// In es, this message translates to:
+  /// **'Recupera el acceso a tu cuenta.'**
+  String get authRecoverHeroSub;
 }
 
 class _AppLocalizationsDelegate

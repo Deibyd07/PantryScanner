@@ -8,6 +8,7 @@ import 'package:intl/intl.dart';
 
 import '../../../../app/router/app_router.dart';
 import '../../../../core/design/design_system.dart';
+import '../../../../l10n/generated/app_localizations.dart';
 import '../../../inventory/domain/entities/inventory_item.dart';
 import '../../../inventory/presentation/providers/inventory_providers.dart';
 
@@ -17,6 +18,7 @@ class NotificationsInboxScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final PaletteSpec p = context.palette;
+    final AppLocalizations t = AppLocalizations.of(context);
     final AsyncValue<List<InventoryItem>> asyncItems =
         ref.watch(inventoryItemsProvider);
 
@@ -26,7 +28,7 @@ class NotificationsInboxScreen extends ConsumerWidget {
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (Object e, _) => Center(
           child: Text(
-            'No se pudieron cargar las notificaciones',
+            t.notifInboxLoadError,
             style: AppTypography.bodyMd.copyWith(color: p.textMuted),
           ),
         ),
@@ -74,8 +76,8 @@ class NotificationsInboxScreen extends ConsumerWidget {
                 else ...<Widget>[
                   if (expired.isNotEmpty) ...<Widget>[
                     _SectionHeader(
-                      title: 'Vencidos',
-                      caption: 'Retíralos de tu despensa',
+                      title: t.notifInboxSectionExpiredTitle,
+                      caption: t.notifInboxSectionExpiredCaption,
                       color: AppColors.dangerStrong,
                       count: expired.length,
                     ),
@@ -86,8 +88,8 @@ class NotificationsInboxScreen extends ConsumerWidget {
                   ],
                   if (expiringSoon.isNotEmpty) ...<Widget>[
                     _SectionHeader(
-                      title: 'Por vencer pronto',
-                      caption: 'Consúmelos en los próximos días',
+                      title: t.notifInboxSectionExpiringTitle,
+                      caption: t.notifInboxSectionExpiringCaption,
                       color: AppColors.warningStrong,
                       count: expiringSoon.length,
                     ),
@@ -98,8 +100,8 @@ class NotificationsInboxScreen extends ConsumerWidget {
                   ],
                   if (lowStock.isNotEmpty) ...<Widget>[
                     _SectionHeader(
-                      title: 'Stock bajo',
-                      caption: 'Pronto necesitarás reponerlos',
+                      title: t.notifInboxSectionLowStockTitle,
+                      caption: t.notifInboxSectionLowStockCaption,
                       color: p.brandPrimary,
                       count: lowStock.length,
                     ),
@@ -140,6 +142,7 @@ class _InboxHero extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final double topPad = MediaQuery.paddingOf(context).top;
+    final AppLocalizations t = AppLocalizations.of(context);
 
     return SliverToBoxAdapter(
       child: Container(
@@ -171,7 +174,7 @@ class _InboxHero extends StatelessWidget {
                 const Spacer(),
                 _CircleIconButton(
                   icon: Icons.tune_rounded,
-                  tooltip: 'Configurar alertas',
+                  tooltip: t.notifConfigTooltip,
                   onTap: () {
                     AppHaptics.tap();
                     context.push(AppRoutes.notificationSettings);
@@ -181,7 +184,7 @@ class _InboxHero extends StatelessWidget {
             ),
             const SizedBox(height: AppSpacing.lg),
             Text(
-              'Notificaciones',
+              t.notifInboxTitle,
               style: AppTypography.displaySm.copyWith(
                 color: Colors.white,
                 fontWeight: FontWeight.w800,
@@ -190,10 +193,8 @@ class _InboxHero extends StatelessWidget {
             const SizedBox(height: AppSpacing.xs),
             Text(
               total == 0
-                  ? 'Todo en orden por ahora'
-                  : total == 1
-                      ? '1 producto requiere tu atención'
-                      : '$total productos requieren tu atención',
+                  ? t.notifInboxAllGood
+                  : t.notifInboxAttentionCount(total),
               style: AppTypography.bodySm.copyWith(
                 color: Colors.white.withValues(alpha: 0.85),
               ),
@@ -203,7 +204,7 @@ class _InboxHero extends StatelessWidget {
               children: <Widget>[
                 Expanded(
                   child: _SummaryChip(
-                    label: 'Vencidos',
+                    label: t.notifInboxChipExpired,
                     count: expired,
                     icon: Icons.error_outline_rounded,
                     accent: const Color(0xFFFFCDD2),
@@ -212,7 +213,7 @@ class _InboxHero extends StatelessWidget {
                 const SizedBox(width: AppSpacing.sm),
                 Expanded(
                   child: _SummaryChip(
-                    label: 'Por vencer',
+                    label: t.notifInboxChipExpiring,
                     count: expiringSoon,
                     icon: Icons.timer_outlined,
                     accent: const Color(0xFFFFE0B2),
@@ -221,7 +222,7 @@ class _InboxHero extends StatelessWidget {
                 const SizedBox(width: AppSpacing.sm),
                 Expanded(
                   child: _SummaryChip(
-                    label: 'Stock bajo',
+                    label: t.notifInboxChipLowStock,
                     count: lowStock,
                     icon: Icons.inventory_2_outlined,
                     accent: Colors.white,
@@ -537,7 +538,7 @@ class _StatusPill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final String text = _statusText(item);
+    final String text = _statusText(context, item);
     final IconData icon = _statusIcon(item);
 
     return Container(
@@ -564,21 +565,24 @@ class _StatusPill extends StatelessWidget {
     );
   }
 
-  String _statusText(InventoryItem item) {
+  String _statusText(BuildContext context, InventoryItem item) {
+    final AppLocalizations t = AppLocalizations.of(context);
+    final String locale = Localizations.localeOf(context).languageCode;
     if (item.status == ProductStatus.expired && item.expiryDate != null) {
       final int days = DateTime.now().difference(item.expiryDate!).inDays;
-      if (days == 0) return 'Venció hoy';
-      if (days == 1) return 'Venció hace 1 día';
-      return 'Venció hace $days días';
+      if (days == 0) return t.notifExpiredToday;
+      if (days == 1) return t.notifExpiredOneDay;
+      return t.notifExpiredManyDays(days);
     }
     if (item.status == ProductStatus.expiringSoon && item.expiryDate != null) {
       final int days = item.expiryDate!.difference(DateTime.now()).inDays;
-      if (days <= 0) return 'Vence hoy';
-      if (days == 1) return 'Vence mañana';
-      return 'Vence en $days días · ${DateFormat('d MMM', 'es').format(item.expiryDate!)}';
+      if (days <= 0) return t.notifExpiresToday;
+      if (days == 1) return t.notifExpiresTomorrow;
+      final String date = DateFormat.MMMd(locale).format(item.expiryDate!);
+      return t.notifExpiresInDays(days, date);
     }
     if (item.isLowStock) {
-      return 'Quedan ${item.quantity} ${item.quantity == 1 ? "unidad" : "unidades"}';
+      return t.notifLowStockRemaining(item.quantity);
     }
     return '';
   }
@@ -646,6 +650,7 @@ class _EmptyInbox extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final AppLocalizations t = AppLocalizations.of(context);
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.xl),
@@ -667,12 +672,12 @@ class _EmptyInbox extends StatelessWidget {
             ),
             const SizedBox(height: AppSpacing.lg),
             Text(
-              'Sin notificaciones',
+              t.notifInboxEmptyTitle,
               style: AppTypography.headingMd.copyWith(color: palette.textBody),
             ),
             const SizedBox(height: AppSpacing.sm),
             Text(
-              'Tu despensa está en orden. Cuando un producto esté por vencer\no quede con poco stock, los avisos aparecerán aquí.',
+              t.notifInboxEmptyBody,
               textAlign: TextAlign.center,
               style: AppTypography.bodySm.copyWith(
                 color: palette.textMuted,

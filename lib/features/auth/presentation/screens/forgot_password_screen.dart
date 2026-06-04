@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/design/design_system.dart';
+import '../../../../l10n/generated/app_localizations.dart';
 import '../../data/repositories/firebase_auth_repository.dart';
 import '../providers/auth_providers.dart';
 
@@ -97,7 +98,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen>
     } on AuthException catch (e) {
       if (mounted) _showError(e.message);
     } catch (_) {
-      if (mounted) _showError('Error inesperado. Intenta de nuevo.');
+      if (mounted) _showError(AppLocalizations.of(context).authUnexpectedError);
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -131,10 +132,11 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen>
   @override
   Widget build(BuildContext context) {
     final PaletteSpec p = context.palette;
+    final AppLocalizations t = AppLocalizations.of(context);
 
     return SplitHeroScaffold(
       heroHeight: 210,
-      heroContent: FadeTransition(opacity: _heroFade, child: _buildHero()),
+      heroContent: FadeTransition(opacity: _heroFade, child: _buildHero(t)),
       formContent: SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(
           AppSpacing.lg,
@@ -142,16 +144,16 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen>
           AppSpacing.lg,
           AppSpacing.xl,
         ),
-        child: _emailSent ? _buildSuccess(p) : _buildForm(p),
+        child: _emailSent ? _buildSuccess(p, t) : _buildForm(p, t),
       ),
     );
   }
 
-  Widget _buildForm(PaletteSpec p) {
+  Widget _buildForm(PaletteSpec p, AppLocalizations t) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        _buildFormTitle(p),
+        _buildFormTitle(p, t),
         const SizedBox(height: AppSpacing.xl - 4),
         Form(
           key: _formKey,
@@ -174,7 +176,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen>
                     cursorColor: p.brandPrimary,
                     decoration: _field(
                       p,
-                      label: 'Correo electrónico',
+                      label: t.authEmailLabel,
                       icon: Icons.email_outlined,
                     ),
                     onFieldSubmitted: (_) => _sendResetEmail(),
@@ -185,7 +187,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen>
                 _animatedItem(
                   index: 1,
                   child: BrandGradientButton(
-                    label: 'Enviar enlace',
+                    label: t.authSendResetLink,
                     isLoading: _isLoading,
                     onPressed: _isLoading ? null : _sendResetEmail,
                   ),
@@ -198,7 +200,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen>
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: <Widget>[
                       Text(
-                        '¿Recordaste tu contraseña? ',
+                        t.authRememberedPassword,
                         style: AppTypography.bodyMd.copyWith(
                           color: p.textMuted.withValues(alpha: 0.8),
                         ),
@@ -217,7 +219,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen>
                           tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                         ),
                         child: Text(
-                          'Iniciar sesión',
+                          t.authSignInBtn,
                           style: AppTypography.bodyMd.copyWith(
                             fontWeight: FontWeight.w700,
                             color: p.brandPrimary,
@@ -235,7 +237,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen>
     );
   }
 
-  Widget _buildSuccess(PaletteSpec p) {
+  Widget _buildSuccess(PaletteSpec p, AppLocalizations t) {
     return ScaleTransition(
       scale: _successScale,
       child: Column(
@@ -258,12 +260,12 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen>
           ),
           const SizedBox(height: AppSpacing.lg),
           Text(
-            '¡Correo enviado!',
+            t.authEmailSentTitle,
             style: AppTypography.displaySm.copyWith(color: p.textBody),
           ),
           const SizedBox(height: AppSpacing.sm + 2),
           Text(
-            'Revisa tu bandeja de entrada en\n${_emailCtrl.text.trim()}\ny sigue el enlace para restablecer tu contraseña.',
+            t.authEmailSentBody(_emailCtrl.text.trim()),
             textAlign: TextAlign.center,
             style: AppTypography.bodySm.copyWith(
               color: p.textMuted,
@@ -274,7 +276,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen>
           SizedBox(
             width: double.infinity,
             child: BrandGradientButton(
-              label: 'Volver al login',
+              label: t.authBackToLogin,
               onPressed: () {
                 AppHaptics.tap();
                 context.pop();
@@ -286,7 +288,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen>
     );
   }
 
-  Widget _buildHero() {
+  Widget _buildHero(AppLocalizations t) {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: <Widget>[
@@ -306,13 +308,13 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen>
         ),
         const SizedBox(height: AppSpacing.md - 2),
         Text(
-          'PantryScanner',
+          t.appName,
           style: AppTypography.displaySm
               .copyWith(color: Colors.white, fontSize: 24),
         ),
         const SizedBox(height: AppSpacing.xs),
         Text(
-          'Recupera el acceso a tu cuenta.',
+          t.authRecoverHeroSub,
           style: AppTypography.bodySm.copyWith(
             color: Colors.white.withValues(alpha: 0.72),
           ),
@@ -321,17 +323,17 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen>
     );
   }
 
-  Widget _buildFormTitle(PaletteSpec p) {
+  Widget _buildFormTitle(PaletteSpec p, AppLocalizations t) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
         Text(
-          'Recuperar contraseña',
+          t.authRecoverTitle,
           style: AppTypography.displayMd.copyWith(color: p.textBody),
         ),
         const SizedBox(height: AppSpacing.xs),
         Text(
-          'Ingresa tu correo y te enviaremos un enlace para restablecerla.',
+          t.authRecoverSub,
           style: AppTypography.bodySm.copyWith(color: p.textMuted),
         ),
       ],
@@ -395,14 +397,15 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen>
   }
 
   String? _validateEmail(String? value) {
+    final AppLocalizations t = AppLocalizations.of(context);
     if (value == null || value.trim().isEmpty) {
-      return 'Ingresa tu correo electrónico';
+      return t.authEmailRequired;
     }
     final RegExp emailRegex = RegExp(
       r'^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$',
     );
     if (!emailRegex.hasMatch(value.trim())) {
-      return 'Formato de correo inválido';
+      return t.authEmailInvalid;
     }
     return null;
   }

@@ -41,6 +41,8 @@ String categoryLabel(BuildContext context, String canonical) {
       return t.categoryCereals;
     case 'Condimentos':
       return t.categoryCondiments;
+    case 'Sin categoría':
+      return t.categoryUncategorized;
     default:
       return canonical;
   }

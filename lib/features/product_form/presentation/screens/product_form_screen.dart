@@ -8,7 +8,9 @@ import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/constants/app_constants.dart';
+import '../../../../core/i18n/category_l10n.dart';
 import '../../../../core/presentation/widgets/offline_banner.dart';
+import '../../../../l10n/generated/app_localizations.dart';
 import '../../../inventory/domain/entities/inventory_item.dart';
 import '../../../inventory/presentation/providers/inventory_providers.dart';
 // ignore: deprecated_member_use_from_same_package
@@ -55,11 +57,6 @@ final _saveNotifierProvider =
   (ref) => _SaveNotifier(ref),
 );
 
-// Categories are now managed in state for HU-18 preview
-
-// ─────────────────────────────────────────
-// Main screen widget (SUB-04.1)
-// ─────────────────────────────────────────
 class ProductFormScreen extends ConsumerStatefulWidget {
   const ProductFormScreen({super.key, this.initialBarcode});
 
@@ -73,20 +70,17 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen>
     with SingleTickerProviderStateMixin {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
-  // Controllers
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _barcodeController = TextEditingController();
   final TextEditingController _notesController = TextEditingController();
 
-  // Field values
-  int _existingId = 0; // If != 0, we are updating an existing product
-  int _quantity = AppConstants.defaultQuantity; // default = 1
+  int _existingId = 0;
+  int _quantity = AppConstants.defaultQuantity;
   int _minStock = 1;
   DateTime? _expiryDate;
   String? _selectedCategory;
-  String? _selectedImagePath; // New: local path of picked image
+  String? _selectedImagePath;
 
-  // Product lookup state (HU-NEW: API auto-fill)
   _LookupStatus _lookupStatus = _LookupStatus.idle;
   ProductLookupSource? _lookupSource;
   Timer? _lookupDebounce;
@@ -95,7 +89,8 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen>
   bool _isRemotePath(String path) =>
       path.startsWith('http://') || path.startsWith('https://');
 
-  // Categories state
+  // Canonical Spanish labels (kept in DB) + their icons.
+  // Display label is translated via categoryLabel(context, canonical).
   final List<Map<String, dynamic>> _categories = <Map<String, dynamic>>[
     {'label': 'Lácteos', 'icon': Icons.egg_outlined},
     {'label': 'Carnes', 'icon': Icons.kebab_dining_outlined},
@@ -108,7 +103,6 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen>
     {'label': 'Sin categoría', 'icon': Icons.category_outlined},
   ];
 
-  // Animation
   late final AnimationController _headerAnim;
   late final Animation<double> _fadeIn;
 
@@ -118,14 +112,11 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen>
     if (widget.initialBarcode != null && widget.initialBarcode!.isNotEmpty) {
       _barcodeController.text = widget.initialBarcode!;
       _lastLookedUpBarcode = widget.initialBarcode;
-      // Resolve product info: inventory → cache → API. Manual entry kicks in
-      // automatically when none of those return data.
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _resolveProduct(widget.initialBarcode!);
       });
     }
 
-    // React to manual edits of the barcode field with a debounced lookup.
     _barcodeController.addListener(_onBarcodeChanged);
 
     _headerAnim = AnimationController(
@@ -136,12 +127,7 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen>
     _fadeIn = CurvedAnimation(parent: _headerAnim, curve: Curves.easeOut);
   }
 
-  /// Resolves product info for [barcode] in three stages:
-  /// 1. Inventory hit  → full edit mode (existing item).
-  /// 2. Cache + API    → auto-fill name/brand/category/image.
-  /// 3. Otherwise      → manual entry with a "not found" banner.
   Future<void> _resolveProduct(String barcode) async {
-    // 1. Existing inventory item → full edit mode
     final InventoryItem? existingItem =
         await ref.read(itemByBarcodeProvider(barcode).future);
 
@@ -162,7 +148,6 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen>
       return;
     }
 
-    // 2. Lookup cache + remote API
     if (!mounted) return;
     setState(() => _lookupStatus = _LookupStatus.loading);
 
@@ -171,6 +156,8 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen>
 
     if (!mounted) return;
 
+    final AppLocalizations t = AppLocalizations.of(context);
+
     if (!result.hasProduct) {
       setState(() {
         _lookupStatus = _LookupStatus.notFound;
@@ -178,7 +165,7 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen>
       });
       AppHaptics.warning();
       _showLookupSnack(
-        message: 'Producto no reconocido. Ingrésalo manualmente.',
+        message: t.productLookupNotFoundSnack,
         background: const Color(0xFFB45309),
         icon: Icons.edit_note_rounded,
       );
@@ -201,7 +188,7 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen>
     });
     AppHaptics.success();
     _showLookupSnack(
-      message: 'Producto encontrado y autocompletado.',
+      message: t.productLookupFoundSnack,
       background: const Color(0xFF166534),
       icon: Icons.check_circle_rounded,
     );
@@ -282,11 +269,9 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen>
     });
   }
 
-  // ───── Image picker ─────
   Future<void> _pickImage(ImageSource source) async {
-    Navigator.of(context).pop(); // close bottom sheet
+    Navigator.of(context).pop();
 
-    // Mobile & Web: use image_picker
     try {
       final XFile? picked = await ImagePicker().pickImage(
         source: source,
@@ -298,9 +283,10 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen>
       }
     } catch (e) {
       if (mounted) {
+        final AppLocalizations t = AppLocalizations.of(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error al abrir cámara/galería: $e'),
+            content: Text(t.productFormImagePickerError(e.toString())),
             backgroundColor: Theme.of(context).colorScheme.error,
           ),
         );
@@ -309,6 +295,7 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen>
   }
 
   void _showImageSourceSheet(BuildContext context, ColorScheme colors) {
+    final AppLocalizations t = AppLocalizations.of(context);
     showModalBottomSheet<void>(
       context: context,
       backgroundColor: colors.surface,
@@ -334,7 +321,7 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen>
               ),
               const SizedBox(height: 20),
               Text(
-                'Agregar foto del producto',
+                t.productFormImagePickerTitle,
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
@@ -345,8 +332,8 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen>
               if (!kIsWeb) ...<Widget>[
                 _ImageSourceTile(
                   icon: Icons.camera_alt_rounded,
-                  label: 'Tomar foto',
-                  subtitle: 'Abre la cámara del dispositivo',
+                  label: t.productFormTakePhoto,
+                  subtitle: t.productFormTakePhotoSubtitle,
                   colors: colors,
                   onTap: () => _pickImage(ImageSource.camera),
                 ),
@@ -354,10 +341,12 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen>
               ],
               _ImageSourceTile(
                 icon: Icons.photo_library_rounded,
-                label: kIsWeb ? 'Subir imagen' : 'Subir desde galería',
+                label: kIsWeb
+                    ? t.productFormUploadImage
+                    : t.productFormUploadFromGallery,
                 subtitle: kIsWeb
-                    ? 'Elige una imagen de tu computador'
-                    : 'Elige una imagen guardada',
+                    ? t.productFormUploadFromComputerSubtitle
+                    : t.productFormUploadFromGallerySubtitle,
                 colors: colors,
                 onTap: () => _pickImage(ImageSource.gallery),
               ),
@@ -370,7 +359,7 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen>
                     const SizedBox(width: 6),
                     Expanded(
                       child: Text(
-                        'La cámara solo está disponible en la app móvil.',
+                        t.productFormCameraWebNotice,
                         style: TextStyle(
                           fontSize: 11,
                           color: colors.onSurfaceVariant,
@@ -384,8 +373,8 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen>
                 const SizedBox(height: 10),
                 _ImageSourceTile(
                   icon: Icons.delete_outline_rounded,
-                  label: 'Quitar foto',
-                  subtitle: 'Elimina la imagen seleccionada',
+                  label: t.productFormRemovePhoto,
+                  subtitle: t.productFormRemovePhotoSubtitle,
                   colors: colors,
                   isDestructive: true,
                   onTap: () {
@@ -401,10 +390,10 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen>
     );
   }
 
-  // ───── Build ─────
   @override
   Widget build(BuildContext context) {
     final ColorScheme colors = Theme.of(context).colorScheme;
+    final AppLocalizations t = AppLocalizations.of(context);
     final _SaveState saveState = ref.watch(_saveNotifierProvider);
     final double topPad = MediaQuery.paddingOf(context).top;
     final double bottomPad = MediaQuery.paddingOf(context).bottom;
@@ -415,8 +404,6 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen>
       backgroundColor: const Color(0xFF7F1D1D),
       body: Stack(
         children: <Widget>[
-          // ── Capa 1: gradiente cubre TODA la pantalla (incluye detrás de
-          //   la curva de la card, para evitar el "corte" de color)
           const Positioned.fill(
             child: DecoratedBox(
               decoration: BoxDecoration(
@@ -428,9 +415,6 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen>
               ),
             ),
           ),
-          // ── Capa 2: card blanca posicionada desde heroHeight, con tope
-          //   redondeado. Las esquinas redondeadas dejan ver el gradiente
-          //   continuo, no el color plano del Scaffold.
           Positioned(
             left: 0,
             right: 0,
@@ -448,12 +432,12 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen>
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: <Widget>[
-                          const _SectionHeader(title: 'Foto del producto', icon: Icons.photo_camera_outlined),
+                          _SectionHeader(title: t.productFormSectionPhoto, icon: Icons.photo_camera_outlined),
                           const SizedBox(height: 12),
                           _buildImagePicker(colors),
                           const SizedBox(height: 28),
                           const _SectionDivider(),
-                          const _SectionHeader(title: 'Información básica', icon: Icons.info_outline_rounded),
+                          _SectionHeader(title: t.productFormSectionBasic, icon: Icons.info_outline_rounded),
                           const SizedBox(height: 12),
                           if (_lookupStatus != _LookupStatus.idle) ...<Widget>[
                             _buildLookupStatusBanner(colors),
@@ -464,22 +448,22 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen>
                           _buildBarcodeField(colors),
                           const SizedBox(height: 28),
                           const _SectionDivider(),
-                          const _SectionHeader(title: 'Categoría', icon: Icons.category_outlined),
+                          _SectionHeader(title: t.productFormSectionCategory, icon: Icons.category_outlined),
                           const SizedBox(height: 12),
                           _buildCategoryPicker(colors),
                           const SizedBox(height: 28),
                           const _SectionDivider(),
-                          const _SectionHeader(title: 'Cantidad', icon: Icons.production_quantity_limits_rounded),
+                          _SectionHeader(title: t.productFormSectionQuantity, icon: Icons.production_quantity_limits_rounded),
                           const SizedBox(height: 12),
                           _buildQuantitySelector(colors),
                           const SizedBox(height: 28),
                           const _SectionDivider(),
-                          const _SectionHeader(title: 'Stock mínimo', icon: Icons.notification_important_outlined),
+                          _SectionHeader(title: t.productFormSectionMinStock, icon: Icons.notification_important_outlined),
                           const SizedBox(height: 4),
                           Padding(
                             padding: const EdgeInsets.only(bottom: 12),
                             child: Text(
-                              'Recibirás una alerta cuando la cantidad llegue a este valor.',
+                              t.productFormMinStockHint,
                               style: TextStyle(
                                 color: colors.onSurfaceVariant,
                                 fontSize: 12,
@@ -489,12 +473,12 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen>
                           _buildMinStockSelector(colors),
                           const SizedBox(height: 28),
                           const _SectionDivider(),
-                          const _SectionHeader(title: 'Fecha de vencimiento', icon: Icons.event_rounded),
+                          _SectionHeader(title: t.productFormSectionExpiry, icon: Icons.event_rounded),
                           const SizedBox(height: 12),
                           _buildExpiryPicker(colors),
                           const SizedBox(height: 28),
                           const _SectionDivider(),
-                          const _SectionHeader(title: 'Notas opcionales', icon: Icons.notes_rounded),
+                          _SectionHeader(title: t.productFormSectionNotes, icon: Icons.notes_rounded),
                           const SizedBox(height: 12),
                           _buildNotesField(colors),
                           if (saveState.error != null) ...<Widget>[
@@ -511,7 +495,7 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen>
                                   const SizedBox(width: 8),
                                   Expanded(
                                     child: Text(
-                                      'Error al guardar: ${saveState.error}',
+                                      t.productFormSaveError(saveState.error!),
                                       style: TextStyle(color: colors.error, fontSize: 13),
                                     ),
                                   ),
@@ -527,7 +511,6 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen>
                   ),
                 ),
               ),
-          // ── Capa 3: hero (back button + título) por encima del gradiente
           Positioned(
             left: 0,
             right: 0,
@@ -545,6 +528,11 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen>
   }
 
   Widget _buildHero(BuildContext context) {
+    final AppLocalizations t = AppLocalizations.of(context);
+    final bool isEditing = _existingId != 0;
+    final String title = isEditing
+        ? t.productFormHeroTitleEdit
+        : t.productFormHeroTitleAdd;
     return Stack(
       children: <Widget>[
         Padding(
@@ -585,9 +573,9 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen>
                 child: const Icon(Icons.add_shopping_cart_rounded, color: Color(0xFFC0392B), size: 30),
               ),
               const SizedBox(height: 12),
-              const Text(
-                'Agregar producto',
-                style: TextStyle(
+              Text(
+                title,
+                style: const TextStyle(
                   color: Colors.white,
                   fontSize: 20,
                   fontWeight: FontWeight.w900,
@@ -596,7 +584,7 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen>
               ),
               const SizedBox(height: 4),
               Text(
-                'Llena los datos y guarda en tu despensa',
+                t.productFormHeroSubtitle,
                 style: TextStyle(
                   color: Colors.white.withValues(alpha: 0.7),
                   fontSize: 12,
@@ -610,10 +598,8 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen>
     );
   }
 
-  // ───── Field builders ─────
-
-  // ───── Image picker widget ─────
   Widget _buildImagePicker(ColorScheme colors) {
+    final AppLocalizations t = AppLocalizations.of(context);
     final bool hasImage = _selectedImagePath != null;
     return GestureDetector(
       onTap: () => _showImageSourceSheet(context, colors),
@@ -671,7 +657,6 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen>
                       File(_selectedImagePath!),
                       fit: BoxFit.cover,
                     ),
-                  // Edit overlay
                   Positioned(
                     bottom: 10,
                     right: 10,
@@ -681,14 +666,14 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen>
                         color: Colors.black.withValues(alpha: 0.55),
                         borderRadius: BorderRadius.circular(20),
                       ),
-                      child: const Row(
+                      child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: <Widget>[
-                          Icon(Icons.edit_rounded, color: Colors.white, size: 14),
-                          SizedBox(width: 6),
+                          const Icon(Icons.edit_rounded, color: Colors.white, size: 14),
+                          const SizedBox(width: 6),
                           Text(
-                            'Cambiar foto',
-                            style: TextStyle(
+                            t.productFormChangePhoto,
+                            style: const TextStyle(
                               color: Colors.white,
                               fontSize: 12,
                               fontWeight: FontWeight.w600,
@@ -717,18 +702,18 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen>
                     ),
                   ),
                   const SizedBox(height: 12),
-                  const Text(
-                    'Agregar foto del producto',
-                    style: TextStyle(
+                  Text(
+                    t.productFormImagePickerTitle,
+                    style: const TextStyle(
                       color: InventoryTokens.textBody,
                       fontWeight: FontWeight.w700,
                       fontSize: 14,
                     ),
                   ),
                   const SizedBox(height: 4),
-                  const Text(
-                    'Cámara · Galería · Opcional',
-                    style: TextStyle(
+                  Text(
+                    t.productFormPhotoOptionsHint,
+                    style: const TextStyle(
                       color: InventoryTokens.textMuted,
                       fontSize: 12,
                     ),
@@ -740,21 +725,22 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen>
   }
 
   Widget _buildNameField(ColorScheme colors) {
+    final AppLocalizations t = AppLocalizations.of(context);
     return TextFormField(
       controller: _nameController,
       style: const TextStyle(color: InventoryTokens.textBody),
       textCapitalization: TextCapitalization.sentences,
-      decoration: const InputDecoration(
-        labelText: 'Nombre del producto',
-        hintText: 'Ej: Leche entera, Arroz integral…',
-        prefixIcon: Icon(Icons.label_outline_rounded),
+      decoration: InputDecoration(
+        labelText: t.productFormNameLabel,
+        hintText: t.productFormNameHint,
+        prefixIcon: const Icon(Icons.label_outline_rounded),
       ),
       validator: (String? value) {
         if (value == null || value.trim().isEmpty) {
-          return 'El nombre es obligatorio';
+          return t.productFormNameRequired;
         }
         if (value.trim().length < 2) {
-          return 'El nombre debe tener al menos 2 caracteres';
+          return t.productFormNameMin;
         }
         return null;
       },
@@ -762,17 +748,18 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen>
   }
 
   Widget _buildBarcodeField(ColorScheme colors) {
+    final AppLocalizations t = AppLocalizations.of(context);
     return TextFormField(
       controller: _barcodeController,
       style: const TextStyle(color: InventoryTokens.textBody),
       readOnly: widget.initialBarcode != null && widget.initialBarcode!.isNotEmpty,
       keyboardType: TextInputType.number,
       decoration: InputDecoration(
-        labelText: 'Código de barras',
+        labelText: t.productFormBarcodeLabel,
         prefixIcon: const Icon(Icons.qr_code_rounded),
         suffixIcon: widget.initialBarcode != null && widget.initialBarcode!.isNotEmpty
             ? Tooltip(
-                message: 'Código escaneado',
+                message: t.productFormBarcodeScanned,
                 child: Icon(Icons.check_circle_rounded, color: colors.primary),
               )
             : null,
@@ -781,6 +768,7 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen>
   }
 
   Widget _buildLookupStatusBanner(ColorScheme colors) {
+    final AppLocalizations t = AppLocalizations.of(context);
     final IconData icon;
     final Color background;
     final Color foreground;
@@ -793,8 +781,8 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen>
         icon = Icons.travel_explore_rounded;
         background = colors.primaryContainer.withValues(alpha: 0.55);
         foreground = colors.onPrimaryContainer;
-        title = 'Buscando producto…';
-        subtitle = 'Consultando base de datos global de alimentos.';
+        title = t.productLookupLoadingTitle;
+        subtitle = t.productLookupLoadingSubtitle;
         leading = SizedBox(
           width: 18,
           height: 18,
@@ -810,18 +798,18 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen>
             : Icons.check_circle_rounded;
         background = const Color(0xFFDCFCE7);
         foreground = const Color(0xFF166534);
-        title = 'Producto encontrado';
+        title = t.productLookupFoundTitle;
         subtitle = _lookupSource == ProductLookupSource.cache
-            ? 'Cargado desde la caché local. Revisa los datos antes de guardar.'
-            : 'Datos auto-completados desde OpenFoodFacts. Revisa antes de guardar.';
+            ? t.productLookupFoundCacheSubtitle
+            : t.productLookupFoundApiSubtitle;
         leading = null;
         break;
       case _LookupStatus.notFound:
         icon = Icons.edit_note_rounded;
         background = const Color(0xFFFEF3C7);
         foreground = const Color(0xFF92400E);
-        title = 'Producto no reconocido';
-        subtitle = 'Completa los campos manualmente para agregarlo a tu despensa.';
+        title = t.productLookupNotFoundTitle;
+        subtitle = t.productLookupNotFoundSubtitle;
         leading = null;
         break;
       case _LookupStatus.idle:
@@ -870,18 +858,20 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen>
   }
 
   Widget _buildCategoryPicker(ColorScheme colors) {
+    final AppLocalizations t = AppLocalizations.of(context);
     return Wrap(
       spacing: 8,
       runSpacing: 8,
       children: <Widget>[
         ..._categories.map((Map<String, dynamic> cat) {
-          final String label = cat['label'] as String;
+          final String canonical = cat['label'] as String;
           final IconData icon = cat['icon'] as IconData;
-          final bool selected = _selectedCategory == label;
+          final bool selected = _selectedCategory == canonical;
+          final String displayLabel = categoryLabel(context, canonical);
 
           return GestureDetector(
             onTap: () => setState(() {
-              _selectedCategory = selected ? null : label;
+              _selectedCategory = selected ? null : canonical;
             }),
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 200),
@@ -904,7 +894,7 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen>
                   ),
                   const SizedBox(width: 6),
                   Text(
-                    label,
+                    displayLabel,
                     style: TextStyle(
                       color: selected ? Colors.white : InventoryTokens.textBody,
                       fontSize: 13,
@@ -916,7 +906,6 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen>
             ),
           );
         }),
-        // "Create new" chip
         GestureDetector(
           onTap: () => _showCreateCategoryDialog(context, colors),
           child: Container(
@@ -926,14 +915,14 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen>
               borderRadius: BorderRadius.circular(12),
               border: Border.all(color: InventoryTokens.primary),
             ),
-            child: const Row(
+            child: Row(
               mainAxisSize: MainAxisSize.min,
               children: <Widget>[
-                Icon(Icons.add_rounded, size: 15, color: InventoryTokens.primary),
-                SizedBox(width: 6),
+                const Icon(Icons.add_rounded, size: 15, color: InventoryTokens.primary),
+                const SizedBox(width: 6),
                 Text(
-                  'Crear nueva',
-                  style: TextStyle(
+                  t.productFormCreateNewCategory,
+                  style: const TextStyle(
                     color: InventoryTokens.primary,
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
@@ -948,6 +937,7 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen>
   }
 
   Future<void> _showCreateCategoryDialog(BuildContext context, ColorScheme colors) async {
+    final AppLocalizations t = AppLocalizations.of(context);
     final TextEditingController newCategoryController = TextEditingController();
 
     await showDialog<void>(
@@ -957,7 +947,7 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen>
           backgroundColor: colors.surface,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
           title: Text(
-            'Nueva Categoría',
+            t.productFormNewCategoryTitle,
             style: TextStyle(
               color: colors.onSurface,
               fontWeight: FontWeight.w600,
@@ -967,7 +957,7 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen>
             controller: newCategoryController,
             textCapitalization: TextCapitalization.sentences,
             decoration: InputDecoration(
-              hintText: 'Nombre de la categoría',
+              hintText: t.productFormNewCategoryHint,
               filled: true,
               fillColor: colors.surfaceContainerHighest,
               border: OutlineInputBorder(
@@ -984,7 +974,7 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen>
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
               child: Text(
-                'Cancelar',
+                t.commonCancel,
                 style: TextStyle(color: colors.onSurfaceVariant),
               ),
             ),
@@ -995,14 +985,14 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen>
                   setState(() {
                     _categories.add({
                       'label': name,
-                      'icon': Icons.category_outlined, // Default icon for custom
+                      'icon': Icons.category_outlined,
                     });
                     _selectedCategory = name;
                   });
                 }
                 Navigator.of(context).pop();
               },
-              child: const Text('Crear'),
+              child: Text(t.commonCreate),
             ),
           ],
         );
@@ -1011,6 +1001,7 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen>
   }
 
   Widget _buildQuantitySelector(ColorScheme colors) {
+    final AppLocalizations t = AppLocalizations.of(context);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
       decoration: BoxDecoration(
@@ -1022,7 +1013,7 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen>
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
           Text(
-            'Unidades en inventario',
+            t.productFormUnitsLabel,
             style: TextStyle(
               color: colors.onSurfaceVariant,
               fontSize: 13,
@@ -1071,6 +1062,7 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen>
 
 
   Widget _buildMinStockSelector(ColorScheme colors) {
+    final AppLocalizations t = AppLocalizations.of(context);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
       decoration: BoxDecoration(
@@ -1082,7 +1074,7 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen>
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
           Text(
-            'Cantidad mínima de alerta',
+            t.productFormMinStockLabel,
             style: TextStyle(
               color: colors.onSurfaceVariant,
               fontSize: 13,
@@ -1129,10 +1121,12 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen>
   }
 
   Widget _buildExpiryPicker(ColorScheme colors) {
+    final AppLocalizations t = AppLocalizations.of(context);
+    final String locale = Localizations.localeOf(context).languageCode;
     final bool hasDate = _expiryDate != null;
     final String dateText = hasDate
-        ? DateFormat('d \'de\' MMMM, yyyy', 'es').format(_expiryDate!)
-        : 'Sin fecha de vencimiento';
+        ? DateFormat.yMMMMd(locale).format(_expiryDate!)
+        : t.productFormNoExpiry;
 
     return GestureDetector(
       onTap: () => _pickDate(context),
@@ -1178,48 +1172,48 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen>
   }
 
   Widget _buildNotesField(ColorScheme colors) {
+    final AppLocalizations t = AppLocalizations.of(context);
     return TextFormField(
       controller: _notesController,
       style: const TextStyle(color: InventoryTokens.textBody),
       minLines: 3,
       maxLines: 5,
       maxLength: 300,
-      decoration: const InputDecoration(
-        labelText: 'Notas (opcional)',
-        hintText: 'Ej: Comprado en oferta, revisar antes de usar…',
+      decoration: InputDecoration(
+        labelText: t.productFormNotesLabel,
+        hintText: t.productFormNotesHint,
         alignLabelWithHint: true,
       ),
     );
   }
 
   Widget _buildSaveButton(ColorScheme colors, bool isSaving) {
+    final AppLocalizations t = AppLocalizations.of(context);
     return BrandGradientButton(
-      label: 'Guardar en inventario',
+      label: t.productFormSave,
       icon: Icons.check_rounded,
       isLoading: isSaving,
       onPressed: isSaving ? null : _save,
     );
   }
 
-  // ───── Actions ─────
-
   Future<void> _pickDate(BuildContext context) async {
+    final AppLocalizations t = AppLocalizations.of(context);
     final DateTime now = DateTime.now();
     final DateTime? selectedDate = await showDatePicker(
       context: context,
       initialDate: _expiryDate ?? now,
       firstDate: now,
       lastDate: DateTime(now.year + 15),
-      helpText: 'Selecciona la fecha de vencimiento',
-      confirmText: 'Confirmar',
-      cancelText: 'Cancelar',
+      helpText: t.productFormDatePickerHelp,
+      confirmText: t.commonConfirm,
+      cancelText: t.commonCancel,
     );
     if (selectedDate != null) {
       setState(() => _expiryDate = selectedDate);
     }
   }
 
-  // SUB-04.3 — Save use case & SUB-04.4 — Visual confirmation
   Future<void> _save() async {
     if (_formKey.currentState?.validate() != true) return;
 
@@ -1229,7 +1223,7 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen>
 
     final InventoryItem item = InventoryItem(
       id: _existingId,
-      syncId: '', // Will be assigned by repository if new
+      syncId: '',
       barcode: barcode,
       name: _nameController.text.trim(),
       brand: null,
@@ -1243,6 +1237,7 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen>
       updatedAt: DateTime.now(),
     );
 
+    final bool wasEditing = _existingId != 0;
     final bool success =
         await ref.read(_saveNotifierProvider.notifier).save(item);
 
@@ -1250,7 +1245,10 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen>
 
     if (success) {
       AppHaptics.success();
-      // SUB-04.4 — Snackbar de confirmación visual
+      final AppLocalizations t = AppLocalizations.of(context);
+      final String message = wasEditing
+          ? t.productFormUpdatedSnack(item.name)
+          : t.productFormSavedSnack(item.name);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           duration: const Duration(seconds: 3),
@@ -1266,7 +1264,7 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen>
               const SizedBox(width: 10),
               Expanded(
                 child: Text(
-                  '¡${item.name} agregado al inventario!',
+                  message,
                   style: TextStyle(
                     color: Theme.of(context).colorScheme.onPrimaryContainer,
                     fontWeight: FontWeight.w600,
@@ -1281,10 +1279,6 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen>
     }
   }
 }
-
-// ───────────────────────────────────────────────
-// Reusable helper widgets
-// ───────────────────────────────────────────────
 
 class _SectionHeader extends StatelessWidget {
   const _SectionHeader({required this.title, required this.icon});
@@ -1360,9 +1354,6 @@ class _QuantityButton extends StatelessWidget {
   }
 }
 
-// ───────────────────────────────────────────────
-// Image source tile for the bottom sheet
-// ───────────────────────────────────────────────
 class _ImageSourceTile extends StatelessWidget {
   const _ImageSourceTile({
     required this.icon,

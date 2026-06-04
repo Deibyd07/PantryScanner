@@ -5,6 +5,8 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../app/router/app_router.dart';
 import '../../../../core/design/design_system.dart';
+import '../../../../core/i18n/category_l10n.dart';
+import '../../../../l10n/generated/app_localizations.dart';
 import '../../data/services/local_notification_service.dart';
 import '../../domain/entities/notification_settings.dart';
 import '../providers/notification_settings_providers.dart';
@@ -38,9 +40,10 @@ class _NotificationSettingsScreenState
           );
     } catch (e) {
       if (!mounted) return;
+      final AppLocalizations t = AppLocalizations.of(context);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('No se pudo guardar la configuración: $e'),
+          content: Text(t.notifSaveError(e.toString())),
           backgroundColor: AppColors.dangerStrong,
         ),
       );
@@ -52,13 +55,14 @@ class _NotificationSettingsScreenState
     final bool granted =
         await LocalNotificationService.instance.requestPermission();
     if (!granted && mounted) {
+      final AppLocalizations t = AppLocalizations.of(context);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        SnackBar(
           behavior: SnackBarBehavior.floating,
           backgroundColor: AppColors.dangerStrong,
           content: Text(
-            'Permiso denegado. Actívalo en la configuración del sistema.',
-            style: TextStyle(color: Colors.white),
+            t.notifPermissionDenied,
+            style: const TextStyle(color: Colors.white),
           ),
         ),
       );
@@ -71,13 +75,14 @@ class _NotificationSettingsScreenState
     final AsyncValue<NotificationSettings> settingsAsync =
         ref.watch(notificationSettingsProvider);
     final PaletteSpec p = context.palette;
+    final AppLocalizations t = AppLocalizations.of(context);
 
     return Scaffold(
       backgroundColor: p.bg,
       body: settingsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (Object err, StackTrace _) => _ErrorState(
-          message: 'No se pudo cargar la configuración.',
+          message: t.notifLoadError,
           onRetry: () => ref.invalidate(notificationSettingsProvider),
         ),
         data: (NotificationSettings settings) {
@@ -126,7 +131,7 @@ class _NotificationSettingsScreenState
                                 final TimeOfDay? picked = await showTimePicker(
                                   context: context,
                                   initialTime: settings.preferredTime,
-                                  helpText: 'Hora preferida para alertas',
+                                  helpText: t.notifTimePickerHelp,
                                 );
                                 if (picked == null) return;
                                 AppHaptics.confirm();
@@ -183,6 +188,7 @@ class _SettingsHero extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final double topPad = MediaQuery.paddingOf(context).top;
+    final AppLocalizations t = AppLocalizations.of(context);
     return SliverToBoxAdapter(
       child: Container(
         decoration: const BoxDecoration(
@@ -213,7 +219,7 @@ class _SettingsHero extends StatelessWidget {
                 const Spacer(),
                 _CircleIconBtn(
                   icon: Icons.notifications_none_rounded,
-                  tooltip: 'Ver notificaciones recibidas',
+                  tooltip: t.notifViewInboxTooltip,
                   onTap: () {
                     AppHaptics.tap();
                     context.push(AppRoutes.notificationsInbox);
@@ -223,7 +229,7 @@ class _SettingsHero extends StatelessWidget {
             ),
             const SizedBox(height: AppSpacing.lg),
             Text(
-              'Alertas',
+              t.notifHeroTitle,
               style: AppTypography.displaySm.copyWith(
                 color: Colors.white,
                 fontWeight: FontWeight.w800,
@@ -232,8 +238,8 @@ class _SettingsHero extends StatelessWidget {
             const SizedBox(height: AppSpacing.xs),
             Text(
               enabled
-                  ? 'Configura cuándo y cómo recibir avisos de tu despensa.'
-                  : 'Las alertas están pausadas. Actívalas para no perder ningún producto.',
+                  ? t.notifHeroEnabledSubtitle
+                  : t.notifHeroDisabledSubtitle,
               style: AppTypography.bodySm.copyWith(
                 color: Colors.white.withValues(alpha: 0.85),
               ),
@@ -286,6 +292,7 @@ class _MasterToggle extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final PaletteSpec p = context.palette;
+    final AppLocalizations t = AppLocalizations.of(context);
     return Container(
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.md,
@@ -333,7 +340,7 @@ class _MasterToggle extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
                 Text(
-                  enabled ? 'Alertas activas' : 'Alertas pausadas',
+                  enabled ? t.notifMasterEnabled : t.notifMasterDisabled,
                   style: AppTypography.headingSm.copyWith(
                     color: enabled ? Colors.white : p.textBody,
                     fontWeight: FontWeight.w800,
@@ -342,8 +349,8 @@ class _MasterToggle extends StatelessWidget {
                 const SizedBox(height: 2),
                 Text(
                   enabled
-                      ? 'Te avisaremos antes de que algo se venza.'
-                      : 'Actívalas para recibir avisos de vencimiento.',
+                      ? t.notifMasterEnabledSub
+                      : t.notifMasterDisabledSub,
                   style: AppTypography.bodyXs.copyWith(
                     color: enabled
                         ? Colors.white.withValues(alpha: 0.85)
@@ -448,16 +455,17 @@ class _GlobalThresholdCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final AppLocalizations t = AppLocalizations.of(context);
     return _SettingsCard(
-      title: 'Umbral global',
-      subtitle: 'Avisar X días antes de que algo se venza.',
+      title: t.notifThresholdTitle,
+      subtitle: t.notifThresholdSubtitle,
       icon: Icons.bolt_rounded,
       child: Row(
         children: <Widget>[
           for (final int days in const <int>[1, 3, 7]) ...<Widget>[
             Expanded(
               child: _ThresholdPill(
-                label: days == 1 ? '1 día' : '$days días',
+                label: t.notifDaysCount(days),
                 selected: value == days,
                 onTap: () => onChanged(days),
               ),
@@ -522,9 +530,10 @@ class _TimeCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final PaletteSpec p = context.palette;
+    final AppLocalizations t = AppLocalizations.of(context);
     return _SettingsCard(
-      title: 'Hora preferida',
-      subtitle: 'Las alertas se enviarán a esta hora.',
+      title: t.notifTimeCardTitle,
+      subtitle: t.notifTimeCardSubtitle,
       icon: Icons.access_time_rounded,
       child: Row(
         children: <Widget>[
@@ -556,7 +565,7 @@ class _TimeCard extends StatelessWidget {
                       color: p.brandPrimary, size: 14),
                   const SizedBox(width: 6),
                   Text(
-                    'Cambiar',
+                    t.commonChange,
                     style: AppTypography.labelMd.copyWith(
                       color: p.brandPrimary,
                       fontWeight: FontWeight.w800,
@@ -595,9 +604,10 @@ class _CategoryRulesCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final PaletteSpec p = context.palette;
+    final AppLocalizations t = AppLocalizations.of(context);
     return _SettingsCard(
-      title: 'Reglas por categoría',
-      subtitle: 'Sobrescribe el umbral global para una categoría puntual.',
+      title: t.notifCategoryRulesTitle,
+      subtitle: t.notifCategoryRulesSubtitle,
       icon: Icons.category_outlined,
       child: Column(
         children: <Widget>[
@@ -656,7 +666,7 @@ class _CategoryRow extends StatelessWidget {
         const SizedBox(width: AppSpacing.sm + 2),
         Expanded(
           child: Text(
-            spec.name,
+            categoryLabel(context, spec.name),
             style: AppTypography.bodyMd.copyWith(
               color: p.textBody,
               fontWeight: FontWeight.w600,
@@ -681,15 +691,13 @@ class _CategoryValueDropdown extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final PaletteSpec p = context.palette;
+    final AppLocalizations t = AppLocalizations.of(context);
     final bool isOverride = value != null;
-    final String label = value == null
-        ? 'Global'
-        : value == 1
-            ? '1 día'
-            : '$value días';
+    final String label =
+        value == null ? t.notifLabelGlobal : t.notifDaysCount(value!);
 
     return PopupMenuButton<int?>(
-      tooltip: 'Cambiar umbral',
+      tooltip: t.notifChangeThresholdTooltip,
       color: p.surface,
       elevation: 6,
       shape: RoundedRectangleBorder(
@@ -697,11 +705,11 @@ class _CategoryValueDropdown extends StatelessWidget {
         side: BorderSide(color: p.outline),
       ),
       onSelected: onChanged,
-      itemBuilder: (BuildContext _) => const <PopupMenuEntry<int?>>[
-        PopupMenuItem<int?>(value: null, child: Text('Usar global')),
-        PopupMenuItem<int?>(value: 1, child: Text('1 día')),
-        PopupMenuItem<int?>(value: 3, child: Text('3 días')),
-        PopupMenuItem<int?>(value: 7, child: Text('7 días')),
+      itemBuilder: (BuildContext _) => <PopupMenuEntry<int?>>[
+        PopupMenuItem<int?>(value: null, child: Text(t.notifUseGlobal)),
+        PopupMenuItem<int?>(value: 1, child: Text(t.notifDaysCount(1))),
+        PopupMenuItem<int?>(value: 3, child: Text(t.notifDaysCount(3))),
+        PopupMenuItem<int?>(value: 7, child: Text(t.notifDaysCount(7))),
       ],
       child: Container(
         padding: const EdgeInsets.symmetric(
@@ -761,7 +769,7 @@ class _InstantInfoBanner extends StatelessWidget {
           const SizedBox(width: AppSpacing.sm + 2),
           Expanded(
             child: Text(
-              'Los cambios se aplican al instante en tus alertas.',
+              AppLocalizations.of(context).notifInstantBanner,
               style: AppTypography.bodyXs.copyWith(
                 color: p.textBody,
                 fontWeight: FontWeight.w600,
@@ -807,7 +815,7 @@ class _ErrorState extends StatelessWidget {
             const SizedBox(height: AppSpacing.md),
             OutlinedButton(
               onPressed: onRetry,
-              child: const Text('Reintentar'),
+              child: Text(AppLocalizations.of(context).commonRetry),
             ),
           ],
         ),

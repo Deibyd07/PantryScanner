@@ -60,6 +60,12 @@ class AppLocalizationsEs extends AppLocalizations {
   String get commonSearch => 'Buscar';
 
   @override
+  String get commonConfirm => 'Confirmar';
+
+  @override
+  String get commonCreate => 'Crear';
+
+  @override
   String get navPantry => 'Despensa';
 
   @override
@@ -668,4 +674,603 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get legalPrivacyBody =>
       'PantryScanner respeta tu privacidad. Recopilamos solo: tu correo electrónico (para autenticación), los productos que registras (almacenados localmente en tu dispositivo y sincronizados con Firebase asociados a tu cuenta), y configuraciones de la app (idioma, preferencias). No compartimos tu información con terceros con fines publicitarios. Puedes eliminar tu cuenta y todos los datos asociados contactando al equipo. Las imágenes de productos se almacenan localmente en tu dispositivo.';
+
+  @override
+  String get productFormHeroTitleAdd => 'Agregar producto';
+
+  @override
+  String get productFormHeroTitleEdit => 'Editar producto';
+
+  @override
+  String get productFormHeroSubtitle =>
+      'Llena los datos y guarda en tu despensa';
+
+  @override
+  String get productFormSectionPhoto => 'Foto del producto';
+
+  @override
+  String get productFormSectionBasic => 'Información básica';
+
+  @override
+  String get productFormSectionCategory => 'Categoría';
+
+  @override
+  String get productFormSectionQuantity => 'Cantidad';
+
+  @override
+  String get productFormSectionMinStock => 'Stock mínimo';
+
+  @override
+  String get productFormSectionExpiry => 'Fecha de vencimiento';
+
+  @override
+  String get productFormSectionNotes => 'Notas opcionales';
+
+  @override
+  String get productFormMinStockHint =>
+      'Recibirás una alerta cuando la cantidad llegue a este valor.';
+
+  @override
+  String get productFormUnitsLabel => 'Unidades en inventario';
+
+  @override
+  String get productFormMinStockLabel => 'Cantidad mínima de alerta';
+
+  @override
+  String get productFormNoExpiry => 'Sin fecha de vencimiento';
+
+  @override
+  String get productFormNotesLabel => 'Notas (opcional)';
+
+  @override
+  String get productFormNotesHint =>
+      'Ej: Comprado en oferta, revisar antes de usar…';
+
+  @override
+  String get productFormSave => 'Guardar en inventario';
+
+  @override
+  String productFormSaveError(String error) {
+    return 'Error al guardar: $error';
+  }
+
+  @override
+  String productFormSavedSnack(String name) {
+    return '¡$name agregado al inventario!';
+  }
+
+  @override
+  String productFormUpdatedSnack(String name) {
+    return '¡$name actualizado!';
+  }
+
+  @override
+  String get productFormDatePickerHelp => 'Selecciona la fecha de vencimiento';
+
+  @override
+  String get productFormNameLabel => 'Nombre del producto';
+
+  @override
+  String get productFormNameHint => 'Ej: Leche entera, Arroz integral…';
+
+  @override
+  String get productFormNameRequired => 'El nombre es obligatorio';
+
+  @override
+  String get productFormNameMin => 'El nombre debe tener al menos 2 caracteres';
+
+  @override
+  String get productFormBarcodeLabel => 'Código de barras';
+
+  @override
+  String get productFormBarcodeScanned => 'Código escaneado';
+
+  @override
+  String get productFormCreateNewCategory => 'Crear nueva';
+
+  @override
+  String get productFormNewCategoryTitle => 'Nueva categoría';
+
+  @override
+  String get productFormNewCategoryHint => 'Nombre de la categoría';
+
+  @override
+  String get productFormImagePickerTitle => 'Agregar foto del producto';
+
+  @override
+  String get productFormTakePhoto => 'Tomar foto';
+
+  @override
+  String get productFormTakePhotoSubtitle => 'Abre la cámara del dispositivo';
+
+  @override
+  String get productFormUploadImage => 'Subir imagen';
+
+  @override
+  String get productFormUploadFromGallery => 'Subir desde galería';
+
+  @override
+  String get productFormUploadFromComputerSubtitle =>
+      'Elige una imagen de tu computador';
+
+  @override
+  String get productFormUploadFromGallerySubtitle =>
+      'Elige una imagen guardada';
+
+  @override
+  String get productFormCameraWebNotice =>
+      'La cámara solo está disponible en la app móvil.';
+
+  @override
+  String get productFormRemovePhoto => 'Quitar foto';
+
+  @override
+  String get productFormRemovePhotoSubtitle => 'Elimina la imagen seleccionada';
+
+  @override
+  String get productFormChangePhoto => 'Cambiar foto';
+
+  @override
+  String get productFormPhotoOptionsHint => 'Cámara · Galería · Opcional';
+
+  @override
+  String productFormImagePickerError(String error) {
+    return 'Error al abrir cámara/galería: $error';
+  }
+
+  @override
+  String get productLookupLoadingTitle => 'Buscando producto…';
+
+  @override
+  String get productLookupLoadingSubtitle =>
+      'Consultando base de datos global de alimentos.';
+
+  @override
+  String get productLookupFoundTitle => 'Producto encontrado';
+
+  @override
+  String get productLookupFoundCacheSubtitle =>
+      'Cargado desde la caché local. Revisa los datos antes de guardar.';
+
+  @override
+  String get productLookupFoundApiSubtitle =>
+      'Datos auto-completados desde OpenFoodFacts. Revisa antes de guardar.';
+
+  @override
+  String get productLookupNotFoundTitle => 'Producto no reconocido';
+
+  @override
+  String get productLookupNotFoundSubtitle =>
+      'Completa los campos manualmente para agregarlo a tu despensa.';
+
+  @override
+  String get productLookupFoundSnack => 'Producto encontrado y autocompletado.';
+
+  @override
+  String get productLookupNotFoundSnack =>
+      'Producto no reconocido. Ingrésalo manualmente.';
+
+  @override
+  String get productDetailLoadError => 'No se pudo cargar el producto';
+
+  @override
+  String get productDetailNotInPantry =>
+      'Este producto ya no está en tu despensa';
+
+  @override
+  String get productDetailUnitOne => 'unidad';
+
+  @override
+  String get productDetailUnitMany => 'unidades';
+
+  @override
+  String get productDetailNoExpiryShort => 'sin vencimiento';
+
+  @override
+  String get productDetailDaysExpiredMany => 'días vencido';
+
+  @override
+  String get productDetailExpiresToday => 'vence hoy';
+
+  @override
+  String get productDetailDayLeft => 'día restante';
+
+  @override
+  String get productDetailDaysLeftMany => 'días restantes';
+
+  @override
+  String get productDetailMinStockShort => 'stock mín.';
+
+  @override
+  String get productDetailQtyCardTitle => 'Cantidad';
+
+  @override
+  String get productDetailQtyCardCaption => 'Ajusta cuántas unidades tienes';
+
+  @override
+  String get productDetailDetailsCardTitle => 'Detalles';
+
+  @override
+  String get productDetailDetailsCardCaption => 'Información del producto';
+
+  @override
+  String get productDetailNotesCardTitle => 'Notas';
+
+  @override
+  String get productDetailNotesCardCaption => 'Tus apuntes sobre este producto';
+
+  @override
+  String get productDetailRowBarcode => 'Código de barras';
+
+  @override
+  String get productDetailRowBarcodeMissing => 'Sin código';
+
+  @override
+  String get productDetailRowCategory => 'Categoría';
+
+  @override
+  String get productDetailRowExpiry => 'Vencimiento';
+
+  @override
+  String get productDetailRowExpiryMissing => 'No registrado';
+
+  @override
+  String get productDetailRowAdded => 'Agregado';
+
+  @override
+  String get productDetailRowUpdated => 'Última edición';
+
+  @override
+  String get productDetailActionReplenish => 'Reponer · añadir al carrito';
+
+  @override
+  String get productDetailActionEdit => 'Editar producto';
+
+  @override
+  String get productDetailActionAddToCart => 'Añadir al carrito';
+
+  @override
+  String get productDetailActionDelete => 'Eliminar producto';
+
+  @override
+  String productDetailCartAlreadyHad(String name) {
+    return 'Ya tenías \"$name\" en tu carrito';
+  }
+
+  @override
+  String productDetailCartAdded(String name) {
+    return 'Añadiste \"$name\" al carrito';
+  }
+
+  @override
+  String get commonChange => 'Cambiar';
+
+  @override
+  String get notifHeroTitle => 'Alertas';
+
+  @override
+  String get notifHeroEnabledSubtitle =>
+      'Configura cuándo y cómo recibir avisos de tu despensa.';
+
+  @override
+  String get notifHeroDisabledSubtitle =>
+      'Las alertas están pausadas. Actívalas para no perder ningún producto.';
+
+  @override
+  String get notifViewInboxTooltip => 'Ver notificaciones recibidas';
+
+  @override
+  String get notifConfigTooltip => 'Configurar alertas';
+
+  @override
+  String notifSaveError(String error) {
+    return 'No se pudo guardar la configuración: $error';
+  }
+
+  @override
+  String get notifLoadError => 'No se pudo cargar la configuración.';
+
+  @override
+  String get notifPermissionDenied =>
+      'Permiso denegado. Actívalo en la configuración del sistema.';
+
+  @override
+  String get notifMasterEnabled => 'Alertas activas';
+
+  @override
+  String get notifMasterDisabled => 'Alertas pausadas';
+
+  @override
+  String get notifMasterEnabledSub =>
+      'Te avisaremos antes de que algo se venza.';
+
+  @override
+  String get notifMasterDisabledSub =>
+      'Actívalas para recibir avisos de vencimiento.';
+
+  @override
+  String get notifThresholdTitle => 'Umbral global';
+
+  @override
+  String get notifThresholdSubtitle =>
+      'Avisar X días antes de que algo se venza.';
+
+  @override
+  String notifDaysCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count días',
+      one: '1 día',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get notifTimeCardTitle => 'Hora preferida';
+
+  @override
+  String get notifTimeCardSubtitle => 'Las alertas se enviarán a esta hora.';
+
+  @override
+  String get notifTimePickerHelp => 'Hora preferida para alertas';
+
+  @override
+  String get notifCategoryRulesTitle => 'Reglas por categoría';
+
+  @override
+  String get notifCategoryRulesSubtitle =>
+      'Sobrescribe el umbral global para una categoría puntual.';
+
+  @override
+  String get notifChangeThresholdTooltip => 'Cambiar umbral';
+
+  @override
+  String get notifUseGlobal => 'Usar global';
+
+  @override
+  String get notifLabelGlobal => 'Global';
+
+  @override
+  String get notifInstantBanner =>
+      'Los cambios se aplican al instante en tus alertas.';
+
+  @override
+  String get notifInboxTitle => 'Notificaciones';
+
+  @override
+  String get notifInboxLoadError => 'No se pudieron cargar las notificaciones';
+
+  @override
+  String get notifInboxAllGood => 'Todo en orden por ahora';
+
+  @override
+  String notifInboxAttentionCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count productos requieren tu atención',
+      one: '1 producto requiere tu atención',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get notifInboxChipExpired => 'Vencidos';
+
+  @override
+  String get notifInboxChipExpiring => 'Por vencer';
+
+  @override
+  String get notifInboxChipLowStock => 'Stock bajo';
+
+  @override
+  String get notifInboxSectionExpiredTitle => 'Vencidos';
+
+  @override
+  String get notifInboxSectionExpiredCaption => 'Retíralos de tu despensa';
+
+  @override
+  String get notifInboxSectionExpiringTitle => 'Por vencer pronto';
+
+  @override
+  String get notifInboxSectionExpiringCaption =>
+      'Consúmelos en los próximos días';
+
+  @override
+  String get notifInboxSectionLowStockTitle => 'Stock bajo';
+
+  @override
+  String get notifInboxSectionLowStockCaption =>
+      'Pronto necesitarás reponerlos';
+
+  @override
+  String get notifExpiredToday => 'Venció hoy';
+
+  @override
+  String get notifExpiredOneDay => 'Venció hace 1 día';
+
+  @override
+  String notifExpiredManyDays(int days) {
+    return 'Venció hace $days días';
+  }
+
+  @override
+  String get notifExpiresToday => 'Vence hoy';
+
+  @override
+  String get notifExpiresTomorrow => 'Vence mañana';
+
+  @override
+  String notifExpiresInDays(int days, String date) {
+    return 'Vence en $days días · $date';
+  }
+
+  @override
+  String notifLowStockRemaining(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Quedan $count unidades',
+      one: 'Queda 1 unidad',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get notifInboxEmptyTitle => 'Sin notificaciones';
+
+  @override
+  String get notifInboxEmptyBody =>
+      'Tu despensa está en orden. Cuando un producto esté por vencer o quede con poco stock, los avisos aparecerán aquí.';
+
+  @override
+  String get scannerTitle => 'Escáner de productos';
+
+  @override
+  String get scannerManualBtn => 'Manual';
+
+  @override
+  String get scannerCameraError =>
+      'No se pudo iniciar la cámara. Verifica permisos e intenta de nuevo.';
+
+  @override
+  String scannerDetectedCode(String code) {
+    return 'Código detectado: $code';
+  }
+
+  @override
+  String get scannerInvalidCode =>
+      'Código no reconocido. Usa un EAN-13 o UPC-A válido.';
+
+  @override
+  String get scannerAddProduct => 'Agregar producto';
+
+  @override
+  String get scannerPermDisabledTitle => 'Permiso de cámara desactivado';
+
+  @override
+  String get scannerPermRequestTitle => 'Necesitamos acceso a la cámara';
+
+  @override
+  String get scannerPermDisabledBody =>
+      'Activa el permiso de cámara en la configuración del sistema para volver a escanear códigos de barras.';
+
+  @override
+  String get scannerPermRequestBody =>
+      'Usamos la cámara solo para leer códigos EAN-13 y UPC-A de tus productos. Puedes continuar con ingreso manual si prefieres.';
+
+  @override
+  String get scannerPermRequesting => 'Solicitando permiso…';
+
+  @override
+  String get scannerPermAllow => 'Permitir cámara';
+
+  @override
+  String get scannerPermOpenSettings => 'Abrir configuración';
+
+  @override
+  String get scannerManualEntry => 'Ingresar código manualmente';
+
+  @override
+  String get scannerGuideHint => 'Alinea el código dentro del marco';
+
+  @override
+  String get authEmailLabel => 'Correo electrónico';
+
+  @override
+  String get authPasswordLabel => 'Contraseña';
+
+  @override
+  String get authEmailRequired => 'Ingresa tu correo electrónico';
+
+  @override
+  String get authEmailInvalid => 'Formato de correo inválido';
+
+  @override
+  String get authPasswordRequired => 'Ingresa tu contraseña';
+
+  @override
+  String get authUnexpectedError => 'Error inesperado. Intenta de nuevo.';
+
+  @override
+  String get authWelcomeBack => 'Bienvenido de nuevo';
+
+  @override
+  String get authWelcomeBackSub => 'Ingresa tus datos para continuar';
+
+  @override
+  String get authSignInBtn => 'Iniciar sesión';
+
+  @override
+  String get authForgotPassword => '¿Olvidaste tu contraseña?';
+
+  @override
+  String get authOrContinueWith => 'o continúa con';
+
+  @override
+  String get authNoAccount => '¿No tienes cuenta? ';
+
+  @override
+  String get authCreateAccount => 'Crear cuenta';
+
+  @override
+  String get authCreateAccountSub => 'Completa tus datos para registrarte';
+
+  @override
+  String get authFullNameLabel => 'Nombre completo';
+
+  @override
+  String get authNameRequired => 'Ingresa tu nombre';
+
+  @override
+  String get authConfirmPasswordLabel => 'Confirmar contraseña';
+
+  @override
+  String get authPasswordMin => 'Mínimo 8 caracteres';
+
+  @override
+  String get authPasswordUppercase => 'Debe incluir al menos 1 mayúscula';
+
+  @override
+  String get authPasswordNumber => 'Debe incluir al menos 1 número';
+
+  @override
+  String get authConfirmPasswordRequired => 'Confirma tu contraseña';
+
+  @override
+  String get authPasswordMismatch => 'Las contraseñas no coinciden';
+
+  @override
+  String get authRegisterHeroSub => 'Únete y organiza tu despensa';
+
+  @override
+  String get authAlreadyHaveAccount => '¿Ya tienes cuenta? ';
+
+  @override
+  String get authRecoverTitle => 'Recuperar contraseña';
+
+  @override
+  String get authRecoverSub =>
+      'Ingresa tu correo y te enviaremos un enlace para restablecerla.';
+
+  @override
+  String get authSendResetLink => 'Enviar enlace';
+
+  @override
+  String get authRememberedPassword => '¿Recordaste tu contraseña? ';
+
+  @override
+  String get authEmailSentTitle => '¡Correo enviado!';
+
+  @override
+  String authEmailSentBody(String email) {
+    return 'Revisa tu bandeja de entrada en\n$email\ny sigue el enlace para restablecer tu contraseña.';
+  }
+
+  @override
+  String get authBackToLogin => 'Volver al inicio de sesión';
+
+  @override
+  String get authRecoverHeroSub => 'Recupera el acceso a tu cuenta.';
 }

@@ -10,6 +10,7 @@ import 'package:permission_handler/permission_handler.dart';
 import '../../../../app/router/app_router.dart';
 import '../../../../core/design/design_system.dart';
 import '../../../../core/presentation/widgets/offline_banner.dart';
+import '../../../../l10n/generated/app_localizations.dart';
 import '../../domain/usecases/scan_barcode_usecase.dart';
 
 class ScannerScreen extends ConsumerStatefulWidget {
@@ -34,7 +35,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
   Timer? _resetTimer;
   bool _isProcessing = false;
   String? _lastValidCode;
-  String? _errorMessage;
+  bool _hasInvalidCodeError = false;
   PermissionStatus? _cameraPermissionStatus;
   bool _isRequestingPermission = false;
 
@@ -69,14 +70,15 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
 
   @override
   Widget build(BuildContext context) {
+    final AppLocalizations t = AppLocalizations.of(context);
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Escaner de productos'),
+        title: Text(t.scannerTitle),
         actions: <Widget>[
           TextButton.icon(
             onPressed: _goToManualInput,
             icon: const Icon(Icons.edit_note_outlined),
-            label: const Text('Manual'),
+            label: Text(t.scannerManualBtn),
           ),
         ],
       ),
@@ -85,6 +87,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
   }
 
   Widget _buildBody(BuildContext context) {
+    final AppLocalizations t = AppLocalizations.of(context);
     if (_cameraPermissionStatus == null) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -104,7 +107,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
                 child: Padding(
                   padding: const EdgeInsets.all(20),
                   child: Text(
-                    'No se pudo iniciar la camara. Verifica permisos e intenta de nuevo.',
+                    t.scannerCameraError,
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       color: Theme.of(context).colorScheme.error,
@@ -133,14 +136,14 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
                       borderRadius: AppRadius.brMdPlus,
                     ),
                     child: Text(
-                      'Codigo detectado: $_lastValidCode',
+                      t.scannerDetectedCode(_lastValidCode!),
                       style: AppTypography.bodyMd.copyWith(
                         color: Colors.white,
                         fontWeight: FontWeight.w700,
                       ),
                     ),
                   ),
-                if (_errorMessage != null)
+                if (_hasInvalidCodeError)
                   Container(
                     width: double.infinity,
                     margin: const EdgeInsets.only(bottom: AppSpacing.sm + 2),
@@ -150,7 +153,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
                       borderRadius: AppRadius.brMdPlus,
                     ),
                     child: Text(
-                      _errorMessage!,
+                      t.scannerInvalidCode,
                       style: AppTypography.bodyMd.copyWith(
                         color: Colors.white,
                         fontWeight: FontWeight.w700,
@@ -170,7 +173,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
                                 );
                               },
                         icon: const Icon(Icons.add_box_outlined),
-                        label: const Text('Agregar producto'),
+                        label: Text(t.scannerAddProduct),
                       ),
                     ),
                   ],
@@ -211,7 +214,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
   Future<void> _requestCameraPermission() async {
     setState(() {
       _isRequestingPermission = true;
-      _errorMessage = null;
+      _hasInvalidCodeError = false;
       _lastValidCode = null;
     });
 
@@ -251,12 +254,12 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
 
       setState(() {
         _lastValidCode = code;
-        _errorMessage = null;
+        _hasInvalidCodeError = false;
       });
     } else {
       AppHaptics.warning();
       setState(() {
-        _errorMessage = 'Codigo no reconocido. Usa un EAN-13 o UPC-A valido.';
+        _hasInvalidCodeError = true;
         _lastValidCode = null;
       });
     }
@@ -287,6 +290,7 @@ class _CameraPermissionPanel extends StatelessWidget {
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
     final ColorScheme colors = theme.colorScheme;
+    final AppLocalizations t = AppLocalizations.of(context);
 
     return Center(
       child: ConstrainedBox(
@@ -318,8 +322,8 @@ class _CameraPermissionPanel extends StatelessWidget {
                       Expanded(
                         child: Text(
                           isPermanentlyDenied
-                              ? 'Permiso de camara desactivado'
-                              : 'Necesitamos acceso a la camara',
+                              ? t.scannerPermDisabledTitle
+                              : t.scannerPermRequestTitle,
                           style: theme.textTheme.titleMedium?.copyWith(
                             fontWeight: FontWeight.w700,
                           ),
@@ -330,8 +334,8 @@ class _CameraPermissionPanel extends StatelessWidget {
                   const SizedBox(height: 14),
                   Text(
                     isPermanentlyDenied
-                        ? 'Activa el permiso de camara en la configuracion del sistema para volver a escanear codigos de barras.'
-                        : 'Usamos la camara solo para leer codigos EAN-13 y UPC-A de tus productos. Puedes continuar con ingreso manual si prefieres.',
+                        ? t.scannerPermDisabledBody
+                        : t.scannerPermRequestBody,
                     style: theme.textTheme.bodyMedium,
                   ),
                   const SizedBox(height: 16),
@@ -343,8 +347,8 @@ class _CameraPermissionPanel extends StatelessWidget {
                         icon: const Icon(Icons.verified_user_outlined),
                         label: Text(
                           isLoading
-                              ? 'Solicitando permiso...'
-                              : 'Permitir camara',
+                              ? t.scannerPermRequesting
+                              : t.scannerPermAllow,
                         ),
                       ),
                     ),
@@ -354,7 +358,7 @@ class _CameraPermissionPanel extends StatelessWidget {
                       child: FilledButton.icon(
                         onPressed: onOpenSettings,
                         icon: const Icon(Icons.settings_outlined),
-                        label: const Text('Abrir configuracion'),
+                        label: Text(t.scannerPermOpenSettings),
                       ),
                     ),
                   const SizedBox(height: 10),
@@ -363,7 +367,7 @@ class _CameraPermissionPanel extends StatelessWidget {
                     child: OutlinedButton.icon(
                       onPressed: onManualInput,
                       icon: const Icon(Icons.keyboard_alt_outlined),
-                      label: const Text('Ingresar codigo manualmente'),
+                      label: Text(t.scannerManualEntry),
                     ),
                   ),
                 ],
@@ -408,9 +412,9 @@ class _ScanGuideOverlay extends StatelessWidget {
               ),
               color: Colors.transparent,
             ),
-            child: const Text(
-              'Alinea el codigo dentro del marco',
-              style: TextStyle(
+            child: Text(
+              AppLocalizations.of(context).scannerGuideHint,
+              style: const TextStyle(
                 color: Colors.white,
                 fontWeight: FontWeight.w600,
               ),

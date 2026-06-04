@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../app/router/app_router.dart';
 import '../../../../core/design/design_system.dart';
+import '../../../../l10n/generated/app_localizations.dart';
 import '../../data/repositories/firebase_auth_repository.dart';
 import '../providers/auth_providers.dart';
 import '../widgets/google_sign_in_button.dart';
@@ -90,7 +91,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
     } on AuthException catch (e) {
       if (mounted) _showError(e.message);
     } catch (_) {
-      if (mounted) _showError('Error inesperado. Intenta de nuevo.');
+      if (mounted) _showError(AppLocalizations.of(context).authUnexpectedError);
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -103,7 +104,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
     } on AuthException catch (e) {
       if (mounted) _showError(e.message);
     } catch (_) {
-      if (mounted) _showError('Error inesperado. Intenta de nuevo.');
+      if (mounted) _showError(AppLocalizations.of(context).authUnexpectedError);
     } finally {
       if (mounted) setState(() => _isGoogleLoading = false);
     }
@@ -135,10 +136,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
   Widget build(BuildContext context) {
     final bool anyLoading = _isLoading || _isGoogleLoading;
     final PaletteSpec p = context.palette;
+    final AppLocalizations t = AppLocalizations.of(context);
 
     return SplitHeroScaffold(
       heroHeight: 210,
-      heroContent: FadeTransition(opacity: _heroFade, child: _buildHero()),
+      heroContent: FadeTransition(opacity: _heroFade, child: _buildHero(t)),
       formContent: SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(
           AppSpacing.lg,
@@ -149,7 +151,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            _buildFormTitle(p),
+            _buildFormTitle(p, t),
             const SizedBox(height: AppSpacing.xl - 4),
             Form(
               key: _formKey,
@@ -157,7 +159,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
-                    // Email
                     _animatedItem(
                       index: 0,
                       child: TextFormField(
@@ -169,13 +170,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                         validator: _validateEmail,
                         style: AppTypography.bodyMd.copyWith(color: p.textBody, fontWeight: FontWeight.w600),
                         cursorColor: p.brandPrimary,
-                        decoration: _field(p, label: 'Correo electrónico', icon: Icons.email_outlined),
+                        decoration: _field(p, label: t.authEmailLabel, icon: Icons.email_outlined),
                         onFieldSubmitted: (_) => _passwordFocus.requestFocus(),
                       ),
                     ),
                     const SizedBox(height: AppSpacing.md - 2),
 
-                    // Password
                     _animatedItem(
                       index: 1,
                       child: TextFormField(
@@ -184,12 +184,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                         obscureText: _obscurePassword,
                         textInputAction: TextInputAction.done,
                         autofillHints: const <String>[AutofillHints.password],
-                        validator: (v) => (v == null || v.isEmpty) ? 'Ingresa tu contraseña' : null,
+                        validator: (v) => (v == null || v.isEmpty) ? t.authPasswordRequired : null,
                         style: AppTypography.bodyMd.copyWith(color: p.textBody, fontWeight: FontWeight.w600),
                         cursorColor: p.brandPrimary,
                         decoration: _field(
                           p,
-                          label: 'Contraseña',
+                          label: t.authPasswordLabel,
                           icon: Icons.lock_outline_rounded,
                           suffixIcon: IconButton(
                             onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
@@ -214,7 +214,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                           padding: EdgeInsets.zero,
                         ),
                         child: Text(
-                          '¿Olvidaste tu contraseña?',
+                          t.authForgotPassword,
                           style: AppTypography.bodySm.copyWith(
                             fontWeight: FontWeight.w600,
                             color: p.brandPrimary,
@@ -224,18 +224,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                     ),
                     const SizedBox(height: AppSpacing.md),
 
-                    // Login button (shimmer compartido)
                     _animatedItem(
                       index: 2,
                       child: BrandGradientButton(
-                        label: 'Iniciar sesión',
+                        label: t.authSignInBtn,
                         isLoading: _isLoading,
                         onPressed: anyLoading ? null : _loginWithEmail,
                       ),
                     ),
                     const SizedBox(height: AppSpacing.lg),
 
-                    // Divider
                     _animatedItem(
                       index: 3,
                       child: Row(children: <Widget>[
@@ -243,7 +241,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
                           child: Text(
-                            'o continúa con',
+                            t.authOrContinueWith,
                             style: AppTypography.bodyXs.copyWith(
                               color: p.textMuted.withValues(alpha: 0.7),
                             ),
@@ -254,7 +252,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                     ),
                     const SizedBox(height: AppSpacing.md + 2),
 
-                    // Google
                     _animatedItem(
                       index: 4,
                       child: GoogleSignInButton(onPressed: _loginWithGoogle, isLoading: _isGoogleLoading),
@@ -265,7 +262,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: <Widget>[
                         Text(
-                          '¿No tienes cuenta? ',
+                          t.authNoAccount,
                           style: AppTypography.bodyMd.copyWith(
                             color: p.textMuted.withValues(alpha: 0.8),
                           ),
@@ -279,7 +276,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                             tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                           ),
                           child: Text(
-                            'Crear cuenta',
+                            t.authCreateAccount,
                             style: AppTypography.bodyMd.copyWith(
                               fontWeight: FontWeight.w700,
                               color: p.brandPrimary,
@@ -298,7 +295,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
     );
   }
 
-  Widget _buildHero() {
+  Widget _buildHero(AppLocalizations t) {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: <Widget>[
@@ -319,12 +316,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
         ),
         const SizedBox(height: AppSpacing.md - 2),
         Text(
-          'PantryScanner',
+          t.appName,
           style: AppTypography.displaySm.copyWith(color: Colors.white, fontSize: 24),
         ),
         const SizedBox(height: AppSpacing.xs),
         Text(
-          'Tu despensa, bajo control.',
+          t.appTagline,
           style: AppTypography.bodySm.copyWith(
             color: Colors.white.withValues(alpha: 0.72),
           ),
@@ -333,17 +330,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
     );
   }
 
-  Widget _buildFormTitle(PaletteSpec p) {
+  Widget _buildFormTitle(PaletteSpec p, AppLocalizations t) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
         Text(
-          'Bienvenido de nuevo',
+          t.authWelcomeBack,
           style: AppTypography.displayMd.copyWith(color: p.textBody),
         ),
         const SizedBox(height: AppSpacing.xs),
         Text(
-          'Ingresa tus datos para continuar',
+          t.authWelcomeBackSub,
           style: AppTypography.bodySm.copyWith(color: p.textMuted),
         ),
       ],
@@ -407,9 +404,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
   }
 
   String? _validateEmail(String? value) {
-    if (value == null || value.trim().isEmpty) return 'Ingresa tu correo electrónico';
+    final AppLocalizations t = AppLocalizations.of(context);
+    if (value == null || value.trim().isEmpty) return t.authEmailRequired;
     final RegExp emailRegex = RegExp(r'^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$');
-    if (!emailRegex.hasMatch(value.trim())) return 'Formato de correo inválido';
+    if (!emailRegex.hasMatch(value.trim())) return t.authEmailInvalid;
     return null;
   }
 }
