@@ -487,7 +487,7 @@ class _AccountCard extends StatelessWidget {
             label: t.profileAccountNameLabel,
             value: user?.displayName ?? '—',
             onEdit: user != null
-                ? () => _showEditNameDialog(context, user!)
+                ? () => _showEditNameSheet(context, user!)
                 : null,
           ),
           const _RowDivider(),
@@ -503,27 +503,29 @@ class _AccountCard extends StatelessWidget {
     );
   }
 
-  void _showEditNameDialog(BuildContext context, AppUser user) {
+  void _showEditNameSheet(BuildContext context, AppUser user) {
     AppHaptics.tap();
-    showDialog<void>(
+    showModalBottomSheet<void>(
       context: context,
-      builder: (_) => _EditNameDialog(currentName: user.displayName ?? ''),
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => _EditNameSheet(currentName: user.displayName ?? ''),
     );
   }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Edit name dialog
+// Edit name sheet
 // ─────────────────────────────────────────────────────────────────────────────
-class _EditNameDialog extends ConsumerStatefulWidget {
-  const _EditNameDialog({required this.currentName});
+class _EditNameSheet extends ConsumerStatefulWidget {
+  const _EditNameSheet({required this.currentName});
   final String currentName;
 
   @override
-  ConsumerState<_EditNameDialog> createState() => _EditNameDialogState();
+  ConsumerState<_EditNameSheet> createState() => _EditNameSheetState();
 }
 
-class _EditNameDialogState extends ConsumerState<_EditNameDialog> {
+class _EditNameSheetState extends ConsumerState<_EditNameSheet> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   late final TextEditingController _ctrl;
   bool _isLoading = false;
@@ -542,8 +544,8 @@ class _EditNameDialogState extends ConsumerState<_EditNameDialog> {
 
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
-    setState(() => _isLoading = true);
     final AppLocalizations t = AppLocalizations.of(context);
+    setState(() => _isLoading = true);
     try {
       await ref
           .read(updateDisplayNameUseCaseProvider)
@@ -585,80 +587,136 @@ class _EditNameDialogState extends ConsumerState<_EditNameDialog> {
   Widget build(BuildContext context) {
     final PaletteSpec p = context.palette;
     final AppLocalizations t = AppLocalizations.of(context);
-    return AlertDialog(
-      shape: const RoundedRectangleBorder(borderRadius: AppRadius.brXl),
-      backgroundColor: p.surface,
-      title: Text(
-        t.profileEditNameTitle,
-        style: AppTypography.headingSm.copyWith(color: p.textBody),
+    final double bottomPad = MediaQuery.viewInsetsOf(context).bottom;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: p.surface,
+        borderRadius: const BorderRadius.vertical(
+          top: Radius.circular(AppRadius.xxl),
+        ),
       ),
-      content: Form(
+      padding: EdgeInsets.fromLTRB(
+        AppSpacing.lg,
+        AppSpacing.md,
+        AppSpacing.lg,
+        AppSpacing.lg + bottomPad,
+      ),
+      child: Form(
         key: _formKey,
-        child: TextFormField(
-          controller: _ctrl,
-          autofocus: true,
-          textCapitalization: TextCapitalization.words,
-          style: AppTypography.bodyMd.copyWith(
-            color: p.textBody,
-            fontWeight: FontWeight.w600,
-          ),
-          cursorColor: p.brandPrimary,
-          decoration: InputDecoration(
-            labelText: t.authFullNameLabel,
-            prefixIcon: Icon(Icons.badge_outlined,
-                color: p.brandPrimary, size: 20),
-            filled: true,
-            fillColor: p.surfaceMuted,
-            labelStyle: AppTypography.labelMd.copyWith(color: p.textMuted),
-            floatingLabelStyle: AppTypography.labelSm.copyWith(
-              color: p.brandPrimary,
-              fontWeight: FontWeight.w700,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: <Widget>[
+            // Drag handle
+            Center(
+              child: Container(
+                width: 36,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: p.outline,
+                  borderRadius: AppRadius.brPill,
+                ),
+              ),
             ),
-            border: OutlineInputBorder(
-              borderRadius: AppRadius.brLg,
-              borderSide: BorderSide(color: p.outline),
+            const SizedBox(height: AppSpacing.md),
+            // Title row
+            Row(
+              children: <Widget>[
+                Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: p.brandTintSoft,
+                    borderRadius: AppRadius.brMs,
+                  ),
+                  child: Icon(Icons.badge_outlined,
+                      color: p.brandPrimary, size: 20),
+                ),
+                const SizedBox(width: AppSpacing.sm + 2),
+                Text(
+                  t.profileEditNameTitle,
+                  style: AppTypography.headingSm.copyWith(
+                    color: p.textBody,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ],
             ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: AppRadius.brLg,
-              borderSide: BorderSide(color: p.outline),
+            const SizedBox(height: AppSpacing.lg),
+            // Name field
+            TextFormField(
+              controller: _ctrl,
+              autofocus: true,
+              textCapitalization: TextCapitalization.words,
+              textInputAction: TextInputAction.done,
+              style: AppTypography.bodyMd.copyWith(
+                color: p.textBody,
+                fontWeight: FontWeight.w600,
+              ),
+              cursorColor: p.brandPrimary,
+              decoration: InputDecoration(
+                labelText: t.authFullNameLabel,
+                prefixIcon: Icon(Icons.person_outline_rounded,
+                    color: p.brandPrimary, size: 20),
+                filled: true,
+                fillColor: p.surfaceMuted,
+                labelStyle:
+                    AppTypography.labelMd.copyWith(color: p.textMuted),
+                floatingLabelStyle: AppTypography.labelSm.copyWith(
+                  color: p.brandPrimary,
+                  fontWeight: FontWeight.w700,
+                ),
+                border: OutlineInputBorder(
+                  borderRadius: AppRadius.brLg,
+                  borderSide: BorderSide(color: p.outline),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: AppRadius.brLg,
+                  borderSide: BorderSide(color: p.outline),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: AppRadius.brLg,
+                  borderSide:
+                      BorderSide(color: p.brandPrimary, width: 1.8),
+                ),
+                errorBorder: const OutlineInputBorder(
+                  borderRadius: AppRadius.brLg,
+                  borderSide: BorderSide(color: AppColors.dangerStrong),
+                ),
+                focusedErrorBorder: const OutlineInputBorder(
+                  borderRadius: AppRadius.brLg,
+                  borderSide: BorderSide(
+                      color: AppColors.dangerStrong, width: 1.4),
+                ),
+              ),
+              validator: (v) =>
+                  (v == null || v.trim().isEmpty) ? t.authNameRequired : null,
+              onFieldSubmitted: (_) => _save(),
             ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: AppRadius.brLg,
-              borderSide: BorderSide(color: p.brandPrimary, width: 1.8),
+            const SizedBox(height: AppSpacing.lg),
+            // Save button
+            FilledButton(
+              onPressed: _isLoading ? null : _save,
+              style: FilledButton.styleFrom(
+                minimumSize: const Size.fromHeight(50),
+                shape: const RoundedRectangleBorder(
+                    borderRadius: AppRadius.brLg),
+              ),
+              child: _isLoading
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                          strokeWidth: 2.5, color: Colors.white),
+                    )
+                  : Text(t.commonSave,
+                      style: AppTypography.labelMd
+                          .copyWith(fontWeight: FontWeight.w700)),
             ),
-            errorBorder: const OutlineInputBorder(
-              borderRadius: AppRadius.brLg,
-              borderSide: BorderSide(color: AppColors.dangerStrong),
-            ),
-            focusedErrorBorder: const OutlineInputBorder(
-              borderRadius: AppRadius.brLg,
-              borderSide:
-                  BorderSide(color: AppColors.dangerStrong, width: 1.4),
-            ),
-          ),
-          validator: (v) => (v == null || v.trim().isEmpty)
-              ? t.authNameRequired
-              : null,
-          onFieldSubmitted: (_) => _save(),
+          ],
         ),
       ),
-      actions: <Widget>[
-        TextButton(
-          onPressed: _isLoading ? null : () => Navigator.of(context).pop(),
-          child: Text(t.commonCancel),
-        ),
-        FilledButton(
-          onPressed: _isLoading ? null : _save,
-          child: _isLoading
-              ? const SizedBox(
-                  width: 16,
-                  height: 16,
-                  child: CircularProgressIndicator(
-                      strokeWidth: 2, color: Colors.white),
-                )
-              : Text(t.commonSave),
-        ),
-      ],
     );
   }
 }
@@ -1245,7 +1303,8 @@ class _InfoRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final PaletteSpec p = context.palette;
-    return Padding(
+
+    final Widget content = Padding(
       padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
       child: Row(
         children: <Widget>[
@@ -1271,21 +1330,19 @@ class _InfoRow extends StatelessWidget {
           ),
           if (onEdit != null) ...<Widget>[
             const SizedBox(width: AppSpacing.xs),
-            GestureDetector(
-              onTap: onEdit,
-              child: Container(
-                width: 28,
-                height: 28,
-                decoration: BoxDecoration(
-                  color: p.brandTintSoft,
-                  borderRadius: AppRadius.brMs,
-                ),
-                child: Icon(Icons.edit_rounded, color: p.brandPrimary, size: 14),
-              ),
-            ),
+            Icon(Icons.chevron_right_rounded,
+                color: p.textMuted.withValues(alpha: 0.5), size: 18),
           ],
         ],
       ),
+    );
+
+    if (onEdit == null) return content;
+
+    return InkWell(
+      onTap: onEdit,
+      borderRadius: AppRadius.brMd,
+      child: content,
     );
   }
 }
