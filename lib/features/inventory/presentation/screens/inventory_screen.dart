@@ -14,6 +14,7 @@ import '../../../../l10n/generated/app_localizations.dart';
 import '../../domain/entities/inventory_item.dart';
 import '../models/pantry_card_item.dart';
 import '../../domain/entities/sort_preference.dart';
+import '../../../notifications/presentation/providers/notification_settings_providers.dart';
 import '../providers/inventory_providers.dart';
 import '../providers/sort_providers.dart';
 import '../widgets/inventory_bottom_nav.dart';
@@ -61,6 +62,7 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
   Widget build(BuildContext context) {
     final AsyncValue<List<InventoryItem>> asyncItems = ref.watch(inventoryItemsProvider);
     ref.watch(lowStockWatcherProvider);
+    ref.watch(expiryNotificationWatcherProvider);
     final PaletteSpec p = context.palette;
     final AppLocalizations t = AppLocalizations.of(context);
 

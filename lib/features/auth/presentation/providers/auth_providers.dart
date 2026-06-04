@@ -1,5 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../settings/domain/entities/app_language.dart';
+import '../../../settings/presentation/providers/settings_providers.dart';
 import '../../data/repositories/firebase_auth_repository.dart';
 import '../../domain/entities/app_user.dart';
 import '../../domain/repositories/auth_repository.dart';
@@ -15,9 +17,11 @@ import '../../domain/usecases/watch_auth_state_usecase.dart';
 
 // ── Repository ───────────────────────────────────────────────────────────────
 
+/// Rebuilds when language changes so error messages are always localized.
 final Provider<AuthRepository> authRepositoryProvider =
     Provider<AuthRepository>((ref) {
-  return FirebaseAuthRepository();
+  final AppLanguage lang = ref.watch(languageProvider);
+  return FirebaseAuthRepository(lang: lang);
 });
 
 // ── Auth state stream ────────────────────────────────────────────────────────

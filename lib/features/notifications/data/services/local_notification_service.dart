@@ -148,6 +148,33 @@ class LocalNotificationService {
     );
   }
 
+  /// Schedules a **one-time** notification at [when].
+  /// If [when] is in the past, the notification is skipped silently.
+  Future<void> scheduleOnce({
+    required int id,
+    required String title,
+    required String body,
+    required DateTime when,
+    String? payload,
+  }) async {
+    _ensureInitialized();
+
+    final tz.TZDateTime scheduledTime = tz.TZDateTime.from(when, tz.local);
+    if (scheduledTime.isBefore(tz.TZDateTime.now(tz.local))) return;
+
+    await _plugin.zonedSchedule(
+      id,
+      title,
+      body,
+      scheduledTime,
+      _details,
+      androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+      uiLocalNotificationDateInterpretation:
+          UILocalNotificationDateInterpretation.absoluteTime,
+      payload: payload,
+    );
+  }
+
   /// Cancels the notification with the given [id].
   Future<void> cancel(int id) async {
     _ensureInitialized();

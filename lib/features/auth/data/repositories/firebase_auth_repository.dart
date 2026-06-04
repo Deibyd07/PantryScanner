@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
+import '../../../../features/settings/domain/entities/app_language.dart';
 import '../../domain/entities/app_user.dart';
 import '../../domain/repositories/auth_repository.dart';
 
@@ -9,8 +10,12 @@ class FirebaseAuthRepository implements AuthRepository {
   FirebaseAuthRepository({
     FirebaseAuth? firebaseAuth,
     GoogleSignIn? googleSignIn,
+    AppLanguage lang = AppLanguage.spanish,
   })  : _auth = firebaseAuth ?? FirebaseAuth.instance,
-        _googleSignIn = googleSignIn ?? GoogleSignIn();
+        _googleSignIn = googleSignIn ?? GoogleSignIn(),
+        _lang = lang;
+
+  final AppLanguage _lang;
 
   final FirebaseAuth _auth;
   final GoogleSignIn _googleSignIn;
@@ -31,33 +36,57 @@ class FirebaseAuthRepository implements AuthRepository {
     );
   }
 
-  /// Translates Firebase error codes into user-friendly Spanish messages.
+  /// Translates Firebase error codes into user-friendly messages
+  /// in the currently selected app language.
   String _mapErrorCode(String code) {
+    final bool isEn = _lang == AppLanguage.english;
     switch (code) {
       case 'user-not-found':
-        return 'No existe una cuenta con este correo electrónico.';
+        return isEn
+            ? 'No account found with this email address.'
+            : 'No existe una cuenta con este correo electrónico.';
       case 'wrong-password':
-        return 'La contraseña es incorrecta.';
+        return isEn ? 'Incorrect password.' : 'La contraseña es incorrecta.';
       case 'invalid-credential':
-        return 'Las credenciales son inválidas. Verifica tu correo y contraseña.';
+        return isEn
+            ? 'Invalid credentials. Please check your email and password.'
+            : 'Las credenciales son inválidas. Verifica tu correo y contraseña.';
       case 'email-already-in-use':
-        return 'Ya existe una cuenta con este correo electrónico.';
+        return isEn
+            ? 'An account with this email already exists.'
+            : 'Ya existe una cuenta con este correo electrónico.';
       case 'weak-password':
-        return 'La contraseña es demasiado débil.';
+        return isEn
+            ? 'The password is too weak.'
+            : 'La contraseña es demasiado débil.';
       case 'invalid-email':
-        return 'El formato del correo electrónico no es válido.';
+        return isEn
+            ? 'Invalid email address format.'
+            : 'El formato del correo electrónico no es válido.';
       case 'user-disabled':
-        return 'Esta cuenta ha sido deshabilitada.';
+        return isEn
+            ? 'This account has been disabled.'
+            : 'Esta cuenta ha sido deshabilitada.';
       case 'too-many-requests':
-        return 'Demasiados intentos fallidos. Intenta más tarde.';
+        return isEn
+            ? 'Too many failed attempts. Please try again later.'
+            : 'Demasiados intentos fallidos. Intenta más tarde.';
       case 'network-request-failed':
-        return 'Error de conexión. Verifica tu internet.';
+        return isEn
+            ? 'Connection error. Please check your internet.'
+            : 'Error de conexión. Verifica tu internet.';
       case 'operation-not-allowed':
-        return 'Este método de autenticación no está habilitado.';
+        return isEn
+            ? 'This authentication method is not enabled.'
+            : 'Este método de autenticación no está habilitado.';
       case 'requires-recent-login':
-        return 'Por seguridad, vuelve a iniciar sesión antes de continuar.';
+        return isEn
+            ? 'For security, please sign in again before continuing.'
+            : 'Por seguridad, vuelve a iniciar sesión antes de continuar.';
       default:
-        return 'Error de autenticación. Intenta de nuevo.';
+        return isEn
+            ? 'Authentication error. Please try again.'
+            : 'Error de autenticación. Intenta de nuevo.';
     }
   }
 

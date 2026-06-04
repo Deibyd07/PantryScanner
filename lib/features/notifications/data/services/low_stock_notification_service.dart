@@ -1,22 +1,32 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../features/inventory/domain/entities/inventory_item.dart';
 import 'local_notification_service.dart';
 
-/// Watches the inventory stream and fires a low-stock notification whenever
-/// new items fall at or below their [InventoryItem.minStock] threshold.
+/// Watches the inventory stream and fires a grouped low-stock notification
+/// whenever new items fall at or below their [InventoryItem.minStock] threshold.
+///
+/// Notified item IDs are persisted in SharedPreferences with a daily TTL so
+/// the notification is not re-fired every time the app restarts (BUG-05).
 class LowStockNotificationService {
   LowStockNotificationService._();
 
   static final LowStockNotificationService instance =
       LowStockNotificationService._();
 
-  /// IDs of items already notified this session — avoids spamming.
+  static const String _prefKeyIds = 'lowstock_notified_ids';
+  static const String _prefKeyDate = 'lowstock_notified_date';
+
+  /// IDs notified today — loaded from SharedPreferences on first use.
   final Set<int> _notifiedIds = <int>{};
+  bool _idsLoaded = false;
 
   StreamSubscription<List<InventoryItem>>? _subscription;
+
+  // ── Public API ──────────────────────────────────────────────────────────────
 
   void startWatching(Stream<List<InventoryItem>> inventoryStream) {
     _subscription?.cancel();
@@ -28,37 +38,84 @@ class LowStockNotificationService {
     _subscription = null;
   }
 
+  // ── Internal ────────────────────────────────────────────────────────────────
+
   Future<void> _onInventoryUpdate(List<InventoryItem> items) async {
     if (kIsWeb) return;
+
+    await _ensureIdsLoaded();
 
     final List<InventoryItem> lowStock = items
         .where((InventoryItem i) => !i.isDeleted && i.isLowStock)
         .toList();
 
-    // Find newly low-stock items not yet notified
-    final List<InventoryItem> newLowStock = lowStock
-        .where((InventoryItem i) => !_notifiedIds.contains(i.id))
-        .toList();
-
-    // Remove items that recovered (quantity > minStock) from notified set
-    final Set<int> currentLowIds = lowStock.map((InventoryItem i) => i.id).toSet();
+    // Items that recovered: remove from notified set
+    final Set<int> currentLowIds = lowStock.map((i) => i.id).toSet();
     _notifiedIds.removeWhere((int id) => !currentLowIds.contains(id));
 
+    // New items not yet notified today
+    final List<InventoryItem> newLowStock =
+        lowStock.where((i) => !_notifiedIds.contains(i.id)).toList();
+
     if (newLowStock.isEmpty) {
-      // If no low stock at all, cancel the notification
       if (lowStock.isEmpty) {
-        await LocalNotificationService.instance.showLowStockNotification(<String>[]);
+        await LocalNotificationService.instance
+            .showLowStockNotification(<String>[]);
       }
       return;
     }
 
-    // Add new IDs to notified set
     for (final InventoryItem item in newLowStock) {
       _notifiedIds.add(item.id);
     }
 
-    // Show grouped notification with ALL current low-stock items
-    final List<String> names = lowStock.map((InventoryItem i) => i.name).toList();
+    await _persistIds();
+
+    final List<String> names = lowStock.map((i) => i.name).toList();
     await LocalNotificationService.instance.showLowStockNotification(names);
+  }
+
+  /// Loads persisted IDs from SharedPreferences; clears them if the date
+  /// changed (new day → user should be notified again).
+  Future<void> _ensureIdsLoaded() async {
+    if (_idsLoaded) return;
+    _idsLoaded = true;
+
+    try {
+      final SharedPreferences prefs = await SharedPreferences.getInstance();
+      final String today = _todayKey();
+      final String savedDate = prefs.getString(_prefKeyDate) ?? '';
+
+      if (savedDate == today) {
+        final List<String> raw = prefs.getStringList(_prefKeyIds) ?? <String>[];
+        for (final String s in raw) {
+          final int? id = int.tryParse(s);
+          if (id != null) _notifiedIds.add(id);
+        }
+      }
+      // If date differs, _notifiedIds stays empty → fresh start for the new day
+    } catch (e) {
+      debugPrint('[LowStock] Could not load persisted IDs: $e');
+    }
+  }
+
+  Future<void> _persistIds() async {
+    try {
+      final SharedPreferences prefs = await SharedPreferences.getInstance();
+      await prefs.setString(_prefKeyDate, _todayKey());
+      await prefs.setStringList(
+        _prefKeyIds,
+        _notifiedIds.map((id) => id.toString()).toList(),
+      );
+    } catch (e) {
+      debugPrint('[LowStock] Could not persist notified IDs: $e');
+    }
+  }
+
+  String _todayKey() {
+    final DateTime now = DateTime.now();
+    return '${now.year}-'
+        '${now.month.toString().padLeft(2, '0')}-'
+        '${now.day.toString().padLeft(2, '0')}';
   }
 }

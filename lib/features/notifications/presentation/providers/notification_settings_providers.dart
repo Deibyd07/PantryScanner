@@ -3,7 +3,11 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../features/inventory/presentation/providers/inventory_providers.dart';
+import '../../../../features/settings/domain/entities/app_language.dart';
+import '../../../../features/settings/presentation/providers/settings_providers.dart';
 import '../../data/repositories/sqlite_notification_settings_repository.dart';
+import '../../data/services/expiry_notification_scheduler.dart';
 import '../../data/services/local_notification_service.dart';
 import '../../data/services/noop_notification_scheduler.dart';
 import '../../data/services/real_notification_scheduler.dart';
@@ -112,4 +116,25 @@ final Provider<void> notificationSettingsSyncProvider = Provider<void>((ref) {
   });
 
   ref.onDispose(sub.cancel);
+});
+
+/// Watches inventory + notification settings and schedules per-product
+/// expiry notifications. Wire this in the inventory screen via ref.watch().
+final Provider<void> expiryNotificationWatcherProvider =
+    Provider<void>((ref) {
+  if (kIsWeb) return;
+
+  final NotificationSettings? settings =
+      ref.watch(notificationSettingsProvider).valueOrNull;
+  if (settings == null) return;
+
+  final AppLanguage lang = ref.watch(languageProvider);
+
+  ExpiryNotificationScheduler.instance.start(
+    inventoryStream: ref.watch(watchInventoryItemsUseCaseProvider).call(),
+    settings: settings,
+    lang: lang,
+  );
+
+  ref.onDispose(ExpiryNotificationScheduler.instance.stop);
 });
