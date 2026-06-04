@@ -735,6 +735,7 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen>
         hintText: t.productFormNameHint,
         prefixIcon: const Icon(Icons.label_outline_rounded),
       ),
+      maxLength: 100,
       validator: (String? value) {
         if (value == null || value.trim().isEmpty) {
           return t.productFormNameRequired;

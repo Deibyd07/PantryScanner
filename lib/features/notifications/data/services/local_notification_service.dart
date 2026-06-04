@@ -207,7 +207,11 @@ class LocalNotificationService {
 
   /// Shows (or updates) the grouped low-stock notification.
   /// Pass an empty list to cancel it.
-  Future<void> showLowStockNotification(List<String> productNames) async {
+  /// [isEn] switches all user-visible strings to English.
+  Future<void> showLowStockNotification(
+    List<String> productNames, {
+    bool isEn = false,
+  }) async {
     _ensureInitialized();
 
     if (productNames.isEmpty) {
@@ -216,35 +220,47 @@ class LocalNotificationService {
     }
 
     final String title = productNames.length == 1
-        ? 'Stock bajo: ${productNames.first}'
-        : '${productNames.length} productos con stock bajo';
+        ? (isEn
+            ? 'Low stock: ${productNames.first}'
+            : 'Stock bajo: ${productNames.first}')
+        : (isEn
+            ? '${productNames.length} products low on stock'
+            : '${productNames.length} productos con stock bajo');
 
     final String body = productNames.length == 1
-        ? 'Está llegando a su cantidad mínima.'
+        ? (isEn
+            ? 'Getting close to the minimum quantity.'
+            : 'Está llegando a su cantidad mínima.')
         : productNames.join(', ');
+
+    final String summaryText = isEn
+        ? '${productNames.length} products'
+        : '${productNames.length} productos';
 
     final AndroidNotificationDetails android = AndroidNotificationDetails(
       _lowStockChannelId,
       _lowStockChannelName,
-      channelDescription: 'Productos que alcanzaron el stock mínimo',
+      channelDescription: isEn
+          ? 'Products that reached the minimum stock'
+          : 'Productos que alcanzaron el stock mínimo',
       importance: Importance.high,
       priority: Priority.high,
       styleInformation: productNames.length > 1
           ? InboxStyleInformation(
               productNames,
               contentTitle: title,
-              summaryText: '${productNames.length} productos',
+              summaryText: summaryText,
             )
           : null,
-      actions: const <AndroidNotificationAction>[
+      actions: <AndroidNotificationAction>[
         AndroidNotificationAction(
           'dismiss_low_stock',
-          'Ya lo compré',
+          isEn ? 'Already bought' : 'Ya lo compré',
           cancelNotification: true,
         ),
         AndroidNotificationAction(
           'open_pantry',
-          'Ver despensa',
+          isEn ? 'View pantry' : 'Ver despensa',
         ),
       ],
     );

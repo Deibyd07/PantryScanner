@@ -12,6 +12,7 @@ import '../../domain/usecases/update_inventory_item_quantity_usecase.dart';
 import '../../domain/usecases/watch_inventory_items_usecase.dart';
 import '../../../../core/sync/inventory_sync_service.dart';
 import '../../../notifications/data/services/low_stock_notification_service.dart';
+import '../../../../features/settings/presentation/providers/settings_providers.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // WEB DEMO — InMemory singleton repository
@@ -169,7 +170,10 @@ final Provider<InventoryRepository> inventoryRepositoryProvider =
   return ref.watch(_sqliteRepoProvider).when(
         data: (repo) => repo,
         loading: () => _globalWebRepo,
-        error: (_, __) => _globalWebRepo,
+        error: (Object err, __) {
+          debugPrint('[PantryScanner] SQLite init failed, using in-memory: $err');
+          return _globalWebRepo;
+        },
       );
 });
 
@@ -208,6 +212,8 @@ final Provider<void> lowStockWatcherProvider = Provider<void>((Ref ref) {
   if (kIsWeb) return;
   final Stream<List<InventoryItem>> stream =
       ref.watch(watchInventoryItemsUseCaseProvider).call();
+  LowStockNotificationService.instance
+      .setLanguage(ref.watch(languageProvider));
   LowStockNotificationService.instance.startWatching(stream);
   ref.onDispose(LowStockNotificationService.instance.stopWatching);
 });

@@ -30,7 +30,7 @@ class RecipeDetailScreen extends ConsumerWidget {
     if (recipe == null) {
       return Scaffold(
         backgroundColor: p.bg,
-        appBar: AppBar(title: const Text('')),
+        appBar: AppBar(title: Text(t.navRecipes)),
         body: Center(
           child: Text(
             t.recipeDetailNotFound,

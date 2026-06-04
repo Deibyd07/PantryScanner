@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../features/inventory/domain/entities/inventory_item.dart';
+import '../../../../features/settings/domain/entities/app_language.dart';
 import 'local_notification_service.dart';
 
 /// Watches the inventory stream and fires a grouped low-stock notification
@@ -23,10 +24,13 @@ class LowStockNotificationService {
   /// IDs notified today — loaded from SharedPreferences on first use.
   final Set<int> _notifiedIds = <int>{};
   bool _idsLoaded = false;
+  AppLanguage _lang = AppLanguage.spanish;
 
   StreamSubscription<List<InventoryItem>>? _subscription;
 
   // ── Public API ──────────────────────────────────────────────────────────────
+
+  void setLanguage(AppLanguage lang) => _lang = lang;
 
   void startWatching(Stream<List<InventoryItem>> inventoryStream) {
     _subscription?.cancel();
@@ -60,7 +64,7 @@ class LowStockNotificationService {
     if (newLowStock.isEmpty) {
       if (lowStock.isEmpty) {
         await LocalNotificationService.instance
-            .showLowStockNotification(<String>[]);
+            .showLowStockNotification(<String>[], isEn: _lang == AppLanguage.english);
       }
       return;
     }
@@ -72,7 +76,10 @@ class LowStockNotificationService {
     await _persistIds();
 
     final List<String> names = lowStock.map((i) => i.name).toList();
-    await LocalNotificationService.instance.showLowStockNotification(names);
+    await LocalNotificationService.instance.showLowStockNotification(
+      names,
+      isEn: _lang == AppLanguage.english,
+    );
   }
 
   /// Loads persisted IDs from SharedPreferences; clears them if the date
