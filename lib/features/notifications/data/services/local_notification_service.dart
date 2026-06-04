@@ -1,8 +1,13 @@
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:go_router/go_router.dart';
 import 'package:timezone/timezone.dart' as tz;
+
+import '../../../../app/router/app_router.dart';
+import '../../../../app/router/router_key.dart';
 
 /// Singleton wrapper around [FlutterLocalNotificationsPlugin].
 ///
@@ -57,10 +62,23 @@ class LocalNotificationService {
     _initialized = true;
   }
 
-  /// Called when the user taps a notification.
+  /// Called when the user taps a notification. Routes to the relevant screen.
   static void _onNotificationTap(NotificationResponse response) {
-    // Deep-link handling will be added in HU-14.
-    debugPrint('[PantryScanner] Notification tapped: ${response.payload}');
+    final String? payload = response.payload;
+    if (payload == null) return;
+
+    final BuildContext? ctx = rootNavigatorKey.currentContext;
+    if (ctx == null) return;
+
+    final GoRouter router = GoRouter.of(ctx);
+
+    if (payload.startsWith('expiry_') ||
+        payload == 'daily_expiry_check' ||
+        payload == 'low_stock') {
+      router.go(AppRoutes.notificationsInbox);
+    } else {
+      router.go(AppRoutes.inventory);
+    }
   }
 
   // ── Permissions ─────────────────────────────────────────────────────────────

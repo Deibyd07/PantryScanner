@@ -114,6 +114,11 @@ class InventorySyncService {
               .collection('inventory')
               .doc(item.syncId);
 
+          // Local filesystem paths (start with '/') are device-specific
+          // and must not be stored in Firestore.
+          final String? cloudImageUrl =
+              (item.imageUrl?.startsWith('/') ?? false) ? null : item.imageUrl;
+
           batch.set(
             docRef,
             <String, dynamic>{
@@ -125,7 +130,7 @@ class InventorySyncService {
               'quantity': item.quantity,
               'minStock': item.minStock,
               'expiryDate': item.expiryDate?.millisecondsSinceEpoch,
-              'imageUrl': item.imageUrl,
+              'imageUrl': cloudImageUrl,
               'notes': item.notes,
               'createdAt': item.createdAt.millisecondsSinceEpoch,
               'updatedAt': item.updatedAt.millisecondsSinceEpoch,
@@ -162,6 +167,11 @@ class InventorySyncService {
         if (data == null) continue;
 
         try {
+          // Discard local filesystem paths that leaked from another device.
+          final String? rawImageUrl = data['imageUrl'] as String?;
+          final String? safeImageUrl =
+              (rawImageUrl?.startsWith('/') ?? false) ? null : rawImageUrl;
+
           final InventoryItem remoteItem = InventoryItem(
             id: 0,
             syncId: data['syncId'] as String,
@@ -174,7 +184,7 @@ class InventorySyncService {
             expiryDate: data['expiryDate'] != null
                 ? DateTime.fromMillisecondsSinceEpoch(data['expiryDate'] as int)
                 : null,
-            imageUrl: data['imageUrl'] as String?,
+            imageUrl: safeImageUrl,
             notes: data['notes'] as String?,
             createdAt: DateTime.fromMillisecondsSinceEpoch(
                 data['createdAt'] as int),

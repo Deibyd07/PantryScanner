@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'router_key.dart';
+
 import '../../features/auth/presentation/providers/auth_providers.dart';
 import '../../features/auth/presentation/screens/forgot_password_screen.dart';
 import '../../features/auth/presentation/screens/login_screen.dart';
@@ -40,6 +42,7 @@ class AppRoutes {
 /// Auth-aware router that redirects unauthenticated users to login.
 GoRouter createAppRouter(Ref ref) {
   return GoRouter(
+    navigatorKey: rootNavigatorKey,
     initialLocation: AppRoutes.inventory,
     refreshListenable: _AuthRefreshNotifier(ref),
     redirect: (BuildContext context, GoRouterState state) {

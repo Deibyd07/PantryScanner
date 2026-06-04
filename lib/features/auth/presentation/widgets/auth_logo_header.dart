@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../../l10n/generated/app_localizations.dart';
+
 /// Animated logo header for auth screens.
 /// Fades in + scales up from 0.7 → 1.0 on first build.
 class AuthLogoHeader extends StatefulWidget {
@@ -84,7 +86,7 @@ class _AuthLogoHeaderState extends State<AuthLogoHeader>
             ),
             const SizedBox(height: 6),
             Text(
-              'Tu despensa inteligente',
+              AppLocalizations.of(context).appTagline,
               style: TextStyle(
                 color: Colors.white.withValues(alpha: 0.6),
                 fontSize: 14,

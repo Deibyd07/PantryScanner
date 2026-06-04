@@ -40,6 +40,7 @@ Future<void> main() async {
   // Initialize the local notification plugin (HU-13)
   if (!kIsWeb) {
     await LocalNotificationService.instance.init();
+    await LocalNotificationService.instance.requestPermission();
   }
 
   // Bootstrap SharedPreferences antes de runApp para que el provider
