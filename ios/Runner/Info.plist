@@ -9,6 +9,7 @@
 	<key>CFBundleLocalizations</key>
 	<array>
 		<string>es</string>
+		<string>en</string>
 	</array>
 	<key>CFBundleDisplayName</key>
 	<string>Pantry Scanner</string>
@@ -57,6 +58,12 @@
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>
 	<string>Main</string>
+	<key>NSCameraUsageDescription</key>
+	<string>PantryScanner necesita la cámara para escanear códigos de barras de productos.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>PantryScanner necesita acceso a tus fotos para añadir imágenes a los productos.</string>
+	<key>NSPhotoLibraryAddOnlyUsageDescription</key>
+	<string>PantryScanner puede guardar fotos de productos en tu galería.</string>
 	<key>UISupportedInterfaceOrientations</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>

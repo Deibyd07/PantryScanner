@@ -29,6 +29,34 @@ Future<void> main() async {
     };
   }
 
+  // ── Error widget amigable (release mode) ─────────────────────────────────
+  ErrorWidget.builder = (FlutterErrorDetails details) {
+    return const Material(
+      child: Center(
+        child: Padding(
+          padding: EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              Icon(Icons.error_outline_rounded, size: 56, color: Color(0xFFB71C1C)),
+              SizedBox(height: 16),
+              Text(
+                'Algo salió mal',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+                textAlign: TextAlign.center,
+              ),
+              SizedBox(height: 8),
+              Text(
+                'Intenta reiniciar la aplicación.',
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  };
+
   FirebaseFirestore.instance.settings = const Settings(
     persistenceEnabled: true,
     cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED,
