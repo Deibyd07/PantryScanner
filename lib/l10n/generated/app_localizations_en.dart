@@ -15,6 +15,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get appTagline => 'Your pantry, under control';
 
   @override
+  String get offlineBanner => 'No internet connection';
+
+  @override
   String get commonCancel => 'Cancel';
 
   @override

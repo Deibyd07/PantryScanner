@@ -3,6 +3,7 @@
 
   "appName": "PantryScanner",
   "appTagline": "Your pantry, under control",
+  "offlineBanner": "No internet connection",
 
   "commonCancel": "Cancel",
   "commonSave": "Save",

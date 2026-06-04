@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/network/connectivity_provider.dart';
+import '../../../l10n/generated/app_localizations.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Non-intrusive offline indicator banner.
@@ -28,18 +29,18 @@ class OfflineBanner extends ConsumerWidget {
           width: double.infinity,
           color: const Color(0xFFB71C1C),
           padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 16),
-          child: const Row(
+          child: Row(
             mainAxisSize: MainAxisSize.max,
             children: <Widget>[
-              Icon(
+              const Icon(
                 Icons.wifi_off_rounded,
                 color: Colors.white,
                 size: 16,
               ),
-              SizedBox(width: 8),
+              const SizedBox(width: 8),
               Text(
-                'Sin conexión a internet',
-                style: TextStyle(
+                AppLocalizations.of(context).offlineBanner,
+                style: const TextStyle(
                   color: Colors.white,
                   fontSize: 12,
                   fontWeight: FontWeight.w600,

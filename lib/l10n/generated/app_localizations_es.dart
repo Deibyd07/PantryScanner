@@ -15,6 +15,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get appTagline => 'Tu despensa, bajo control';
 
   @override
+  String get offlineBanner => 'Sin conexión a internet';
+
+  @override
   String get commonCancel => 'Cancelar';
 
   @override

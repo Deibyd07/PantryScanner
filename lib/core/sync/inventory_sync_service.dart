@@ -145,7 +145,7 @@ class InventorySyncService {
 
       _lastPushTimestamp = DateTime.now().millisecondsSinceEpoch;
     } catch (e) {
-      debugPrint('Sync push error: $e');
+      debugPrint('[InventorySync] Push error: $e');
     } finally {
       syncEnd(ref);
       _isSyncing = false;
@@ -195,7 +195,7 @@ class InventorySyncService {
 
           await localRepo.saveItemFromCloud(remoteItem);
         } catch (e) {
-          debugPrint('Error parsing cloud item: $e');
+          debugPrint('[InventorySync] Error parsing cloud item: $e');
         }
       }
     } finally {

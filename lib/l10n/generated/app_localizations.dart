@@ -110,6 +110,12 @@ abstract class AppLocalizations {
   /// **'Tu despensa, bajo control'**
   String get appTagline;
 
+  /// No description provided for @offlineBanner.
+  ///
+  /// In es, this message translates to:
+  /// **'Sin conexión a internet'**
+  String get offlineBanner;
+
   /// No description provided for @commonCancel.
   ///
   /// In es, this message translates to:
