@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../app/router/app_router.dart';
 import '../../../../core/design/design_system.dart';
 import '../../../../l10n/generated/app_localizations.dart';
+import '../../../auth/data/repositories/firebase_auth_repository.dart';
 import '../../../auth/domain/entities/app_user.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
 import '../../../inventory/domain/entities/inventory_item.dart';
@@ -61,9 +62,13 @@ class ProfileScreen extends ConsumerWidget {
                 const SizedBox(height: AppSpacing.md),
                 const _PreferencesCard(),
                 const SizedBox(height: AppSpacing.md),
+                if (user != null) _SecurityCard(user: user),
+                if (user != null) const SizedBox(height: AppSpacing.md),
                 const _AboutCard(),
                 const SizedBox(height: AppSpacing.lg),
                 const _LogoutButton(),
+                const SizedBox(height: AppSpacing.md),
+                if (user != null) _DeleteAccountButton(user: user),
               ]),
             ),
           ),
@@ -261,7 +266,7 @@ class _CircleIconBtn extends StatelessWidget {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Card shells
+// Card shell
 // ─────────────────────────────────────────────────────────────────────────────
 class _SectionCard extends StatelessWidget {
   const _SectionCard({
@@ -456,7 +461,7 @@ class _VerticalDivider extends StatelessWidget {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Account card
+// Account card  (name is editable)
 // ─────────────────────────────────────────────────────────────────────────────
 class _AccountCard extends StatelessWidget {
   const _AccountCard({required this.user, required this.t});
@@ -481,6 +486,9 @@ class _AccountCard extends StatelessWidget {
             icon: Icons.badge_outlined,
             label: t.profileAccountNameLabel,
             value: user?.displayName ?? '—',
+            onEdit: user != null
+                ? () => _showEditNameDialog(context, user!)
+                : null,
           ),
           const _RowDivider(),
           _InfoRow(
@@ -494,10 +502,169 @@ class _AccountCard extends StatelessWidget {
       ),
     );
   }
+
+  void _showEditNameDialog(BuildContext context, AppUser user) {
+    AppHaptics.tap();
+    showDialog<void>(
+      context: context,
+      builder: (_) => _EditNameDialog(currentName: user.displayName ?? ''),
+    );
+  }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Preferences card (sin tema; solo notificaciones + idioma funcional)
+// Edit name dialog
+// ─────────────────────────────────────────────────────────────────────────────
+class _EditNameDialog extends ConsumerStatefulWidget {
+  const _EditNameDialog({required this.currentName});
+  final String currentName;
+
+  @override
+  ConsumerState<_EditNameDialog> createState() => _EditNameDialogState();
+}
+
+class _EditNameDialogState extends ConsumerState<_EditNameDialog> {
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  late final TextEditingController _ctrl;
+  bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = TextEditingController(text: widget.currentName);
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _save() async {
+    if (!_formKey.currentState!.validate()) return;
+    setState(() => _isLoading = true);
+    final AppLocalizations t = AppLocalizations.of(context);
+    try {
+      await ref
+          .read(updateDisplayNameUseCaseProvider)
+          .call(_ctrl.text.trim());
+      if (mounted) {
+        Navigator.of(context).pop();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(t.profileNameUpdated),
+            behavior: SnackBarBehavior.floating,
+            margin: const EdgeInsets.all(AppSpacing.md),
+            shape: const RoundedRectangleBorder(
+                borderRadius: AppRadius.brMd),
+          ),
+        );
+      }
+    } on AuthException catch (e) {
+      if (mounted) _showError(t.profileNameUpdateError(e.message));
+    } catch (e) {
+      if (mounted) _showError(t.profileNameUpdateError(e.toString()));
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  void _showError(String msg) {
+    AppHaptics.error();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(msg),
+        backgroundColor: AppColors.dangerStrong,
+        behavior: SnackBarBehavior.floating,
+        margin: const EdgeInsets.all(AppSpacing.md),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final PaletteSpec p = context.palette;
+    final AppLocalizations t = AppLocalizations.of(context);
+    return AlertDialog(
+      shape: const RoundedRectangleBorder(borderRadius: AppRadius.brXl),
+      backgroundColor: p.surface,
+      title: Text(
+        t.profileEditNameTitle,
+        style: AppTypography.headingSm.copyWith(color: p.textBody),
+      ),
+      content: Form(
+        key: _formKey,
+        child: TextFormField(
+          controller: _ctrl,
+          autofocus: true,
+          textCapitalization: TextCapitalization.words,
+          style: AppTypography.bodyMd.copyWith(
+            color: p.textBody,
+            fontWeight: FontWeight.w600,
+          ),
+          cursorColor: p.brandPrimary,
+          decoration: InputDecoration(
+            labelText: t.authFullNameLabel,
+            prefixIcon: Icon(Icons.badge_outlined,
+                color: p.brandPrimary, size: 20),
+            filled: true,
+            fillColor: p.surfaceMuted,
+            labelStyle: AppTypography.labelMd.copyWith(color: p.textMuted),
+            floatingLabelStyle: AppTypography.labelSm.copyWith(
+              color: p.brandPrimary,
+              fontWeight: FontWeight.w700,
+            ),
+            border: OutlineInputBorder(
+              borderRadius: AppRadius.brLg,
+              borderSide: BorderSide(color: p.outline),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: AppRadius.brLg,
+              borderSide: BorderSide(color: p.outline),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: AppRadius.brLg,
+              borderSide: BorderSide(color: p.brandPrimary, width: 1.8),
+            ),
+            errorBorder: const OutlineInputBorder(
+              borderRadius: AppRadius.brLg,
+              borderSide: BorderSide(color: AppColors.dangerStrong),
+            ),
+            focusedErrorBorder: const OutlineInputBorder(
+              borderRadius: AppRadius.brLg,
+              borderSide:
+                  BorderSide(color: AppColors.dangerStrong, width: 1.4),
+            ),
+          ),
+          validator: (v) => (v == null || v.trim().isEmpty)
+              ? t.authNameRequired
+              : null,
+          onFieldSubmitted: (_) => _save(),
+        ),
+      ),
+      actions: <Widget>[
+        TextButton(
+          onPressed: _isLoading ? null : () => Navigator.of(context).pop(),
+          child: Text(t.commonCancel),
+        ),
+        FilledButton(
+          onPressed: _isLoading ? null : _save,
+          child: _isLoading
+              ? const SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(
+                      strokeWidth: 2, color: Colors.white),
+                )
+              : Text(t.commonSave),
+        ),
+      ],
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Preferences card
 // ─────────────────────────────────────────────────────────────────────────────
 class _PreferencesCard extends ConsumerWidget {
   const _PreferencesCard();
@@ -704,9 +871,316 @@ class _LangOption extends StatelessWidget {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Security card  (cambiar contraseña, solo email)
+// ─────────────────────────────────────────────────────────────────────────────
+class _SecurityCard extends StatelessWidget {
+  const _SecurityCard({required this.user});
+  final AppUser user;
+
+  @override
+  Widget build(BuildContext context) {
+    final AppLocalizations t = AppLocalizations.of(context);
+    final bool isEmail = user.provider == AppAuthProvider.email;
+
+    return _SectionCard(
+      title: t.profileSecurityTitle,
+      subtitle: t.profileSecuritySubtitle,
+      icon: Icons.shield_outlined,
+      child: Column(
+        children: <Widget>[
+          if (isEmail)
+            _ActionRow(
+              icon: Icons.lock_outline_rounded,
+              label: t.profileChangePassword,
+              trailing: Icons.chevron_right_rounded,
+              onTap: () {
+                AppHaptics.tap();
+                _showChangePasswordSheet(context);
+              },
+            ),
+        ],
+      ),
+    );
+  }
+
+  void _showChangePasswordSheet(BuildContext context) {
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => const _ChangePasswordSheet(),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Change password sheet
+// ─────────────────────────────────────────────────────────────────────────────
+class _ChangePasswordSheet extends ConsumerStatefulWidget {
+  const _ChangePasswordSheet();
+
+  @override
+  ConsumerState<_ChangePasswordSheet> createState() =>
+      _ChangePasswordSheetState();
+}
+
+class _ChangePasswordSheetState extends ConsumerState<_ChangePasswordSheet> {
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  final TextEditingController _currentCtrl = TextEditingController();
+  final TextEditingController _newCtrl = TextEditingController();
+  final TextEditingController _confirmCtrl = TextEditingController();
+
+  bool _isLoading = false;
+  bool _obscureCurrent = true;
+  bool _obscureNew = true;
+  bool _obscureConfirm = true;
+
+  @override
+  void dispose() {
+    _currentCtrl.dispose();
+    _newCtrl.dispose();
+    _confirmCtrl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _save() async {
+    if (!_formKey.currentState!.validate()) return;
+    setState(() => _isLoading = true);
+    final AppLocalizations t = AppLocalizations.of(context);
+    try {
+      await ref.read(updatePasswordUseCaseProvider).call(
+            _currentCtrl.text,
+            _newCtrl.text,
+          );
+      if (mounted) {
+        Navigator.of(context).pop();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(t.profilePasswordUpdated),
+            behavior: SnackBarBehavior.floating,
+            margin: const EdgeInsets.all(AppSpacing.md),
+            shape: const RoundedRectangleBorder(
+                borderRadius: AppRadius.brMd),
+          ),
+        );
+      }
+    } on AuthException catch (e) {
+      if (mounted) _showError(t.profilePasswordUpdateError(e.message));
+    } catch (e) {
+      if (mounted) _showError(t.profilePasswordUpdateError(e.toString()));
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  void _showError(String msg) {
+    AppHaptics.error();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(msg),
+        backgroundColor: AppColors.dangerStrong,
+        behavior: SnackBarBehavior.floating,
+        margin: const EdgeInsets.all(AppSpacing.md),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final PaletteSpec p = context.palette;
+    final AppLocalizations t = AppLocalizations.of(context);
+    final double bottomPad = MediaQuery.viewInsetsOf(context).bottom;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: p.surface,
+        borderRadius: const BorderRadius.vertical(
+          top: Radius.circular(AppRadius.xxl),
+        ),
+      ),
+      padding: EdgeInsets.fromLTRB(
+        AppSpacing.lg,
+        AppSpacing.md,
+        AppSpacing.lg,
+        AppSpacing.lg + bottomPad,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: <Widget>[
+          Center(
+            child: Container(
+              width: 36,
+              height: 4,
+              decoration: BoxDecoration(
+                color: p.outline,
+                borderRadius: AppRadius.brPill,
+              ),
+            ),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          Row(
+            children: <Widget>[
+              Container(
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(
+                  color: p.brandTintSoft,
+                  borderRadius: AppRadius.brMs,
+                ),
+                child: Icon(Icons.lock_outline_rounded,
+                    color: p.brandPrimary, size: 18),
+              ),
+              const SizedBox(width: AppSpacing.sm + 2),
+              Text(
+                t.profileChangePasswordTitle,
+                style: AppTypography.headingSm.copyWith(
+                  color: p.textBody,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          Form(
+            key: _formKey,
+            child: Column(
+              children: <Widget>[
+                _PasswordField(
+                  controller: _currentCtrl,
+                  label: t.profileCurrentPasswordLabel,
+                  obscure: _obscureCurrent,
+                  onToggle: () =>
+                      setState(() => _obscureCurrent = !_obscureCurrent),
+                  validator: (v) => (v == null || v.isEmpty)
+                      ? t.authPasswordRequired
+                      : null,
+                ),
+                const SizedBox(height: AppSpacing.md - 2),
+                _PasswordField(
+                  controller: _newCtrl,
+                  label: t.profileNewPasswordLabel,
+                  obscure: _obscureNew,
+                  onToggle: () =>
+                      setState(() => _obscureNew = !_obscureNew),
+                  validator: _validateNewPassword,
+                ),
+                const SizedBox(height: AppSpacing.md - 2),
+                _PasswordField(
+                  controller: _confirmCtrl,
+                  label: t.profileConfirmNewPasswordLabel,
+                  obscure: _obscureConfirm,
+                  onToggle: () =>
+                      setState(() => _obscureConfirm = !_obscureConfirm),
+                  validator: (v) {
+                    if (v == null || v.isEmpty) return t.authConfirmPasswordRequired;
+                    if (v != _newCtrl.text) return t.authPasswordMismatch;
+                    return null;
+                  },
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          BrandGradientButton(
+            label: t.commonSave,
+            isLoading: _isLoading,
+            onPressed: _isLoading ? null : _save,
+          ),
+        ],
+      ),
+    );
+  }
+
+  String? _validateNewPassword(String? v) {
+    final AppLocalizations t = AppLocalizations.of(context);
+    if (v == null || v.isEmpty) return t.authPasswordRequired;
+    if (v.length < 8) return t.authPasswordMin;
+    if (!RegExp(r'[A-Z]').hasMatch(v)) return t.authPasswordUppercase;
+    if (!RegExp(r'[0-9]').hasMatch(v)) return t.authPasswordNumber;
+    return null;
+  }
+}
+
+class _PasswordField extends StatelessWidget {
+  const _PasswordField({
+    required this.controller,
+    required this.label,
+    required this.obscure,
+    required this.onToggle,
+    required this.validator,
+  });
+
+  final TextEditingController controller;
+  final String label;
+  final bool obscure;
+  final VoidCallback onToggle;
+  final String? Function(String?) validator;
+
+  @override
+  Widget build(BuildContext context) {
+    final PaletteSpec p = context.palette;
+    return TextFormField(
+      controller: controller,
+      obscureText: obscure,
+      style: AppTypography.bodyMd
+          .copyWith(color: p.textBody, fontWeight: FontWeight.w600),
+      cursorColor: p.brandPrimary,
+      validator: validator,
+      decoration: InputDecoration(
+        labelText: label,
+        prefixIcon:
+            Icon(Icons.lock_outline_rounded, color: p.brandPrimary, size: 20),
+        suffixIcon: IconButton(
+          onPressed: onToggle,
+          icon: Icon(
+            obscure ? Icons.visibility_off_rounded : Icons.visibility_rounded,
+            color: p.textMuted,
+            size: 20,
+          ),
+        ),
+        filled: true,
+        fillColor: p.surfaceMuted,
+        contentPadding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.md, vertical: 18),
+        labelStyle: AppTypography.labelMd.copyWith(color: p.textMuted),
+        floatingLabelStyle: AppTypography.labelSm.copyWith(
+          color: p.brandPrimary,
+          fontWeight: FontWeight.w700,
+        ),
+        border: OutlineInputBorder(
+          borderRadius: AppRadius.brLg,
+          borderSide: BorderSide(color: p.outline),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: AppRadius.brLg,
+          borderSide: BorderSide(color: p.outline),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: AppRadius.brLg,
+          borderSide: BorderSide(color: p.brandPrimary, width: 1.8),
+        ),
+        errorBorder: const OutlineInputBorder(
+          borderRadius: AppRadius.brLg,
+          borderSide: BorderSide(color: AppColors.dangerStrong),
+        ),
+        focusedErrorBorder: const OutlineInputBorder(
+          borderRadius: AppRadius.brLg,
+          borderSide: BorderSide(color: AppColors.dangerStrong, width: 1.4),
+        ),
+        errorStyle: const TextStyle(
+          color: AppColors.dangerStrong,
+          fontSize: 11.5,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // About card
 // ─────────────────────────────────────────────────────────────────────────────
-/// Versión visible al usuario. Mantener sincronizada con `version:` en pubspec.yaml.
 const String _kAppVersion = '0.1.0';
 
 class _AboutCard extends StatelessWidget {
@@ -760,11 +1234,13 @@ class _InfoRow extends StatelessWidget {
     required this.icon,
     required this.label,
     required this.value,
+    this.onEdit,
   });
 
   final IconData icon;
   final String label;
   final String value;
+  final VoidCallback? onEdit;
 
   @override
   Widget build(BuildContext context) {
@@ -778,9 +1254,7 @@ class _InfoRow extends StatelessWidget {
           Expanded(
             child: Text(
               label,
-              style: AppTypography.bodySm.copyWith(
-                color: p.textMuted,
-              ),
+              style: AppTypography.bodySm.copyWith(color: p.textMuted),
             ),
           ),
           Flexible(
@@ -795,6 +1269,21 @@ class _InfoRow extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
             ),
           ),
+          if (onEdit != null) ...<Widget>[
+            const SizedBox(width: AppSpacing.xs),
+            GestureDetector(
+              onTap: onEdit,
+              child: Container(
+                width: 28,
+                height: 28,
+                decoration: BoxDecoration(
+                  color: p.brandTintSoft,
+                  borderRadius: AppRadius.brMs,
+                ),
+                child: Icon(Icons.edit_rounded, color: p.brandPrimary, size: 14),
+              ),
+            ),
+          ],
         ],
       ),
     );
@@ -819,6 +1308,9 @@ class _ActionRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final PaletteSpec p = context.palette;
+    final Color iconColor = p.textMuted;
+    final Color labelColor = p.textBody;
+
     return InkWell(
       onTap: onTap,
       borderRadius: AppRadius.brMd,
@@ -826,13 +1318,13 @@ class _ActionRow extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm + 2),
         child: Row(
           children: <Widget>[
-            Icon(icon, color: p.textMuted, size: 18),
+            Icon(icon, color: iconColor, size: 18),
             const SizedBox(width: AppSpacing.sm + 2),
             Expanded(
               child: Text(
                 label,
                 style: AppTypography.bodyMd.copyWith(
-                  color: p.textBody,
+                  color: labelColor,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -860,7 +1352,7 @@ class _ActionRow extends StatelessWidget {
             ],
             Icon(
               trailing ?? Icons.chevron_right_rounded,
-              color: p.textMuted,
+              color: iconColor,
               size: 18,
             ),
           ],
@@ -983,5 +1475,218 @@ class _LogoutButton extends ConsumerWidget {
     if (confirm == true) {
       await ref.read(logoutUseCaseProvider).call();
     }
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Delete account button
+// ─────────────────────────────────────────────────────────────────────────────
+class _DeleteAccountButton extends ConsumerStatefulWidget {
+  const _DeleteAccountButton({required this.user});
+  final AppUser user;
+
+  @override
+  ConsumerState<_DeleteAccountButton> createState() =>
+      _DeleteAccountButtonState();
+}
+
+class _DeleteAccountButtonState extends ConsumerState<_DeleteAccountButton> {
+  bool _isLoading = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final AppLocalizations t = AppLocalizations.of(context);
+    return TextButton(
+      onPressed: _isLoading ? null : () => _showDeleteDialog(context, t),
+      style: TextButton.styleFrom(
+        foregroundColor: AppColors.dangerStrong.withValues(alpha: 0.65),
+        padding: EdgeInsets.zero,
+        minimumSize: Size.zero,
+        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+      ),
+      child: Text(
+        t.profileDeleteAccount,
+        style: AppTypography.bodySm.copyWith(
+          color: AppColors.dangerStrong.withValues(alpha: 0.65),
+          fontWeight: FontWeight.w600,
+          decoration: TextDecoration.underline,
+          decorationColor: AppColors.dangerStrong.withValues(alpha: 0.45),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _showDeleteDialog(
+      BuildContext context, AppLocalizations t) async {
+    AppHaptics.warning();
+    final PaletteSpec p = context.palette;
+    final bool isEmail = widget.user.provider == AppAuthProvider.email;
+
+    final TextEditingController passwordCtrl = TextEditingController();
+    final GlobalKey<FormState> formKey = GlobalKey<FormState>();
+
+    final bool? confirmed = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext ctx) => StatefulBuilder(
+        builder: (BuildContext ctx, StateSetter setInner) {
+          return AlertDialog(
+            shape:
+                const RoundedRectangleBorder(borderRadius: AppRadius.brXl),
+            backgroundColor: p.surface,
+            title: Row(
+              children: <Widget>[
+                Container(
+                  width: 32,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    color: AppColors.dangerStrong.withValues(alpha: 0.12),
+                    borderRadius: AppRadius.brMs,
+                  ),
+                  child: const Icon(Icons.warning_amber_rounded,
+                      color: AppColors.dangerStrong, size: 18),
+                ),
+                const SizedBox(width: AppSpacing.sm + 2),
+                Expanded(
+                  child: Text(
+                    t.profileDeleteAccountTitle,
+                    style: AppTypography.headingSm
+                        .copyWith(color: AppColors.dangerStrong),
+                  ),
+                ),
+              ],
+            ),
+            content: Form(
+              key: formKey,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    t.profileDeleteAccountBody,
+                    style: AppTypography.bodyMd.copyWith(color: p.textBody),
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  if (isEmail) ...<Widget>[
+                    TextFormField(
+                      controller: passwordCtrl,
+                      obscureText: true,
+                      style: AppTypography.bodyMd.copyWith(
+                          color: p.textBody, fontWeight: FontWeight.w600),
+                      cursorColor: AppColors.dangerStrong,
+                      decoration: InputDecoration(
+                        labelText: t.profileDeletePasswordHint,
+                        prefixIcon: const Icon(Icons.lock_outline_rounded,
+                            color: AppColors.dangerStrong, size: 20),
+                        filled: true,
+                        fillColor: p.surfaceMuted,
+                        labelStyle:
+                            AppTypography.labelMd.copyWith(color: p.textMuted),
+                        border: const OutlineInputBorder(
+                          borderRadius: AppRadius.brLg,
+                          borderSide:
+                              BorderSide(color: AppColors.dangerStrong),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: AppRadius.brLg,
+                          borderSide: BorderSide(color: p.outline),
+                        ),
+                        focusedBorder: const OutlineInputBorder(
+                          borderRadius: AppRadius.brLg,
+                          borderSide: BorderSide(
+                              color: AppColors.dangerStrong, width: 1.8),
+                        ),
+                        errorBorder: const OutlineInputBorder(
+                          borderRadius: AppRadius.brLg,
+                          borderSide:
+                              BorderSide(color: AppColors.dangerStrong),
+                        ),
+                        focusedErrorBorder: const OutlineInputBorder(
+                          borderRadius: AppRadius.brLg,
+                          borderSide: BorderSide(
+                              color: AppColors.dangerStrong, width: 1.4),
+                        ),
+                      ),
+                      validator: (v) => (v == null || v.isEmpty)
+                          ? t.authPasswordRequired
+                          : null,
+                    ),
+                  ] else ...<Widget>[
+                    Container(
+                      padding: const EdgeInsets.all(AppSpacing.sm + 2),
+                      decoration: BoxDecoration(
+                        color: AppColors.warningStrong.withValues(alpha: 0.1),
+                        borderRadius: AppRadius.brMd,
+                        border: Border.all(
+                          color: AppColors.warningStrong.withValues(alpha: 0.3),
+                        ),
+                      ),
+                      child: Row(
+                        children: <Widget>[
+                          const Icon(Icons.info_outline_rounded,
+                              color: AppColors.warningStrong, size: 16),
+                          const SizedBox(width: AppSpacing.sm),
+                          Expanded(
+                            child: Text(
+                              t.profileDeleteReauthGoogle,
+                              style: AppTypography.bodySm
+                                  .copyWith(color: p.textBody),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            actions: <Widget>[
+              TextButton(
+                onPressed: () => Navigator.of(ctx).pop(false),
+                child: Text(t.commonCancel),
+              ),
+              FilledButton(
+                onPressed: () {
+                  if (isEmail && !formKey.currentState!.validate()) return;
+                  Navigator.of(ctx).pop(true);
+                },
+                style: FilledButton.styleFrom(
+                  backgroundColor: AppColors.dangerStrong,
+                ),
+                child: Text(t.profileDeleteAccountConfirmBtn),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+
+    if (confirmed != true || !mounted) return;
+
+    setState(() => _isLoading = true);
+    try {
+      await ref.read(deleteAccountUseCaseProvider).call(
+            currentPassword: isEmail ? passwordCtrl.text : null,
+          );
+      // Firebase auth stream emits null → router redirects to login automatically.
+    } on AuthException catch (e) {
+      if (mounted) _showError(t.profileDeleteError(e.message));
+    } catch (e) {
+      if (mounted) _showError(t.profileDeleteError(e.toString()));
+    } finally {
+      passwordCtrl.dispose();
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  void _showError(String msg) {
+    AppHaptics.error();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(msg),
+        backgroundColor: AppColors.dangerStrong,
+        behavior: SnackBarBehavior.floating,
+        margin: const EdgeInsets.all(AppSpacing.md),
+      ),
+    );
   }
 }

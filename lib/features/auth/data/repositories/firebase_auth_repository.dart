@@ -54,6 +54,8 @@ class FirebaseAuthRepository implements AuthRepository {
         return 'Error de conexión. Verifica tu internet.';
       case 'operation-not-allowed':
         return 'Este método de autenticación no está habilitado.';
+      case 'requires-recent-login':
+        return 'Por seguridad, vuelve a iniciar sesión antes de continuar.';
       default:
         return 'Error de autenticación. Intenta de nuevo.';
     }
@@ -63,7 +65,9 @@ class FirebaseAuthRepository implements AuthRepository {
 
   @override
   Stream<AppUser?> watchAuthState() {
-    return _auth.authStateChanges().map((User? user) {
+    // userChanges() also fires when displayName / photoURL are updated,
+    // which lets the profile screen react to name edits immediately.
+    return _auth.userChanges().map((User? user) {
       return user != null ? _mapUser(user) : null;
     });
   }
@@ -94,7 +98,6 @@ class FirebaseAuthRepository implements AuthRepository {
         password: password,
       );
 
-      // Set the display name on the Firebase profile.
       await credential.user!.updateDisplayName(name.trim());
       await credential.user!.reload();
 
@@ -150,6 +153,82 @@ class FirebaseAuthRepository implements AuthRepository {
       _auth.signOut(),
       _googleSignIn.signOut(),
     ]);
+  }
+
+  @override
+  Future<void> updateDisplayName(String name) async {
+    try {
+      final User? user = _auth.currentUser;
+      if (user == null) throw const AuthException('No hay sesión activa.');
+      await user.updateDisplayName(name.trim());
+    } on FirebaseAuthException catch (e) {
+      throw AuthException(_mapErrorCode(e.code));
+    }
+  }
+
+  @override
+  Future<void> updatePassword(
+    String currentPassword,
+    String newPassword,
+  ) async {
+    try {
+      final User? user = _auth.currentUser;
+      if (user == null) throw const AuthException('No hay sesión activa.');
+
+      final AuthCredential credential = EmailAuthProvider.credential(
+        email: user.email!,
+        password: currentPassword,
+      );
+      await user.reauthenticateWithCredential(credential);
+      await user.updatePassword(newPassword);
+    } on FirebaseAuthException catch (e) {
+      throw AuthException(_mapErrorCode(e.code));
+    }
+  }
+
+  @override
+  Future<void> deleteAccount({String? currentPassword}) async {
+    try {
+      final User? user = _auth.currentUser;
+      if (user == null) throw const AuthException('No hay sesión activa.');
+
+      final bool isGoogle = user.providerData.any(
+        (UserInfo info) => info.providerId == 'google.com',
+      );
+
+      if (isGoogle) {
+        final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
+        if (googleUser == null) {
+          throw const AuthException(
+              'Se canceló la verificación con Google.');
+        }
+        final GoogleSignInAuthentication googleAuth =
+            await googleUser.authentication;
+        final OAuthCredential cred = GoogleAuthProvider.credential(
+          accessToken: googleAuth.accessToken,
+          idToken: googleAuth.idToken,
+        );
+        await user.reauthenticateWithCredential(cred);
+      } else {
+        if (currentPassword == null || currentPassword.isEmpty) {
+          throw const AuthException('Se requiere la contraseña actual.');
+        }
+        final AuthCredential cred = EmailAuthProvider.credential(
+          email: user.email!,
+          password: currentPassword,
+        );
+        await user.reauthenticateWithCredential(cred);
+      }
+
+      await user.delete();
+      await _googleSignIn.signOut();
+    } on FirebaseAuthException catch (e) {
+      throw AuthException(_mapErrorCode(e.code));
+    } on AuthException {
+      rethrow;
+    } catch (e) {
+      throw AuthException('Error al eliminar la cuenta: $e');
+    }
   }
 }
 

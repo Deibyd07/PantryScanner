@@ -646,6 +646,74 @@ class AppLocalizationsEn extends AppLocalizations {
       'Are you sure you want to log out? You will need to sign in again.';
 
   @override
+  String get profileEditNameTitle => 'Edit name';
+
+  @override
+  String get profileNameUpdated => 'Name updated';
+
+  @override
+  String profileNameUpdateError(String error) {
+    return 'Could not update name: $error';
+  }
+
+  @override
+  String get profileSecurityTitle => 'Security';
+
+  @override
+  String get profileSecuritySubtitle => 'Password and account access';
+
+  @override
+  String get profileChangePassword => 'Change password';
+
+  @override
+  String get profileChangePasswordTitle => 'Change password';
+
+  @override
+  String get profileCurrentPasswordLabel => 'Current password';
+
+  @override
+  String get profileNewPasswordLabel => 'New password';
+
+  @override
+  String get profileConfirmNewPasswordLabel => 'Confirm new password';
+
+  @override
+  String get profilePasswordUpdated => 'Password updated';
+
+  @override
+  String profilePasswordUpdateError(String error) {
+    return 'Error changing password: $error';
+  }
+
+  @override
+  String get profileDeleteAccount => 'Delete account';
+
+  @override
+  String get profileDeleteAccountTitle => 'Delete your account?';
+
+  @override
+  String get profileDeleteAccountBody =>
+      'All your PantryScanner data will be permanently deleted. This action cannot be undone.';
+
+  @override
+  String get profileDeleteAccountConfirmBtn => 'Yes, delete my account';
+
+  @override
+  String get profileDeletePasswordHint => 'Enter your password to confirm';
+
+  @override
+  String get profileDeleteReauthGoogle =>
+      'Your Google identity will be verified before deleting your account.';
+
+  @override
+  String get profileDeleteSuccess => 'Account deleted';
+
+  @override
+  String profileDeleteError(String error) {
+    return 'Could not delete account: $error';
+  }
+
+  @override
   String get languageSheetTitle => 'Choose language';
 
   @override

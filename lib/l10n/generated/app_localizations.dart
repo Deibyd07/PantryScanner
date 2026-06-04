@@ -1196,6 +1196,126 @@ abstract class AppLocalizations {
   /// **'¿Seguro que quieres cerrar tu sesión? Tendrás que iniciar sesión de nuevo.'**
   String get profileLogoutConfirmBody;
 
+  /// No description provided for @profileEditNameTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Editar nombre'**
+  String get profileEditNameTitle;
+
+  /// No description provided for @profileNameUpdated.
+  ///
+  /// In es, this message translates to:
+  /// **'Nombre actualizado'**
+  String get profileNameUpdated;
+
+  /// No description provided for @profileNameUpdateError.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo actualizar el nombre: {error}'**
+  String profileNameUpdateError(String error);
+
+  /// No description provided for @profileSecurityTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Seguridad'**
+  String get profileSecurityTitle;
+
+  /// No description provided for @profileSecuritySubtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Contraseña y datos de acceso'**
+  String get profileSecuritySubtitle;
+
+  /// No description provided for @profileChangePassword.
+  ///
+  /// In es, this message translates to:
+  /// **'Cambiar contraseña'**
+  String get profileChangePassword;
+
+  /// No description provided for @profileChangePasswordTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Cambiar contraseña'**
+  String get profileChangePasswordTitle;
+
+  /// No description provided for @profileCurrentPasswordLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'Contraseña actual'**
+  String get profileCurrentPasswordLabel;
+
+  /// No description provided for @profileNewPasswordLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'Nueva contraseña'**
+  String get profileNewPasswordLabel;
+
+  /// No description provided for @profileConfirmNewPasswordLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'Confirmar nueva contraseña'**
+  String get profileConfirmNewPasswordLabel;
+
+  /// No description provided for @profilePasswordUpdated.
+  ///
+  /// In es, this message translates to:
+  /// **'Contraseña actualizada'**
+  String get profilePasswordUpdated;
+
+  /// No description provided for @profilePasswordUpdateError.
+  ///
+  /// In es, this message translates to:
+  /// **'Error al cambiar contraseña: {error}'**
+  String profilePasswordUpdateError(String error);
+
+  /// No description provided for @profileDeleteAccount.
+  ///
+  /// In es, this message translates to:
+  /// **'Eliminar cuenta'**
+  String get profileDeleteAccount;
+
+  /// No description provided for @profileDeleteAccountTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'¿Eliminar tu cuenta?'**
+  String get profileDeleteAccountTitle;
+
+  /// No description provided for @profileDeleteAccountBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Todos tus datos de PantryScanner se eliminarán permanentemente. Esta acción no se puede deshacer.'**
+  String get profileDeleteAccountBody;
+
+  /// No description provided for @profileDeleteAccountConfirmBtn.
+  ///
+  /// In es, this message translates to:
+  /// **'Sí, eliminar mi cuenta'**
+  String get profileDeleteAccountConfirmBtn;
+
+  /// No description provided for @profileDeletePasswordHint.
+  ///
+  /// In es, this message translates to:
+  /// **'Ingresa tu contraseña para confirmar'**
+  String get profileDeletePasswordHint;
+
+  /// No description provided for @profileDeleteReauthGoogle.
+  ///
+  /// In es, this message translates to:
+  /// **'Se verificará tu identidad con Google antes de eliminar la cuenta.'**
+  String get profileDeleteReauthGoogle;
+
+  /// No description provided for @profileDeleteSuccess.
+  ///
+  /// In es, this message translates to:
+  /// **'Cuenta eliminada'**
+  String get profileDeleteSuccess;
+
+  /// No description provided for @profileDeleteError.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo eliminar la cuenta: {error}'**
+  String profileDeleteError(String error);
+
   /// No description provided for @languageSheetTitle.
   ///
   /// In es, this message translates to:

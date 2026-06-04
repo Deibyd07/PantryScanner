@@ -647,6 +647,75 @@ class AppLocalizationsEs extends AppLocalizations {
       '¿Seguro que quieres cerrar tu sesión? Tendrás que iniciar sesión de nuevo.';
 
   @override
+  String get profileEditNameTitle => 'Editar nombre';
+
+  @override
+  String get profileNameUpdated => 'Nombre actualizado';
+
+  @override
+  String profileNameUpdateError(String error) {
+    return 'No se pudo actualizar el nombre: $error';
+  }
+
+  @override
+  String get profileSecurityTitle => 'Seguridad';
+
+  @override
+  String get profileSecuritySubtitle => 'Contraseña y datos de acceso';
+
+  @override
+  String get profileChangePassword => 'Cambiar contraseña';
+
+  @override
+  String get profileChangePasswordTitle => 'Cambiar contraseña';
+
+  @override
+  String get profileCurrentPasswordLabel => 'Contraseña actual';
+
+  @override
+  String get profileNewPasswordLabel => 'Nueva contraseña';
+
+  @override
+  String get profileConfirmNewPasswordLabel => 'Confirmar nueva contraseña';
+
+  @override
+  String get profilePasswordUpdated => 'Contraseña actualizada';
+
+  @override
+  String profilePasswordUpdateError(String error) {
+    return 'Error al cambiar contraseña: $error';
+  }
+
+  @override
+  String get profileDeleteAccount => 'Eliminar cuenta';
+
+  @override
+  String get profileDeleteAccountTitle => '¿Eliminar tu cuenta?';
+
+  @override
+  String get profileDeleteAccountBody =>
+      'Todos tus datos de PantryScanner se eliminarán permanentemente. Esta acción no se puede deshacer.';
+
+  @override
+  String get profileDeleteAccountConfirmBtn => 'Sí, eliminar mi cuenta';
+
+  @override
+  String get profileDeletePasswordHint =>
+      'Ingresa tu contraseña para confirmar';
+
+  @override
+  String get profileDeleteReauthGoogle =>
+      'Se verificará tu identidad con Google antes de eliminar la cuenta.';
+
+  @override
+  String get profileDeleteSuccess => 'Cuenta eliminada';
+
+  @override
+  String profileDeleteError(String error) {
+    return 'No se pudo eliminar la cuenta: $error';
+  }
+
+  @override
   String get languageSheetTitle => 'Elegir idioma';
 
   @override
