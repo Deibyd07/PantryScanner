@@ -1,10 +1,13 @@
 import 'dart:async';
 
 import 'package:sqflite/sqflite.dart';
+import 'package:uuid/uuid.dart';
 
 import '../../../../core/db/app_database.dart';
 import '../../domain/entities/shopping_list_item.dart';
 import '../../domain/repositories/shopping_list_repository.dart';
+
+const Uuid _uuid = Uuid();
 
 class SqliteShoppingListRepository implements ShoppingListRepository {
   SqliteShoppingListRepository._();
@@ -41,6 +44,7 @@ class SqliteShoppingListRepository implements ShoppingListRepository {
   static ShoppingListItem _fromRow(Map<String, dynamic> row) {
     return ShoppingListItem(
       id: row['id'] as int,
+      syncId: (row['sync_id'] as String?) ?? _uuid.v4(),
       name: row['name'] as String,
       quantity: row['quantity'] as String?,
       sourceRecipeId: row['source_recipe'] as String?,
@@ -95,6 +99,7 @@ class SqliteShoppingListRepository implements ShoppingListRepository {
 
     final int now = DateTime.now().millisecondsSinceEpoch;
     final int id = await _database.insert('shopping_list_items', <String, dynamic>{
+      'sync_id': _uuid.v4(),
       'name': name.trim(),
       'normalized_name': normalized,
       'quantity': quantity,
@@ -125,6 +130,7 @@ class SqliteShoppingListRepository implements ShoppingListRepository {
 
         final int now = DateTime.now().millisecondsSinceEpoch;
         await txn.insert('shopping_list_items', <String, dynamic>{
+          'sync_id': _uuid.v4(),
           'name': d.name.trim(),
           'normalized_name': normalized,
           'quantity': d.quantity,
@@ -205,6 +211,7 @@ class SqliteShoppingListRepository implements ShoppingListRepository {
   @override
   Future<int> restoreItem(ShoppingListItem item) async {
     final int id = await _database.insert('shopping_list_items', <String, dynamic>{
+      'sync_id': item.syncId,
       'name': item.name,
       'normalized_name': _normalize(item.name),
       'quantity': item.quantity,
@@ -217,6 +224,73 @@ class SqliteShoppingListRepository implements ShoppingListRepository {
     await _emit();
     return id;
   }
+
+  // ── Cloud sync helpers ───────────────────────────────────────────────────────
+
+  /// Upsert de un ítem proveniente de Firestore (no dispara _emit para que el
+  /// caller lo llame una sola vez al final del batch).
+  Future<void> saveItemFromCloud(Map<String, dynamic> data) async {
+    final String syncId = data['syncId'] as String;
+    final String name = (data['name'] as String?) ?? '';
+    if (name.isEmpty) return;
+
+    final List<Map<String, dynamic>> existing = await _database.query(
+      'shopping_list_items',
+      where: 'sync_id = ?',
+      whereArgs: <dynamic>[syncId],
+      limit: 1,
+    );
+
+    final int isChecked = (data['isChecked'] as bool? ?? false) ? 1 : 0;
+    final int? checkedAt = data['checkedAt'] as int?;
+    final int createdAt =
+        data['createdAt'] as int? ?? DateTime.now().millisecondsSinceEpoch;
+
+    if (existing.isNotEmpty) {
+      await _database.update(
+        'shopping_list_items',
+        <String, dynamic>{
+          'name': name,
+          'normalized_name': _normalize(name),
+          'quantity': data['quantity'],
+          'source_recipe': data['sourceRecipeId'],
+          'source_title': data['sourceTitle'],
+          'is_checked': isChecked,
+          'checked_at': checkedAt,
+        },
+        where: 'sync_id = ?',
+        whereArgs: <dynamic>[syncId],
+      );
+    } else {
+      await _database.insert(
+        'shopping_list_items',
+        <String, dynamic>{
+          'sync_id': syncId,
+          'name': name,
+          'normalized_name': _normalize(name),
+          'quantity': data['quantity'],
+          'source_recipe': data['sourceRecipeId'],
+          'source_title': data['sourceTitle'],
+          'is_checked': isChecked,
+          'created_at': createdAt,
+          'checked_at': checkedAt,
+        },
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
+    }
+  }
+
+  /// Elimina localmente el ítem con el [syncId] dado (llegó como removed desde Firestore).
+  Future<void> deleteItemBySyncId(String syncId) async {
+    await _database.delete(
+      'shopping_list_items',
+      where: 'sync_id = ?',
+      whereArgs: <dynamic>[syncId],
+    );
+  }
+
+  /// Emite el estado actual tras aplicar una serie de cambios de cloud.
+  Future<void> emitAfterCloudUpdate() async => _emit();
 
   @override
   Future<void> clearCompleted() async {

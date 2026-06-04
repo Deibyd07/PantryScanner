@@ -162,6 +162,42 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
                   ),
                 Row(
                   children: <Widget>[
+                    ValueListenableBuilder<MobileScannerState>(
+                      valueListenable: _controller,
+                      builder: (
+                        BuildContext ctx,
+                        MobileScannerState state,
+                        Widget? _,
+                      ) {
+                        final TorchState torchState = state.torchState;
+                        if (torchState == TorchState.unavailable) {
+                          return const SizedBox.shrink();
+                        }
+                        final bool isOn = torchState == TorchState.on;
+                        return Padding(
+                          padding:
+                              const EdgeInsets.only(right: AppSpacing.sm),
+                          child: IconButton.filled(
+                            tooltip: isOn
+                                ? t.scannerFlashOff
+                                : t.scannerFlashOn,
+                            onPressed: () => _controller.toggleTorch(),
+                            icon: Icon(
+                              isOn
+                                  ? Icons.flashlight_off
+                                  : Icons.flashlight_on,
+                            ),
+                            style: IconButton.styleFrom(
+                              backgroundColor: isOn
+                                  ? Colors.amber.shade600
+                                  : Colors.white24,
+                              foregroundColor:
+                                  isOn ? Colors.black87 : Colors.white,
+                            ),
+                          ),
+                        );
+                      },
+                    ),
                     Expanded(
                       child: FilledButton.icon(
                         onPressed: _lastValidCode == null

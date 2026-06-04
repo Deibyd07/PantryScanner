@@ -217,6 +217,8 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
 
   @override
   Widget build(BuildContext context) {
+    ref.watch(shoppingListSyncProvider);
+
     final PaletteSpec p = context.palette;
     final AppLocalizations t = AppLocalizations.of(context);
     final AsyncValue<List<ShoppingListItem>> async =

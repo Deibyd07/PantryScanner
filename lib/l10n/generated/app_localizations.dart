@@ -2228,6 +2228,18 @@ abstract class AppLocalizations {
   /// **'Alinea el código dentro del marco'**
   String get scannerGuideHint;
 
+  /// No description provided for @scannerFlashOn.
+  ///
+  /// In es, this message translates to:
+  /// **'Encender linterna'**
+  String get scannerFlashOn;
+
+  /// No description provided for @scannerFlashOff.
+  ///
+  /// In es, this message translates to:
+  /// **'Apagar linterna'**
+  String get scannerFlashOff;
+
   /// No description provided for @authEmailLabel.
   ///
   /// In es, this message translates to:

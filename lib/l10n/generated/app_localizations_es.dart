@@ -1245,6 +1245,12 @@ class AppLocalizationsEs extends AppLocalizations {
   String get scannerGuideHint => 'Alinea el código dentro del marco';
 
   @override
+  String get scannerFlashOn => 'Encender linterna';
+
+  @override
+  String get scannerFlashOff => 'Apagar linterna';
+
+  @override
   String get authEmailLabel => 'Correo electrónico';
 
   @override

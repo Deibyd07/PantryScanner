@@ -4,6 +4,7 @@
 class ShoppingListItem {
   const ShoppingListItem({
     required this.id,
+    required this.syncId,
     required this.name,
     required this.isChecked,
     required this.createdAt,
@@ -14,6 +15,8 @@ class ShoppingListItem {
   });
 
   final int id;
+  /// UUID estable usado como ID de documento en Firestore.
+  final String syncId;
   final String name;
   final String? quantity;
   final String? sourceRecipeId;
@@ -28,6 +31,7 @@ class ShoppingListItem {
 
   ShoppingListItem copyWith({
     int? id,
+    String? syncId,
     String? name,
     Object? quantity = _unset,
     Object? sourceRecipeId = _unset,
@@ -38,6 +42,7 @@ class ShoppingListItem {
   }) {
     return ShoppingListItem(
       id: id ?? this.id,
+      syncId: syncId ?? this.syncId,
       name: name ?? this.name,
       quantity: identical(quantity, _unset)
           ? this.quantity

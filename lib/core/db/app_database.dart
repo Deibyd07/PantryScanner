@@ -19,7 +19,7 @@ class AppDatabase {
 
     _db = await openDatabase(
       dbPath,
-      version: 6,
+      version: 7,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -114,12 +114,29 @@ class AppDatabase {
     if (oldVersion < 6) {
       await _createShoppingListTable(db);
     }
+
+    if (oldVersion < 7) {
+      await db.execute(
+        'ALTER TABLE shopping_list_items ADD COLUMN sync_id TEXT',
+      );
+      final List<Map<String, dynamic>> rows =
+          await db.query('shopping_list_items');
+      for (final Map<String, dynamic> row in rows) {
+        await db.update(
+          'shopping_list_items',
+          <String, dynamic>{'sync_id': const Uuid().v4()},
+          where: 'id = ?',
+          whereArgs: <dynamic>[row['id']],
+        );
+      }
+    }
   }
 
   Future<void> _createShoppingListTable(Database db) async {
     await db.execute('''
       CREATE TABLE IF NOT EXISTS shopping_list_items (
         id              INTEGER PRIMARY KEY AUTOINCREMENT,
+        sync_id         TEXT,
         name            TEXT    NOT NULL,
         normalized_name TEXT    NOT NULL,
         quantity        TEXT,

@@ -1237,6 +1237,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get scannerGuideHint => 'Align the code inside the frame';
 
   @override
+  String get scannerFlashOn => 'Turn on flashlight';
+
+  @override
+  String get scannerFlashOff => 'Turn off flashlight';
+
+  @override
   String get authEmailLabel => 'Email';
 
   @override

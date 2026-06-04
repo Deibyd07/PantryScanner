@@ -507,6 +507,8 @@
   "scannerPermOpenSettings": "Open settings",
   "scannerManualEntry": "Enter code manually",
   "scannerGuideHint": "Align the code inside the frame",
+  "scannerFlashOn": "Turn on flashlight",
+  "scannerFlashOff": "Turn off flashlight",
 
   "authEmailLabel": "Email",
   "authPasswordLabel": "Password",

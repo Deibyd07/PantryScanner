@@ -2,10 +2,14 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:uuid/uuid.dart';
 
+import '../../../../core/sync/shopping_list_sync_service.dart';
 import '../../data/repositories/sqlite_shopping_list_repository.dart';
 import '../../domain/entities/shopping_list_item.dart';
 import '../../domain/repositories/shopping_list_repository.dart';
+
+const Uuid _uuid = Uuid();
 
 // ─────────────────────────────────────────────────────────────────────────────
 // WEB DEMO — InMemory singleton
@@ -47,6 +51,7 @@ class _InMemoryShoppingListRepository implements ShoppingListRepository {
 
     final ShoppingListItem item = ShoppingListItem(
       id: _nextId++,
+      syncId: _uuid.v4(),
       name: name.trim(),
       quantity: quantity,
       sourceRecipeId: sourceRecipeId,
@@ -73,6 +78,7 @@ class _InMemoryShoppingListRepository implements ShoppingListRepository {
         0,
         ShoppingListItem(
           id: _nextId++,
+          syncId: _uuid.v4(),
           name: d.name.trim(),
           quantity: d.quantity,
           sourceRecipeId: d.sourceRecipeId,
@@ -139,6 +145,7 @@ class _InMemoryShoppingListRepository implements ShoppingListRepository {
   Future<int> restoreItem(ShoppingListItem item) async {
     final ShoppingListItem restored = ShoppingListItem(
       id: _nextId++,
+      syncId: item.syncId,
       name: item.name,
       quantity: item.quantity,
       sourceRecipeId: item.sourceRecipeId,
@@ -190,4 +197,17 @@ final Provider<int> shoppingListPendingCountProvider = Provider<int>((Ref ref) {
           ?.where((ShoppingListItem i) => !i.isChecked)
           .length ??
       0;
+});
+
+/// Activa la sincronización bidireccional de la lista de compras con Firestore.
+/// Wiréalo en la pantalla con ref.watch(shoppingListSyncProvider).
+final Provider<void> shoppingListSyncProvider = Provider<void>((Ref ref) {
+  if (kIsWeb) return;
+
+  final ShoppingListRepository repo = ref.watch(shoppingListRepositoryProvider);
+  if (repo is! SqliteShoppingListRepository) return;
+
+  final ShoppingListSyncService service =
+      ShoppingListSyncService(ref, repo);
+  ref.onDispose(service.dispose);
 });

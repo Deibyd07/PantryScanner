@@ -507,6 +507,8 @@
   "scannerPermOpenSettings": "Abrir configuración",
   "scannerManualEntry": "Ingresar código manualmente",
   "scannerGuideHint": "Alinea el código dentro del marco",
+  "scannerFlashOn": "Encender linterna",
+  "scannerFlashOff": "Apagar linterna",
 
   "authEmailLabel": "Correo electrónico",
   "authPasswordLabel": "Contraseña",
