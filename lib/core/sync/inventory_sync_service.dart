@@ -1,10 +1,12 @@
 import 'dart:async';
+import 'dart:math';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../features/auth/presentation/providers/auth_providers.dart';
 import '../../features/auth/domain/entities/app_user.dart';
+import '../../features/auth/presentation/providers/auth_providers.dart';
 import '../../features/inventory/data/repositories/sqlite_inventory_repository.dart';
 import '../../features/inventory/domain/entities/inventory_item.dart';
 import '../network/connectivity_provider.dart';
@@ -16,33 +18,34 @@ class InventorySyncService {
 
   final Ref ref;
   final SqliteInventoryRepository localRepo;
-  final FirebaseFirestore firestore = FirebaseFirestore.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _firestoreSub;
+  StreamSubscription<List<InventoryItem>>? _localSub;
 
   String? _currentUid;
   bool _isOnline = false;
   bool _isSyncing = false;
+  // Prevents re-push loop when cloud changes update local DB
+  bool _isApplyingCloudUpdate = false;
+  // Only push items modified after this timestamp
+  int _lastPushTimestamp = 0;
 
   void _init() {
-    // Initial State
-    final initialUser = ref.read(authStateProvider).valueOrNull;
-    if (initialUser != null) {
-      _currentUid = initialUser.uid;
-    }
-    final initialOffline = ref.read(isOfflineProvider).valueOrNull ?? false;
+    final AppUser? initialUser = ref.read(authStateProvider).valueOrNull;
+    if (initialUser != null) _currentUid = initialUser.uid;
+
+    final bool initialOffline = ref.read(isOfflineProvider).valueOrNull ?? false;
     _isOnline = !initialOffline;
 
-    if (_isOnline && _currentUid != null) {
-      _startSync();
-    }
+    if (_isOnline && _currentUid != null) _startSync();
 
-    // Listen to Auth State
-    ref.listen<AsyncValue<AppUser?>>(authStateProvider, (previous, next) {
-      final user = next.valueOrNull;
+    ref.listen<AsyncValue<AppUser?>>(authStateProvider, (_, next) {
+      final AppUser? user = next.valueOrNull;
       if (user != null) {
         if (_currentUid != user.uid) {
           _currentUid = user.uid;
+          _lastPushTimestamp = 0; // force full sync for new user
           _startSync();
         }
       } else {
@@ -50,18 +53,15 @@ class InventorySyncService {
       }
     });
 
-    // Listen to Connectivity State
-    ref.listen<AsyncValue<bool>>(isOfflineProvider, (previous, next) {
-      final isOffline = next.valueOrNull ?? false;
+    ref.listen<AsyncValue<bool>>(isOfflineProvider, (_, next) {
+      final bool isOffline = next.valueOrNull ?? false;
       _isOnline = !isOffline;
-      if (_isOnline && _currentUid != null) {
-        _startSync();
-      }
+      if (_isOnline && _currentUid != null) _startSync();
     });
 
-    // Listen to Local DB changes to push
-    localRepo.watchInventory().listen((_) {
-      if (_isOnline && _currentUid != null) {
+    // Push local changes — but skip when the change came from the cloud
+    _localSub = localRepo.watchInventory().listen((_) {
+      if (_isOnline && _currentUid != null && !_isApplyingCloudUpdate) {
         _pushToCloud();
       }
     });
@@ -71,7 +71,7 @@ class InventorySyncService {
     if (_currentUid == null || !_isOnline) return;
 
     _firestoreSub?.cancel();
-    _firestoreSub = firestore
+    _firestoreSub = _firestore
         .collection('users')
         .doc(_currentUid)
         .collection('inventory')
@@ -85,90 +85,113 @@ class InventorySyncService {
     _firestoreSub?.cancel();
     _firestoreSub = null;
     _currentUid = null;
+    _lastPushTimestamp = 0;
   }
 
   Future<void> _pushToCloud() async {
     if (_isSyncing || _currentUid == null || !_isOnline) return;
     _isSyncing = true;
     try {
-      final List<InventoryItem> localItems = await localRepo.getSyncableItems(0);
+      final String uid = _currentUid!;
+      final List<InventoryItem> localItems =
+          await localRepo.getSyncableItems(_lastPushTimestamp);
 
-      for (final InventoryItem item in localItems) {
-        final DocumentReference docRef = firestore
-            .collection('users')
-            .doc(_currentUid)
-            .collection('inventory')
-            .doc(item.syncId);
+      if (localItems.isEmpty) return;
 
-        final docSnap = await docRef.get();
-        bool shouldPush = true;
+      // Batch writes: Firestore allows max 500 per batch
+      const int chunkSize = 400;
+      for (int i = 0; i < localItems.length; i += chunkSize) {
+        final List<InventoryItem> chunk =
+            localItems.sublist(i, min(i + chunkSize, localItems.length));
+        final WriteBatch batch = _firestore.batch();
 
-        if (docSnap.exists) {
-          final data = docSnap.data() as Map<String, dynamic>;
-          final remoteUpdatedAt = data['updatedAt'] as int? ?? 0;
-          if (remoteUpdatedAt >= item.updatedAt.millisecondsSinceEpoch) {
-            shouldPush = false;
-          }
+        for (final InventoryItem item in chunk) {
+          final DocumentReference<Map<String, dynamic>> docRef = _firestore
+              .collection('users')
+              .doc(uid)
+              .collection('inventory')
+              .doc(item.syncId);
+
+          batch.set(
+            docRef,
+            <String, dynamic>{
+              'syncId': item.syncId,
+              'barcode': item.barcode,
+              'name': item.name,
+              'brand': item.brand,
+              'category': item.category,
+              'quantity': item.quantity,
+              'minStock': item.minStock,
+              'expiryDate': item.expiryDate?.millisecondsSinceEpoch,
+              'imageUrl': item.imageUrl,
+              'notes': item.notes,
+              'createdAt': item.createdAt.millisecondsSinceEpoch,
+              'updatedAt': item.updatedAt.millisecondsSinceEpoch,
+              'isDeleted': item.isDeleted,
+            },
+            SetOptions(merge: true),
+          );
         }
 
-        if (shouldPush) {
-          await docRef.set({
-            'syncId': item.syncId,
-            'barcode': item.barcode,
-            'name': item.name,
-            'brand': item.brand,
-            'category': item.category,
-            'quantity': item.quantity,
-            'expiryDate': item.expiryDate?.millisecondsSinceEpoch,
-            'imageUrl': item.imageUrl,
-            'notes': item.notes,
-            'createdAt': item.createdAt.millisecondsSinceEpoch,
-            'updatedAt': item.updatedAt.millisecondsSinceEpoch,
-            'isDeleted': item.isDeleted,
-          }, SetOptions(merge: true));
-        }
+        await batch.commit();
       }
+
+      _lastPushTimestamp = DateTime.now().millisecondsSinceEpoch;
     } catch (e) {
-      debugPrint('Sync Push Error: \$e');
+      debugPrint('Sync push error: $e');
     } finally {
       _isSyncing = false;
     }
   }
 
-  Future<void> _onCloudUpdate(QuerySnapshot<Map<String, dynamic>> snapshot) async {
-    for (final change in snapshot.docChanges) {
-      if (change.type == DocumentChangeType.added || change.type == DocumentChangeType.modified) {
-        final data = change.doc.data();
+  Future<void> _onCloudUpdate(
+    QuerySnapshot<Map<String, dynamic>> snapshot,
+  ) async {
+    if (snapshot.docChanges.isEmpty) return;
+
+    _isApplyingCloudUpdate = true;
+    try {
+      for (final DocumentChange<Map<String, dynamic>> change
+          in snapshot.docChanges) {
+        if (change.type == DocumentChangeType.removed) continue;
+
+        final Map<String, dynamic>? data = change.doc.data();
         if (data == null) continue;
 
         try {
-          final remoteItem = InventoryItem(
-            id: 0, 
+          final InventoryItem remoteItem = InventoryItem(
+            id: 0,
             syncId: data['syncId'] as String,
             barcode: data['barcode'] as String? ?? '',
             name: data['name'] as String,
             brand: data['brand'] as String?,
             category: data['category'] as String?,
             quantity: data['quantity'] as int? ?? 0,
+            minStock: data['minStock'] as int? ?? 1,
             expiryDate: data['expiryDate'] != null
                 ? DateTime.fromMillisecondsSinceEpoch(data['expiryDate'] as int)
                 : null,
             imageUrl: data['imageUrl'] as String?,
             notes: data['notes'] as String?,
-            createdAt: DateTime.fromMillisecondsSinceEpoch(data['createdAt'] as int),
-            updatedAt: DateTime.fromMillisecondsSinceEpoch(data['updatedAt'] as int),
+            createdAt: DateTime.fromMillisecondsSinceEpoch(
+                data['createdAt'] as int),
+            updatedAt: DateTime.fromMillisecondsSinceEpoch(
+                data['updatedAt'] as int),
             isDeleted: data['isDeleted'] as bool? ?? false,
           );
-          
+
           await localRepo.saveItemFromCloud(remoteItem);
         } catch (e) {
-          debugPrint('Error parsing cloud item: \$e');
+          debugPrint('Error parsing cloud item: $e');
         }
       }
+    } finally {
+      _isApplyingCloudUpdate = false;
     }
   }
 
   void dispose() {
+    _localSub?.cancel();
     _stopSync();
   }
 }

@@ -206,17 +206,22 @@ class SqliteInventoryRepository implements InventoryRepository {
 
   // Exclusive for sync service
   Future<void> saveItemFromCloud(InventoryItem item) async {
-    // Try to find if item exists locally to keep the same integer ID
-    final existingRows = await _database.query(
+    final List<Map<String, dynamic>> existingRows = await _database.query(
       'inventory_items',
       where: 'sync_id = ?',
-      whereArgs: [item.syncId],
+      whereArgs: <dynamic>[item.syncId],
       limit: 1,
     );
 
     InventoryItem finalItem = item;
     if (existingRows.isNotEmpty) {
       final int existingId = existingRows.first['id'] as int;
+      // Preserve local minStock when cloud doc predates the minStock sync field
+      // (cloud default=1 may mean "field absent", not "user set it to 1")
+      final int localMinStock = existingRows.first['min_stock'] as int? ?? 1;
+      final int resolvedMinStock =
+          (item.minStock == 1 && localMinStock > 1) ? localMinStock : item.minStock;
+
       finalItem = InventoryItem(
         id: existingId,
         syncId: item.syncId,
@@ -225,6 +230,7 @@ class SqliteInventoryRepository implements InventoryRepository {
         brand: item.brand,
         category: item.category,
         quantity: item.quantity,
+        minStock: resolvedMinStock,
         createdAt: item.createdAt,
         updatedAt: item.updatedAt,
         isDeleted: item.isDeleted,

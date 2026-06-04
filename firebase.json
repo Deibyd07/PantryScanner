@@ -1,1 +1,25 @@
-{"flutter":{"platforms":{"android":{"default":{"projectId":"pantryscanner-eb88c","appId":"1:98614404819:android:d78d44bf4d9d115ab5d626","fileOutput":"android/app/google-services.json"}},"dart":{"lib/firebase_options.dart":{"projectId":"pantryscanner-eb88c","configurations":{"android":"1:98614404819:android:d78d44bf4d9d115ab5d626"}}}}}}
+{
+  "firestore": {
+    "rules": "firestore.rules",
+    "indexes": "firestore.indexes.json"
+  },
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "pantryscanner-eb88c",
+          "appId": "1:98614404819:android:d78d44bf4d9d115ab5d626",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "pantryscanner-eb88c",
+          "configurations": {
+            "android": "1:98614404819:android:d78d44bf4d9d115ab5d626"
+          }
+        }
+      }
+    }
+  }
+}

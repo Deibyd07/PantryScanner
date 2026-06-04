@@ -238,9 +238,11 @@ final AutoDisposeFutureProviderFamily<Map<String, dynamic>?, String>
 // ─────────────────────────────────────────────────────────────────────────────
 final inventorySyncServiceProvider = Provider<InventorySyncService?>((ref) {
   if (kIsWeb) return null;
-  final repo = ref.watch(inventoryRepositoryProvider);
+  final InventoryRepository repo = ref.watch(inventoryRepositoryProvider);
   if (repo is SqliteInventoryRepository) {
-    return InventorySyncService(ref, repo);
+    final InventorySyncService service = InventorySyncService(ref, repo);
+    ref.onDispose(service.dispose);
+    return service;
   }
   return null;
 });
