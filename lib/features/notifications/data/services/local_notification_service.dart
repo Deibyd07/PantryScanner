@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
@@ -19,6 +20,14 @@ class LocalNotificationService {
 
   bool _initialized = false;
 
+  /// Broadcasts notification payloads when the user taps a notification.
+  /// Listened to in [PantryScannerApp] to handle deep linking.
+  final StreamController<String?> _payloadController =
+      StreamController<String?>.broadcast();
+
+  Stream<String?> get payloadStream => _payloadController.stream;
+
+  /// Android notification channel for expiry alerts.
   static const String _channelId = 'pantry_expiry_alerts';
   static const String _channelName = 'Alertas de vencimiento';
   static const String _channelDesc =
@@ -55,12 +64,25 @@ class LocalNotificationService {
     );
 
     _initialized = true;
+
+    // Handle the case where the app was launched by tapping a notification
+    // (cold start / app was fully closed).
+    final launchDetails = await _plugin.getNotificationAppLaunchDetails();
+    if (launchDetails?.didNotificationLaunchApp == true) {
+      final payload = launchDetails!.notificationResponse?.payload;
+      if (payload != null && payload.isNotEmpty) {
+        _payloadController.add(payload);
+      }
+    }
   }
 
-  /// Called when the user taps a notification.
-  static void _onNotificationTap(NotificationResponse response) {
-    // Deep-link handling will be added in HU-14.
+  /// Called when the user taps a notification while the app is running or
+  /// brought to the foreground.
+  void _onNotificationTap(NotificationResponse response) {
     debugPrint('[PantryScanner] Notification tapped: ${response.payload}');
+    if (response.payload != null && response.payload!.isNotEmpty) {
+      _payloadController.add(response.payload);
+    }
   }
 
   // ── Permissions ─────────────────────────────────────────────────────────────
@@ -146,6 +168,17 @@ class LocalNotificationService {
       matchDateTimeComponents: DateTimeComponents.time,
       payload: payload,
     );
+  }
+
+  /// Shows an immediate (non-scheduled) local notification.
+  Future<void> show({
+    required int id,
+    required String title,
+    required String body,
+    String? payload,
+  }) async {
+    _ensureInitialized();
+    await _plugin.show(id, title, body, _details, payload: payload);
   }
 
   /// Cancels the notification with the given [id].

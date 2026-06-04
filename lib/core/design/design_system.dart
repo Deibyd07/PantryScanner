@@ -30,4 +30,5 @@ export 'tokens/app_radius.dart';
 export 'tokens/app_spacing.dart';
 export 'tokens/app_typography.dart';
 export 'widgets/brand_gradient_button.dart';
+export 'widgets/empty_state.dart';
 export 'widgets/split_hero_scaffold.dart';
