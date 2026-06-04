@@ -7,7 +7,7 @@ plugins {
 }
 
 android {
-    namespace = "com.deibyd.pantryscanner"
+    namespace = "com.example.pantry_scanner"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
