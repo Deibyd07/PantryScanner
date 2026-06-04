@@ -1305,27 +1305,32 @@ class _InfoRow extends StatelessWidget {
     final PaletteSpec p = context.palette;
 
     final Widget content = Padding(
-      padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm + 2),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: <Widget>[
           Icon(icon, color: p.textMuted, size: 18),
           const SizedBox(width: AppSpacing.sm + 2),
           Expanded(
-            child: Text(
-              label,
-              style: AppTypography.bodySm.copyWith(color: p.textMuted),
-            ),
-          ),
-          Flexible(
-            child: Text(
-              value,
-              textAlign: TextAlign.end,
-              style: AppTypography.bodyMd.copyWith(
-                color: p.textBody,
-                fontWeight: FontWeight.w700,
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                Text(
+                  label,
+                  style: AppTypography.bodySm.copyWith(color: p.textMuted),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  value,
+                  style: AppTypography.bodyMd.copyWith(
+                    color: p.textBody,
+                    fontWeight: FontWeight.w700,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
             ),
           ),
           if (onEdit != null) ...<Widget>[
