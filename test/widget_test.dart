@@ -21,6 +21,6 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    expect(find.text('PantryScanner'), findsOneWidget);
+    expect(find.text('Foodly'), findsOneWidget);
   });
 }

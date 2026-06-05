@@ -1,0 +1,45 @@
+name: Flutter CI — Tests
+
+on:
+  push:
+    branches: [ main, testing, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  unit_tests:
+    name: Unit & Widget Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.41.5'
+          channel: 'stable'
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Verify formatting
+        run: dart format --output=none --set-exit-if-changed lib/ test/
+
+      - name: Analyze code (static analysis)
+        run: flutter analyze --no-fatal-infos
+
+      - name: Run tests with coverage
+        run: flutter test --coverage --reporter=expanded
+
+      - name: Upload coverage report
+        uses: codecov/codecov-action@v4
+        with:
+          file: coverage/lcov.info
+          flags: unittests
+          name: foodly-coverage
+          fail_ci_if_error: false
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
