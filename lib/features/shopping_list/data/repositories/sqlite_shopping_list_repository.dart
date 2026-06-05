@@ -57,7 +57,7 @@ class SqliteShoppingListRepository implements ShoppingListRepository {
   static ShoppingListItem _fromRow(Map<String, dynamic> row) {
     return ShoppingListItem(
       id: row['id'] as int,
-      syncId: (row['sync_id'] as String?) ?? _uuid.v4(),
+      syncId: (row['sync_id'] as String?) ?? '',
       name: row['name'] as String,
       quantity: row['quantity'] as String?,
       sourceRecipeId: row['source_recipe'] as String?,

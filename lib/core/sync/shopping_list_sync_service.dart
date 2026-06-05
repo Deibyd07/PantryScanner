@@ -109,8 +109,10 @@ class ShoppingListSyncService {
           .doc(uid)
           .collection('shopping_list');
 
-      final Set<String> currentSyncIds =
-          items.map((ShoppingListItem i) => i.syncId).toSet();
+      final Set<String> currentSyncIds = items
+          .where((ShoppingListItem i) => i.syncId.isNotEmpty)
+          .map((ShoppingListItem i) => i.syncId)
+          .toSet();
 
       // Delete from Firestore items that were removed locally
       final Set<String> deletedSyncIds =
@@ -130,6 +132,7 @@ class ShoppingListSyncService {
         final WriteBatch batch = _firestore.batch();
 
         for (final ShoppingListItem item in chunk) {
+          if (item.syncId.isEmpty) continue;
           batch.set(
             col.doc(item.syncId),
             <String, dynamic>{

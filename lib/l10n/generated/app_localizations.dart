@@ -344,6 +344,12 @@ abstract class AppLocalizations {
   /// **'La cantidad de \"{name}\" llegará a 0. ¿Quieres eliminarlo del inventario?'**
   String inventoryConfirmDeleteBody(String name);
 
+  /// No description provided for @inventoryBelowMinStockSnack.
+  ///
+  /// In es, this message translates to:
+  /// **'\"{name}\" está en su stock mínimo'**
+  String inventoryBelowMinStockSnack(String name);
+
   /// No description provided for @categoryAll.
   ///
   /// In es, this message translates to:

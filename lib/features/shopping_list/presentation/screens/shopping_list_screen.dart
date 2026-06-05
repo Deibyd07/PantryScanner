@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/router/app_router.dart';
+import '../../../../core/analytics/app_analytics.dart';
 import '../../../../core/design/design_system.dart';
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../data/utils/quick_add_parser.dart';
@@ -36,6 +37,7 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
           name: parsed.name,
           quantity: parsed.quantity,
         );
+    AppAnalytics.logShoppingItemAdded().ignore();
     _quickAddCtrl.clear();
     if (mounted) FocusScope.of(context).unfocus();
   }
@@ -111,6 +113,7 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
     if (snapshot.isEmpty) return;
 
     await ref.read(shoppingListRepositoryProvider).clearCompleted();
+    AppAnalytics.logShoppingListCleared().ignore();
     if (!mounted) return;
     final AppLocalizations t = AppLocalizations.of(context);
     final ScaffoldMessengerState messenger = ScaffoldMessenger.of(context);

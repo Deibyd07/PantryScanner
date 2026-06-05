@@ -58,6 +58,10 @@
   "@inventoryConfirmDeleteBody": {
     "placeholders": { "name": { "type": "String" } }
   },
+  "inventoryBelowMinStockSnack": "\"{name}\" is at minimum stock",
+  "@inventoryBelowMinStockSnack": {
+    "placeholders": { "name": { "type": "String" } }
+  },
 
   "categoryAll": "All",
   "categoryDairy": "Dairy",

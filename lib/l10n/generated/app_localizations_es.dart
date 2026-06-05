@@ -142,6 +142,11 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
+  String inventoryBelowMinStockSnack(String name) {
+    return '\"$name\" está en su stock mínimo';
+  }
+
+  @override
   String get categoryAll => 'Todos';
 
   @override

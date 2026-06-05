@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/analytics/app_analytics.dart';
 import '../../../../core/design/design_system.dart';
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../data/repositories/firebase_auth_repository.dart';
@@ -89,6 +90,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
             _emailCtrl.text.trim(),
             _passwordCtrl.text,
           );
+      AppAnalytics.logSignUp(method: 'email').ignore();
       if (mounted) AppHaptics.success();
     } on AuthException catch (e) {
       if (mounted) _showError(e.message);

@@ -9,6 +9,7 @@ import '../../features/auth/domain/entities/app_user.dart';
 import '../../features/auth/presentation/providers/auth_providers.dart';
 import '../../features/inventory/data/repositories/sqlite_inventory_repository.dart';
 import '../../features/inventory/domain/entities/inventory_item.dart';
+import '../../features/notifications/data/services/low_stock_notification_service.dart';
 import '../db/app_database.dart';
 import '../network/connectivity_provider.dart';
 import 'sync_status_provider.dart';
@@ -43,6 +44,7 @@ class InventorySyncService {
         if (_currentUid != user.uid) {
           _stopSync();               // _currentUid = null, localRepo sin usuario
           _lastPushTimestamp = 0;
+          LowStockNotificationService.instance.resetForUser();
           _currentUid = user.uid;
           localRepo.setCurrentUser(user.uid);
           _startSync();
@@ -50,6 +52,7 @@ class InventorySyncService {
       } else {
         final String? prevUid = _currentUid;
         _stopSync();               // _currentUid = null, localRepo sin usuario
+        LowStockNotificationService.instance.resetForUser();
         if (prevUid != null) {
           // Limpia los datos locales del usuario que cerró sesión.
           await AppDatabase.instance.clearUserData(prevUid);

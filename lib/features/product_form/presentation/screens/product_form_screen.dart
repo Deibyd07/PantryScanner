@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../core/analytics/app_analytics.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/i18n/category_l10n.dart';
 import '../../../../core/presentation/widgets/offline_banner.dart';
@@ -1307,6 +1308,14 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen>
 
     if (success) {
       AppHaptics.success();
+      if (wasEditing) {
+        AppAnalytics.logProductEdited(name: item.name).ignore();
+      } else {
+        AppAnalytics.logProductAdded(
+          name: item.name,
+          category: item.category,
+        ).ignore();
+      }
       final AppLocalizations t = AppLocalizations.of(context);
       final String message = wasEditing
           ? t.productFormUpdatedSnack(item.name)

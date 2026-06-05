@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/router/app_router.dart';
+import '../../../../core/analytics/app_analytics.dart';
 import '../../../../core/design/design_system.dart';
 import '../../../../core/i18n/category_l10n.dart';
 import '../../../../core/i18n/sort_l10n.dart';
@@ -401,6 +402,7 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
                           },
                           onDismissed: (_) {
                             AppHaptics.error();
+                            AppAnalytics.logProductDeleted().ignore();
                             // Defer al siguiente frame: el Dismissible se
                             // desmonta limpio antes de que el stream emita y
                             // dispare el rebuild que evidencia el race.
@@ -511,6 +513,7 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
       );
       if (confirmed == true && mounted) {
         AppHaptics.error();
+        AppAnalytics.logProductDeleted().ignore();
         ref.read(deleteInventoryItemUseCaseProvider).call(item.id);
       }
       return;
@@ -519,6 +522,26 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
     await ref
         .read(updateInventoryItemQuantityUseCaseProvider)
         .call(item, -1);
+    // Avisar al usuario cuando la cantidad resultante iguala o cae bajo el
+    // stock mínimo configurado (solo relevante cuando minStock > 1).
+    if (item.minStock > 1 && (item.quantity - 1) <= item.minStock && mounted) {
+      final AppLocalizations t = AppLocalizations.of(context);
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(
+            duration: const Duration(seconds: 3),
+            behavior: SnackBarBehavior.floating,
+            shape: const RoundedRectangleBorder(
+              borderRadius: AppRadius.brMd,
+            ),
+            content: Text(
+              t.inventoryBelowMinStockSnack(item.name),
+              style: const TextStyle(fontWeight: FontWeight.w600),
+            ),
+          ),
+        );
+    }
   }
 
   PantryCardItem _toPantryCard(InventoryItem item) {

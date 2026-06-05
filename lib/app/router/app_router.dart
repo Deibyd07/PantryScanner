@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/analytics/app_analytics.dart';
 import 'router_key.dart';
 
 import '../../features/auth/presentation/providers/auth_providers.dart';
@@ -44,6 +45,7 @@ GoRouter createAppRouter(Ref ref) {
   return GoRouter(
     navigatorKey: rootNavigatorKey,
     initialLocation: AppRoutes.inventory,
+    observers: <NavigatorObserver>[AppAnalytics.observer],
     refreshListenable: _AuthRefreshNotifier(ref),
     redirect: (BuildContext context, GoRouterState state) {
       final authState = ref.read(authStateProvider);

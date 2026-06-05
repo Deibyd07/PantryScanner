@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/router/app_router.dart';
+import '../../../../core/analytics/app_analytics.dart';
 import '../../../../core/design/design_system.dart';
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../data/repositories/firebase_auth_repository.dart';
@@ -88,6 +89,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
             _emailCtrl.text.trim(),
             _passwordCtrl.text,
           );
+      AppAnalytics.logLogin(method: 'email').ignore();
     } on AuthException catch (e) {
       if (mounted) _showError(e.message);
     } catch (_) {
@@ -101,6 +103,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
     setState(() => _isGoogleLoading = true);
     try {
       await ref.read(loginWithGoogleUseCaseProvider).call();
+      AppAnalytics.logLogin(method: 'google').ignore();
     } on AuthException catch (e) {
       if (mounted) _showError(e.message);
     } catch (_) {

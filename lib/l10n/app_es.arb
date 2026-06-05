@@ -58,6 +58,10 @@
   "@inventoryConfirmDeleteBody": {
     "placeholders": { "name": { "type": "String" } }
   },
+  "inventoryBelowMinStockSnack": "\"{name}\" está en su stock mínimo",
+  "@inventoryBelowMinStockSnack": {
+    "placeholders": { "name": { "type": "String" } }
+  },
 
   "categoryAll": "Todos",
   "categoryDairy": "Lácteos",

@@ -32,6 +32,14 @@ class LowStockNotificationService {
 
   void setLanguage(AppLanguage lang) => _lang = lang;
 
+  /// Limpia el estado de IDs notificados al cambiar de usuario.
+  /// Llamar al inicio de sesión con una cuenta distinta para evitar que los
+  /// IDs del usuario anterior supriman notificaciones del nuevo usuario.
+  void resetForUser() {
+    _notifiedIds.clear();
+    _idsLoaded = false;
+  }
+
   void startWatching(Stream<List<InventoryItem>> inventoryStream) {
     _subscription?.cancel();
     _subscription = inventoryStream.listen(_onInventoryUpdate);
