@@ -47,6 +47,9 @@ class RecipeVisual extends StatelessWidget {
         fit: BoxFit.cover,
         width: double.infinity,
         height: double.infinity,
+        memCacheWidth: 800,
+        fadeInDuration: Duration.zero,
+        fadeOutDuration: Duration.zero,
         httpHeaders: const <String, String>{
           'User-Agent': 'PantryScanner/1.0 (Flutter; Android)',
         },

@@ -76,7 +76,7 @@ class _AuthLogoHeaderState extends State<AuthLogoHeader>
             ),
             const SizedBox(height: 18),
             const Text(
-              'PantryScanner',
+              'Foodly',
               style: TextStyle(
                 color: Colors.white,
                 fontSize: 28,

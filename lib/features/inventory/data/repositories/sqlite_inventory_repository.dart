@@ -23,11 +23,19 @@ class SqliteInventoryRepository implements InventoryRepository {
   }
 
   Database? _db;
+  String? _currentUserId;
   final Uuid _uuid = const Uuid();
 
   Database get _database {
     if (_db == null) throw StateError('Database is not initialized.');
     return _db!;
+  }
+
+  /// Cambia el usuario activo. Emite la lista actualizada a todos los listeners.
+  void setCurrentUser(String? uid) {
+    if (_currentUserId == uid) return;
+    _currentUserId = uid;
+    if (_db != null) _emit();
   }
 
   // ── Reactive stream ───────────────────────────────────────────────────────
@@ -43,9 +51,12 @@ class SqliteInventoryRepository implements InventoryRepository {
   // ── Helpers ───────────────────────────────────────────────────────────────
 
   Future<List<InventoryItem>> _queryAll() async {
+    final String? uid = _currentUserId;
+    if (uid == null || uid.isEmpty || _db == null) return [];
     final rows = await _database.query(
       'inventory_items',
-      where: 'is_deleted = 0',
+      where: 'is_deleted = 0 AND user_id = ?',
+      whereArgs: [uid],
       orderBy: 'created_at DESC',
     );
     return rows.map(_fromRow).toList();
@@ -53,10 +64,12 @@ class SqliteInventoryRepository implements InventoryRepository {
 
   // Raw query for Sync Service (includes deleted items)
   Future<List<InventoryItem>> getSyncableItems(int lastSyncTimestamp) async {
+    final String? uid = _currentUserId;
+    if (uid == null || uid.isEmpty || _db == null) return [];
     final rows = await _database.query(
       'inventory_items',
-      where: 'updated_at > ?',
-      whereArgs: [lastSyncTimestamp],
+      where: 'updated_at > ? AND user_id = ?',
+      whereArgs: [lastSyncTimestamp, uid],
     );
     return rows.map(_fromRow).toList();
   }
@@ -131,9 +144,10 @@ class SqliteInventoryRepository implements InventoryRepository {
     );
   }
 
-  static Map<String, dynamic> _toRow(InventoryItem item) {
+  static Map<String, dynamic> _toRow(InventoryItem item, String userId) {
     final Map<String, dynamic> row = <String, dynamic>{
       'sync_id': item.syncId,
+      'user_id': userId,
       'barcode': item.barcode,
       'name': item.name,
       'brand': item.brand,
@@ -161,11 +175,12 @@ class SqliteInventoryRepository implements InventoryRepository {
 
   @override
   Future<InventoryItem?> getItemByBarcode(String barcode) async {
-    if (barcode.isEmpty) return null;
+    final String? uid = _currentUserId;
+    if (barcode.isEmpty || uid == null || uid.isEmpty) return null;
     final List<Map<String, dynamic>> rows = await _database.query(
       'inventory_items',
-      where: 'barcode = ? AND is_deleted = 0',
-      whereArgs: <dynamic>[barcode],
+      where: 'barcode = ? AND is_deleted = 0 AND user_id = ?',
+      whereArgs: <dynamic>[barcode, uid],
       limit: 1,
     );
     return rows.isEmpty ? null : _fromRow(rows.first);
@@ -173,10 +188,12 @@ class SqliteInventoryRepository implements InventoryRepository {
 
   @override
   Future<int> saveItem(InventoryItem item) async {
-    // Generate syncId and set timestamps if missing/new
+    final String? uid = _currentUserId;
+    if (uid == null || uid.isEmpty) return 0;
+
     final String syncId = item.syncId.isEmpty ? _uuid.v4() : item.syncId;
     final DateTime now = DateTime.now();
-    
+
     final InventoryItem itemToSave = InventoryItem(
       id: item.id,
       syncId: syncId,
@@ -195,7 +212,7 @@ class SqliteInventoryRepository implements InventoryRepository {
 
     final int id = await _database.insert(
       'inventory_items',
-      _toRow(itemToSave),
+      _toRow(itemToSave, uid),
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
 
@@ -204,12 +221,12 @@ class SqliteInventoryRepository implements InventoryRepository {
     return id;
   }
 
-  // Exclusive for sync service
-  Future<void> saveItemFromCloud(InventoryItem item) async {
+  // Exclusive for sync service — saves an item coming from Firestore.
+  Future<void> saveItemFromCloud(InventoryItem item, String userId) async {
     final List<Map<String, dynamic>> existingRows = await _database.query(
       'inventory_items',
-      where: 'sync_id = ?',
-      whereArgs: <dynamic>[item.syncId],
+      where: 'sync_id = ? AND user_id = ?',
+      whereArgs: <dynamic>[item.syncId, userId],
       limit: 1,
     );
 
@@ -242,7 +259,7 @@ class SqliteInventoryRepository implements InventoryRepository {
 
     await _database.insert(
       'inventory_items',
-      _toRow(finalItem),
+      _toRow(finalItem, userId),
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
     await _emit();
@@ -250,16 +267,14 @@ class SqliteInventoryRepository implements InventoryRepository {
 
   @override
   Future<void> deleteItem(int id) async {
-    // Soft delete locally
+    final String? uid = _currentUserId;
+    if (uid == null || uid.isEmpty) return;
     final int now = DateTime.now().millisecondsSinceEpoch;
     await _database.update(
       'inventory_items',
-      {
-        'is_deleted': 1,
-        'updated_at': now,
-      },
-      where: 'id = ?',
-      whereArgs: <dynamic>[id],
+      {'is_deleted': 1, 'updated_at': now},
+      where: 'id = ? AND user_id = ?',
+      whereArgs: <dynamic>[id, uid],
     );
     await _emit();
   }

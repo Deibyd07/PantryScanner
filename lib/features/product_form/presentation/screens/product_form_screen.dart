@@ -11,12 +11,14 @@ import '../../../../core/constants/app_constants.dart';
 import '../../../../core/i18n/category_l10n.dart';
 import '../../../../core/presentation/widgets/offline_banner.dart';
 import '../../../../l10n/generated/app_localizations.dart';
+import '../../../auth/presentation/providers/auth_providers.dart';
 import '../../../inventory/domain/entities/inventory_item.dart';
 import '../../../inventory/presentation/providers/inventory_providers.dart';
 // ignore: deprecated_member_use_from_same_package
 import '../../../inventory/presentation/widgets/inventory_tokens.dart';
 import '../../../product_lookup/domain/entities/product_info.dart';
 import '../../../product_lookup/presentation/providers/product_lookup_providers.dart';
+import '../../../../core/cloudinary/cloudinary_service.dart';
 import '../../../../core/design/design_system.dart';
 
 // ─────────────────────────────────────────
@@ -80,6 +82,8 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen>
   DateTime? _expiryDate;
   String? _selectedCategory;
   String? _selectedImagePath;
+  bool _isUploadingImage = false;
+  double _uploadProgress = 0.0;
 
   _LookupStatus _lookupStatus = _LookupStatus.idle;
   ProductLookupSource? _lookupSource;
@@ -278,19 +282,37 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen>
         imageQuality: 80,
         maxWidth: 1024,
       );
-      if (picked != null) {
-        setState(() => _selectedImagePath = picked.path);
-      }
+      if (picked == null) return;
+
+      setState(() {
+        _isUploadingImage = true;
+        _uploadProgress = 0.0;
+      });
+
+      final String? uid =
+          ref.read(authStateProvider).valueOrNull?.uid;
+
+      final String url = await CloudinaryService.instance.uploadImage(
+        File(picked.path),
+        userId: uid,
+        onProgress: (double p) {
+          if (mounted) setState(() => _uploadProgress = p);
+        },
+      );
+
+      if (mounted) setState(() => _selectedImagePath = url);
     } catch (e) {
       if (mounted) {
         final AppLocalizations t = AppLocalizations.of(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(t.productFormImagePickerError(e.toString())),
+            content: Text(t.productFormImageUploadError),
             backgroundColor: Theme.of(context).colorScheme.error,
           ),
         );
       }
+    } finally {
+      if (mounted) setState(() => _isUploadingImage = false);
     }
   }
 
@@ -533,10 +555,11 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen>
     final String title = isEditing
         ? t.productFormHeroTitleEdit
         : t.productFormHeroTitleAdd;
+    final double statusBarHeight = MediaQuery.paddingOf(context).top;
     return Stack(
       children: <Widget>[
         Padding(
-          padding: const EdgeInsets.only(top: 10, left: 12),
+          padding: EdgeInsets.only(top: statusBarHeight + 10, left: 12),
           child: GestureDetector(
             onTap: () => Navigator.of(context).pop(),
             child: Container(
@@ -602,8 +625,10 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen>
     final AppLocalizations t = AppLocalizations.of(context);
     final bool hasImage = _selectedImagePath != null;
     return GestureDetector(
-      onTap: () => _showImageSourceSheet(context, colors),
-      child: AnimatedContainer(
+      onTap: _isUploadingImage ? null : () => _showImageSourceSheet(context, colors),
+      child: Stack(
+        children: <Widget>[
+          AnimatedContainer(
         duration: const Duration(milliseconds: 250),
         height: 180,
         decoration: BoxDecoration(
@@ -720,6 +745,40 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen>
                   ),
                 ],
               ),
+      ),
+      if (_isUploadingImage)
+        Positioned.fill(
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.black.withValues(alpha: 0.45),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget>[
+                SizedBox(
+                  width: 32,
+                  height: 32,
+                  child: CircularProgressIndicator(
+                    value: _uploadProgress > 0 ? _uploadProgress : null,
+                    strokeWidth: 2.5,
+                    color: Colors.white,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  t.productFormImageUploading,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        ],
       ),
     );
   }
@@ -1190,11 +1249,12 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen>
 
   Widget _buildSaveButton(ColorScheme colors, bool isSaving) {
     final AppLocalizations t = AppLocalizations.of(context);
+    final bool blocked = isSaving || _isUploadingImage;
     return BrandGradientButton(
       label: t.productFormSave,
       icon: Icons.check_rounded,
-      isLoading: isSaving,
-      onPressed: isSaving ? null : _save,
+      isLoading: blocked,
+      onPressed: blocked ? null : _save,
     );
   }
 
@@ -1216,6 +1276,7 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen>
   }
 
   Future<void> _save() async {
+    if (_isUploadingImage) return;
     if (_formKey.currentState?.validate() != true) return;
 
     final String barcode = _barcodeController.text.trim().isEmpty

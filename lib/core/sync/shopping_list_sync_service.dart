@@ -9,6 +9,7 @@ import '../../features/auth/domain/entities/app_user.dart';
 import '../../features/auth/presentation/providers/auth_providers.dart';
 import '../../features/shopping_list/data/repositories/sqlite_shopping_list_repository.dart';
 import '../../features/shopping_list/domain/entities/shopping_list_item.dart';
+import '../db/app_database.dart';
 import '../network/connectivity_provider.dart';
 import 'sync_status_provider.dart';
 
@@ -32,25 +33,26 @@ class ShoppingListSyncService {
   // Previous local syncIds to detect deletions
   Set<String> _lastKnownSyncIds = <String>{};
 
-  void _init() {
-    final AppUser? initialUser = ref.read(authStateProvider).valueOrNull;
-    if (initialUser != null) _currentUid = initialUser.uid;
-
+  void _init() async {
     final bool initialOffline = ref.read(isOfflineProvider).valueOrNull ?? false;
     _isOnline = !initialOffline;
 
-    if (_isOnline && _currentUid != null) _startSync();
-
-    ref.listen<AsyncValue<AppUser?>>(authStateProvider, (_, AsyncValue<AppUser?> next) {
+    ref.listen<AsyncValue<AppUser?>>(authStateProvider, (_, AsyncValue<AppUser?> next) async {
       final AppUser? user = next.valueOrNull;
       if (user != null) {
         if (_currentUid != user.uid) {
-          _currentUid = user.uid;
+          _stopSync();               // _currentUid = null, localRepo sin usuario
           _lastKnownSyncIds = <String>{};
+          _currentUid = user.uid;
+          localRepo.setCurrentUser(user.uid);
           _startSync();
         }
       } else {
-        _stopSync();
+        final String? prevUid = _currentUid;
+        _stopSync();               // _currentUid = null, localRepo sin usuario
+        if (prevUid != null) {
+          await AppDatabase.instance.clearUserData(prevUid);
+        }
       }
     });
 
@@ -59,6 +61,13 @@ class ShoppingListSyncService {
       _isOnline = !isOffline;
       if (_isOnline && _currentUid != null) _startSync();
     });
+
+    final AppUser? initialUser = ref.read(authStateProvider).valueOrNull;
+    if (initialUser != null) {
+      _currentUid = initialUser.uid;
+      localRepo.setCurrentUser(initialUser.uid);
+      if (_isOnline) _startSync();
+    }
 
     _localSub = localRepo.watchAll().listen((List<ShoppingListItem> items) {
       if (_isOnline && _currentUid != null && !_isApplyingCloudUpdate) {
@@ -86,6 +95,7 @@ class ShoppingListSyncService {
     _firestoreSub = null;
     _currentUid = null;
     _lastKnownSyncIds = <String>{};
+    localRepo.setCurrentUser(null);
   }
 
   Future<void> _pushToCloud(List<ShoppingListItem> items) async {
@@ -159,7 +169,7 @@ class ShoppingListSyncService {
         if (change.type == DocumentChangeType.removed) {
           final String? syncId = change.doc.data()?['syncId'] as String?;
           if (syncId != null) {
-            await localRepo.deleteItemBySyncId(syncId);
+            await localRepo.deleteItemBySyncId(syncId, _currentUid ?? '');
             _lastKnownSyncIds.remove(syncId);
             anyChange = true;
           }
@@ -170,7 +180,7 @@ class ShoppingListSyncService {
         if (data == null) continue;
 
         try {
-          await localRepo.saveItemFromCloud(data);
+          await localRepo.saveItemFromCloud(data, _currentUid ?? '');
           final String? syncId = data['syncId'] as String?;
           if (syncId != null) _lastKnownSyncIds.add(syncId);
           anyChange = true;

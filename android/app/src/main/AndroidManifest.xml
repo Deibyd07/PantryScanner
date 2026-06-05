@@ -14,7 +14,7 @@
         android:maxSdkVersion="32" />
 
     <application
-        android:label="pantry_scanner"
+        android:label="Foodly"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

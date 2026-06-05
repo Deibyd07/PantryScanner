@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -5,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../app/router/app_router.dart';
 import '../../../../core/design/design_system.dart';
 import '../../../../l10n/generated/app_localizations.dart';
+import '../../data/sources/local_recipes_catalog.dart';
 import '../../domain/entities/recipe_match.dart';
 import '../providers/recipes_providers.dart';
 import '../widgets/recipe_card.dart';
@@ -20,6 +22,20 @@ class RecipesScreen extends ConsumerStatefulWidget {
 
 class _RecipesScreenState extends ConsumerState<RecipesScreen> {
   _RecipeFilter _filter = _RecipeFilter.todas;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    for (final recipe in const LocalRecipesCatalog().getAll()) {
+      final String? url = recipe.imageUrl;
+      if (url != null && url.isNotEmpty) {
+        precacheImage(
+          ResizeImage(CachedNetworkImageProvider(url), width: 800),
+          context,
+        );
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {

@@ -196,8 +196,9 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen>
 
                 _animatedItem(
                   index: 2,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
+                  child: Wrap(
+                    alignment: WrapAlignment.center,
+                    crossAxisAlignment: WrapCrossAlignment.center,
                     children: <Widget>[
                       Text(
                         t.authRememberedPassword,

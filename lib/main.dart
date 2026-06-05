@@ -6,7 +6,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:timezone/data/latest_all.dart' as tz;
+import 'package:timezone/data/latest.dart' as tz;
 
 import 'app/pantry_scanner_app.dart';
 import 'features/notifications/data/services/local_notification_service.dart';
@@ -16,11 +16,12 @@ import 'firebase_options.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  // Firebase debe ir primero — todo lo demás depende de él.
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
-  // ── Crashlytics ─────────────────────────────────────────────────────────────
+  // Crashlytics
   if (!kIsWeb) {
     FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
     PlatformDispatcher.instance.onError = (Object error, StackTrace stack) {
@@ -29,7 +30,6 @@ Future<void> main() async {
     };
   }
 
-  // ── Error widget amigable (release mode) ─────────────────────────────────
   ErrorWidget.builder = (FlutterErrorDetails details) {
     return const Material(
       child: Center(
@@ -41,13 +41,13 @@ Future<void> main() async {
               Icon(Icons.error_outline_rounded, size: 56, color: Color(0xFFB71C1C)),
               SizedBox(height: 16),
               Text(
-                'Algo salió mal',
+                'Algo salió mal · Something went wrong',
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
                 textAlign: TextAlign.center,
               ),
               SizedBox(height: 8),
               Text(
-                'Intenta reiniciar la aplicación.',
+                'Intenta reiniciar la aplicación.\nTry restarting the app.',
                 textAlign: TextAlign.center,
               ),
             ],
@@ -57,23 +57,30 @@ Future<void> main() async {
     );
   };
 
+  // Firestore offline persistence
   FirebaseFirestore.instance.settings = const Settings(
     persistenceEnabled: true,
     cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED,
   );
 
-  // Initialize timezone data for flutter_local_notifications (HU-13)
+  // Operaciones independientes en paralelo:
+  // - SharedPreferences (no depende de nada)
+  // - Timezone data (solo CPU, latest.dart en lugar de latest_all.dart)
+  // - Notifications init (no depende de prefs)
   tz.initializeTimeZones();
 
-  // Initialize the local notification plugin (HU-13)
+  final List<dynamic> results = await Future.wait<dynamic>(<Future<dynamic>>[
+    SharedPreferences.getInstance(),
+    if (!kIsWeb) LocalNotificationService.instance.init(),
+  ]);
+
+  final SharedPreferences prefs = results[0] as SharedPreferences;
+
+  // requestPermission después de init, pero sin bloquear el arranque.
   if (!kIsWeb) {
-    await LocalNotificationService.instance.init();
-    await LocalNotificationService.instance.requestPermission();
+    LocalNotificationService.instance.requestPermission().ignore();
   }
 
-  // Bootstrap SharedPreferences antes de runApp para que el provider
-  // del idioma pueda leer el valor persistido en su primer build.
-  final SharedPreferences prefs = await SharedPreferences.getInstance();
   final String savedLang = prefs.getString('settings.language') ?? 'es';
   FirebaseAuth.instance.setLanguageCode(savedLang);
 

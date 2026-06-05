@@ -9,6 +9,7 @@ import '../../features/auth/domain/entities/app_user.dart';
 import '../../features/auth/presentation/providers/auth_providers.dart';
 import '../../features/inventory/data/repositories/sqlite_inventory_repository.dart';
 import '../../features/inventory/domain/entities/inventory_item.dart';
+import '../db/app_database.dart';
 import '../network/connectivity_provider.dart';
 import 'sync_status_provider.dart';
 
@@ -32,25 +33,27 @@ class InventorySyncService {
   // Only push items modified after this timestamp
   int _lastPushTimestamp = 0;
 
-  void _init() {
-    final AppUser? initialUser = ref.read(authStateProvider).valueOrNull;
-    if (initialUser != null) _currentUid = initialUser.uid;
-
+  void _init() async {
     final bool initialOffline = ref.read(isOfflineProvider).valueOrNull ?? false;
     _isOnline = !initialOffline;
 
-    if (_isOnline && _currentUid != null) _startSync();
-
-    ref.listen<AsyncValue<AppUser?>>(authStateProvider, (_, next) {
+    ref.listen<AsyncValue<AppUser?>>(authStateProvider, (_, next) async {
       final AppUser? user = next.valueOrNull;
       if (user != null) {
         if (_currentUid != user.uid) {
+          _stopSync();               // _currentUid = null, localRepo sin usuario
+          _lastPushTimestamp = 0;
           _currentUid = user.uid;
-          _lastPushTimestamp = 0; // force full sync for new user
+          localRepo.setCurrentUser(user.uid);
           _startSync();
         }
       } else {
-        _stopSync();
+        final String? prevUid = _currentUid;
+        _stopSync();               // _currentUid = null, localRepo sin usuario
+        if (prevUid != null) {
+          // Limpia los datos locales del usuario que cerró sesión.
+          await AppDatabase.instance.clearUserData(prevUid);
+        }
       }
     });
 
@@ -60,7 +63,13 @@ class InventorySyncService {
       if (_isOnline && _currentUid != null) _startSync();
     });
 
-    // Push local changes — but skip when the change came from the cloud
+    final AppUser? initialUser = ref.read(authStateProvider).valueOrNull;
+    if (initialUser != null) {
+      _currentUid = initialUser.uid;
+      localRepo.setCurrentUser(initialUser.uid);
+      if (_isOnline) _startSync();
+    }
+
     _localSub = localRepo.watchInventory().listen((_) {
       if (_isOnline && _currentUid != null && !_isApplyingCloudUpdate) {
         _pushToCloud();
@@ -87,6 +96,7 @@ class InventorySyncService {
     _firestoreSub = null;
     _currentUid = null;
     _lastPushTimestamp = 0;
+    localRepo.setCurrentUser(null);
   }
 
   Future<void> _pushToCloud() async {
@@ -193,7 +203,7 @@ class InventorySyncService {
             isDeleted: data['isDeleted'] as bool? ?? false,
           );
 
-          await localRepo.saveItemFromCloud(remoteItem);
+          await localRepo.saveItemFromCloud(remoteItem, _currentUid ?? '');
         } catch (e) {
           debugPrint('[InventorySync] Error parsing cloud item: $e');
         }

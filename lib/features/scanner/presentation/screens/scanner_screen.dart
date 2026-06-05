@@ -25,6 +25,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
   final MobileScannerController _controller = MobileScannerController(
     formats: <BarcodeFormat>[
       BarcodeFormat.ean13,
+      BarcodeFormat.ean8,
       BarcodeFormat.upcA,
     ],
     detectionSpeed: DetectionSpeed.noDuplicates,

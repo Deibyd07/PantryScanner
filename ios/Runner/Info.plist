@@ -12,7 +12,7 @@
 		<string>en</string>
 	</array>
 	<key>CFBundleDisplayName</key>
-	<string>Pantry Scanner</string>
+	<string>Foodly</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -20,7 +20,7 @@
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
-	<string>pantry_scanner</string>
+	<string>Foodly</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
@@ -59,11 +59,11 @@
 	<key>UIMainStoryboardFile</key>
 	<string>Main</string>
 	<key>NSCameraUsageDescription</key>
-	<string>PantryScanner necesita la cámara para escanear códigos de barras de productos.</string>
+	<string>Foodly necesita la cámara para escanear códigos de barras de productos.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>PantryScanner necesita acceso a tus fotos para añadir imágenes a los productos.</string>
+	<string>Foodly necesita acceso a tus fotos para añadir imágenes a los productos.</string>
 	<key>NSPhotoLibraryAddOnlyUsageDescription</key>
-	<string>PantryScanner puede guardar fotos de productos en tu galería.</string>
+	<string>Foodly puede guardar fotos de productos en tu galería.</string>
 	<key>UISupportedInterfaceOrientations</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>

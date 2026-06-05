@@ -2,19 +2,48 @@ import '../../domain/entities/recipe.dart';
 import '../../domain/entities/recipe_ingredient.dart';
 
 /// Catálogo curado de recetas en español. Offline-first.
-/// Imágenes empaquetadas como assets locales (assets/images/recipes/<id>.jpg).
+/// Imágenes servidas desde Cloudinary (pantryscanner/recipes).
 class LocalRecipesCatalog {
   const LocalRecipesCatalog();
 
-  static const String _img = 'assets/images/recipes';
+  static const String _cdn =
+      'https://res.cloudinary.com/dobttsg2q/image/upload';
 
-  static const List<Recipe> _all = <Recipe>[
+  static const Map<String, String> _ids = <String, String>{
+    'tostada-aguacate':         'tostada-aguacate_jtpevd',
+    'avena-frutas':             'avena-frutas_knltta',
+    'huevos-revueltos':         'huevos-revueltos_hozt5w',
+    'pancakes':                 'pancakes_nd695c',
+    'yogur-granola':            'yogur-granola_nnrupl',
+    'sandwich-jamon-queso':     'sandwich-jamon-queso_hjltic',
+    'arroz-pollo':              'arroz-pollo_ipnrnv',
+    'pasta-carbonara':          'pasta-carbonara_mthtdr',
+    'ensalada-cesar':           'ensalada-cesar_ububem',
+    'lentejas':                 'lentejas_wdxlte',
+    'pollo-plancha-verduras':   'pollo-plancha-verduras_ixyrc6',
+    'sopa-tomate':              'sopa-tomate_ezcblf',
+    'hamburguesa-casera':       'hamburguesa-casera_vjjn7n',
+    'tortilla-espanola':        'tortilla-espanola_ohkny5',
+    'pescado-plancha':          'pescado-plancha_eoxsz8',
+    'tacos-carne':              'tacos-carne_ttz3jc',
+    'quesadillas':              'quesadillas_iyelyh',
+    'ensalada-atun':            'ensalada-atun_z1yc5w',
+    'arroz-blanco-huevo':       'arroz-blanco-huevo_rrfydw',
+    'smoothie-banano':          'smoothie-banano_kewhed',
+    'fruta-yogur':              'fruta-yogur_noutpw',
+    'arroz-con-leche':          'arroz-con-leche_mksjt9',
+    'galletas-avena':           'galletas-avena_zgqkkn',
+  };
+
+  static String _img(String id) => '$_cdn/${_ids[id] ?? id}';
+
+  static final List<Recipe> _all = <Recipe>[
     // ─── DESAYUNO ────────────────────────────────────────────────────────────
     Recipe(
-      id: 'tostada-aguacate',
+      id:'tostada-aguacate',
       title: 'Tostada de aguacate',
       description: 'Pan tostado con aguacate machacado, limón y un toque de sal.',
-      imageUrl: '$_img/tostada-aguacate.jpg',
+      imageUrl: _img('tostada-aguacate'),
       minutes: 8,
       difficulty: RecipeDifficulty.facil,
       servings: 1,
@@ -33,10 +62,10 @@ class LocalRecipesCatalog {
       ],
     ),
     Recipe(
-      id: 'avena-frutas',
+      id:'avena-frutas',
       title: 'Avena con frutas',
       description: 'Avena cocida en leche con plátano y miel.',
-      imageUrl: '$_img/avena-frutas.jpg',
+      imageUrl: _img('avena-frutas'),
       minutes: 10,
       difficulty: RecipeDifficulty.facil,
       servings: 1,
@@ -55,10 +84,10 @@ class LocalRecipesCatalog {
       ],
     ),
     Recipe(
-      id: 'huevos-revueltos',
+      id:'huevos-revueltos',
       title: 'Huevos revueltos',
       description: 'Clásicos huevos revueltos cremosos en mantequilla.',
-      imageUrl: '$_img/huevos-revueltos.jpg',
+      imageUrl: _img('huevos-revueltos'),
       minutes: 7,
       difficulty: RecipeDifficulty.facil,
       servings: 1,
@@ -77,10 +106,10 @@ class LocalRecipesCatalog {
       ],
     ),
     Recipe(
-      id: 'pancakes',
+      id:'pancakes',
       title: 'Pancakes esponjosos',
       description: 'Pancakes caseros con leche, huevo y harina.',
-      imageUrl: '$_img/pancakes.jpg',
+      imageUrl: _img('pancakes'),
       minutes: 20,
       difficulty: RecipeDifficulty.facil,
       servings: 2,
@@ -101,10 +130,10 @@ class LocalRecipesCatalog {
       ],
     ),
     Recipe(
-      id: 'yogur-granola',
+      id:'yogur-granola',
       title: 'Yogur con granola',
       description: 'Parfait rápido de yogur, granola y fruta fresca.',
-      imageUrl: '$_img/yogur-granola.jpg',
+      imageUrl: _img('yogur-granola'),
       minutes: 5,
       difficulty: RecipeDifficulty.facil,
       servings: 1,
@@ -121,10 +150,10 @@ class LocalRecipesCatalog {
       ],
     ),
     Recipe(
-      id: 'sandwich-jamon-queso',
+      id:'sandwich-jamon-queso',
       title: 'Sándwich de jamón y queso',
       description: 'Sándwich caliente con jamón, queso y mantequilla.',
-      imageUrl: '$_img/sandwich-jamon-queso.jpg',
+      imageUrl: _img('sandwich-jamon-queso'),
       minutes: 10,
       difficulty: RecipeDifficulty.facil,
       servings: 1,
@@ -145,10 +174,10 @@ class LocalRecipesCatalog {
 
     // ─── ALMUERZO ────────────────────────────────────────────────────────────
     Recipe(
-      id: 'arroz-pollo',
+      id:'arroz-pollo',
       title: 'Arroz con pollo',
       description: 'Arroz amarillo con trozos de pollo y verduras.',
-      imageUrl: '$_img/arroz-pollo.jpg',
+      imageUrl: _img('arroz-pollo'),
       minutes: 40,
       difficulty: RecipeDifficulty.medio,
       servings: 4,
@@ -171,10 +200,10 @@ class LocalRecipesCatalog {
       ],
     ),
     Recipe(
-      id: 'pasta-carbonara',
+      id:'pasta-carbonara',
       title: 'Pasta a la carbonara',
       description: 'Pasta italiana con tocino, huevo y queso.',
-      imageUrl: '$_img/pasta-carbonara.jpg',
+      imageUrl: _img('pasta-carbonara'),
       minutes: 25,
       difficulty: RecipeDifficulty.medio,
       servings: 2,
@@ -196,10 +225,10 @@ class LocalRecipesCatalog {
       ],
     ),
     Recipe(
-      id: 'ensalada-cesar',
+      id:'ensalada-cesar',
       title: 'Ensalada César',
       description: 'Lechuga, pollo, crutones y aderezo cremoso.',
-      imageUrl: '$_img/ensalada-cesar.jpg',
+      imageUrl: _img('ensalada-cesar'),
       minutes: 20,
       difficulty: RecipeDifficulty.facil,
       servings: 2,
@@ -221,10 +250,10 @@ class LocalRecipesCatalog {
       ],
     ),
     Recipe(
-      id: 'lentejas',
+      id:'lentejas',
       title: 'Lentejas guisadas',
       description: 'Lentejas con verduras y especias.',
-      imageUrl: '$_img/lentejas.jpg',
+      imageUrl: _img('lentejas'),
       minutes: 45,
       difficulty: RecipeDifficulty.facil,
       servings: 4,
@@ -246,10 +275,10 @@ class LocalRecipesCatalog {
       ],
     ),
     Recipe(
-      id: 'pollo-plancha-verduras',
+      id:'pollo-plancha-verduras',
       title: 'Pollo a la plancha con verduras',
       description: 'Pechuga de pollo dorada con verduras salteadas.',
-      imageUrl: '$_img/pollo-plancha-verduras.jpg',
+      imageUrl: _img('pollo-plancha-verduras'),
       minutes: 25,
       difficulty: RecipeDifficulty.facil,
       servings: 2,
@@ -271,10 +300,10 @@ class LocalRecipesCatalog {
       ],
     ),
     Recipe(
-      id: 'sopa-tomate',
+      id:'sopa-tomate',
       title: 'Sopa de tomate',
       description: 'Crema de tomate suave y reconfortante.',
-      imageUrl: '$_img/sopa-tomate.jpg',
+      imageUrl: _img('sopa-tomate'),
       minutes: 30,
       difficulty: RecipeDifficulty.facil,
       servings: 4,
@@ -295,10 +324,10 @@ class LocalRecipesCatalog {
       ],
     ),
     Recipe(
-      id: 'hamburguesa-casera',
+      id:'hamburguesa-casera',
       title: 'Hamburguesa casera',
       description: 'Hamburguesa de carne con queso y verduras.',
-      imageUrl: '$_img/hamburguesa-casera.jpg',
+      imageUrl: _img('hamburguesa-casera'),
       minutes: 20,
       difficulty: RecipeDifficulty.medio,
       servings: 2,
@@ -322,10 +351,10 @@ class LocalRecipesCatalog {
 
     // ─── CENA ────────────────────────────────────────────────────────────────
     Recipe(
-      id: 'tortilla-espanola',
+      id:'tortilla-espanola',
       title: 'Tortilla española',
       description: 'Tortilla gruesa de huevo, papa y cebolla.',
-      imageUrl: '$_img/tortilla-espanola.jpg',
+      imageUrl: _img('tortilla-espanola'),
       minutes: 35,
       difficulty: RecipeDifficulty.medio,
       servings: 4,
@@ -346,10 +375,10 @@ class LocalRecipesCatalog {
       ],
     ),
     Recipe(
-      id: 'pescado-plancha',
+      id:'pescado-plancha',
       title: 'Pescado a la plancha',
       description: 'Filete de pescado dorado con limón.',
-      imageUrl: '$_img/pescado-plancha.jpg',
+      imageUrl: _img('pescado-plancha'),
       minutes: 15,
       difficulty: RecipeDifficulty.facil,
       servings: 2,
@@ -369,10 +398,10 @@ class LocalRecipesCatalog {
       ],
     ),
     Recipe(
-      id: 'tacos-carne',
+      id:'tacos-carne',
       title: 'Tacos de carne molida',
       description: 'Tortillas con carne sazonada y queso.',
-      imageUrl: '$_img/tacos-carne.jpg',
+      imageUrl: _img('tacos-carne'),
       minutes: 25,
       difficulty: RecipeDifficulty.facil,
       servings: 2,
@@ -393,10 +422,10 @@ class LocalRecipesCatalog {
       ],
     ),
     Recipe(
-      id: 'quesadillas',
+      id:'quesadillas',
       title: 'Quesadillas',
       description: 'Tortillas dobladas con queso derretido.',
-      imageUrl: '$_img/quesadillas.jpg',
+      imageUrl: _img('quesadillas'),
       minutes: 10,
       difficulty: RecipeDifficulty.facil,
       servings: 2,
@@ -414,10 +443,10 @@ class LocalRecipesCatalog {
       ],
     ),
     Recipe(
-      id: 'ensalada-atun',
+      id:'ensalada-atun',
       title: 'Ensalada de atún',
       description: 'Ensalada fría con atún en lata y vegetales.',
-      imageUrl: '$_img/ensalada-atun.jpg',
+      imageUrl: _img('ensalada-atun'),
       minutes: 10,
       difficulty: RecipeDifficulty.facil,
       servings: 2,
@@ -438,10 +467,10 @@ class LocalRecipesCatalog {
       ],
     ),
     Recipe(
-      id: 'arroz-blanco-huevo',
+      id:'arroz-blanco-huevo',
       title: 'Arroz blanco con huevo',
       description: 'Plato sencillo de arroz con huevo frito.',
-      imageUrl: '$_img/arroz-blanco-huevo.jpg',
+      imageUrl: _img('arroz-blanco-huevo'),
       minutes: 25,
       difficulty: RecipeDifficulty.facil,
       servings: 1,
@@ -461,10 +490,10 @@ class LocalRecipesCatalog {
 
     // ─── SNACK ───────────────────────────────────────────────────────────────
     Recipe(
-      id: 'smoothie-banano',
+      id:'smoothie-banano',
       title: 'Smoothie de banano',
       description: 'Batido cremoso de banano con leche y miel.',
-      imageUrl: '$_img/smoothie-banano.jpg',
+      imageUrl: _img('smoothie-banano'),
       minutes: 5,
       difficulty: RecipeDifficulty.facil,
       servings: 1,
@@ -481,10 +510,10 @@ class LocalRecipesCatalog {
       ],
     ),
     Recipe(
-      id: 'fruta-yogur',
+      id:'fruta-yogur',
       title: 'Bowl de fruta con yogur',
       description: 'Mezcla rápida de fruta de temporada y yogur.',
-      imageUrl: '$_img/fruta-yogur.jpg',
+      imageUrl: _img('fruta-yogur'),
       minutes: 5,
       difficulty: RecipeDifficulty.facil,
       servings: 1,
@@ -503,10 +532,10 @@ class LocalRecipesCatalog {
 
     // ─── POSTRE ──────────────────────────────────────────────────────────────
     Recipe(
-      id: 'arroz-con-leche',
+      id:'arroz-con-leche',
       title: 'Arroz con leche',
       description: 'Postre cremoso de arroz, leche y canela.',
-      imageUrl: '$_img/arroz-con-leche.jpg',
+      imageUrl: _img('arroz-con-leche'),
       minutes: 45,
       difficulty: RecipeDifficulty.medio,
       servings: 4,
@@ -526,10 +555,10 @@ class LocalRecipesCatalog {
       ],
     ),
     Recipe(
-      id: 'galletas-avena',
+      id:'galletas-avena',
       title: 'Galletas de avena',
       description: 'Galletas suaves de avena y plátano.',
-      imageUrl: '$_img/galletas-avena.jpg',
+      imageUrl: _img('galletas-avena'),
       minutes: 25,
       difficulty: RecipeDifficulty.facil,
       servings: 12,

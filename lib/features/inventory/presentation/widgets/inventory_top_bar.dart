@@ -54,7 +54,7 @@ class InventoryTopBar extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
               Text(
-                'PantryScanner',
+                'Foodly',
                 style: AppTypography.headingSm.copyWith(
                   color: Colors.white,
                   fontSize: 16,

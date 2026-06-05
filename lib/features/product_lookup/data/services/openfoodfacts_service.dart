@@ -3,20 +3,17 @@ import 'package:dio/dio.dart';
 import '../../domain/entities/product_info.dart';
 import '../mappers/openfoodfacts_category_mapper.dart';
 
-/// Calls the public OpenFoodFacts v2 API to fetch product metadata for a
-/// barcode. Returns `null` when the API does not recognize the product or
-/// the network call fails — the caller should fall back to manual entry.
+/// Consulta OpenFoodFacts v2 priorizando el endpoint colombiano (co.)
+/// antes del global (world.). Retorna null si ninguno reconoce el producto.
 class OpenFoodFactsService {
   OpenFoodFactsService({Dio? dio, OpenFoodFactsCategoryMapper? mapper})
       : _dio = dio ??
             Dio(
               BaseOptions(
-                baseUrl: 'https://world.openfoodfacts.org/api/v2',
                 connectTimeout: const Duration(seconds: 6),
-                receiveTimeout: const Duration(seconds: 6),
+                receiveTimeout: const Duration(seconds: 8),
                 headers: <String, String>{
-                  'User-Agent':
-                      'PantryScanner/0.1 (https://github.com/Deibyd07/PantryScanner)',
+                  'User-Agent': 'Foodly/1.0 (Flutter; Android)',
                 },
               ),
             ),
@@ -25,23 +22,36 @@ class OpenFoodFactsService {
   final Dio _dio;
   final OpenFoodFactsCategoryMapper _mapper;
 
+  static const List<String> _hosts = <String>[
+    'https://co.openfoodfacts.org',
+    'https://world.openfoodfacts.org',
+  ];
+
+  static const String _fields =
+      'code,product_name,product_name_es,brands,categories_tags,'
+      'image_front_small_url,image_front_url,image_url';
+
   Future<ProductInfo?> lookup(String barcode) async {
     if (barcode.isEmpty) return null;
 
+    for (final String host in _hosts) {
+      final ProductInfo? result = await _fetchFrom(host, barcode);
+      if (result != null) return result;
+    }
+    return null;
+  }
+
+  Future<ProductInfo?> _fetchFrom(String host, String barcode) async {
     try {
       final Response<Map<String, dynamic>> response =
           await _dio.get<Map<String, dynamic>>(
-        '/product/$barcode.json',
-        queryParameters: <String, dynamic>{
-          'fields':
-              'code,product_name,product_name_es,brands,categories_tags,image_front_small_url,image_front_url,image_url',
-        },
+        '$host/api/v2/product/$barcode.json',
+        queryParameters: <String, dynamic>{'fields': _fields},
       );
 
       final Map<String, dynamic>? data = response.data;
       if (data == null) return null;
-      final int status = (data['status'] as int?) ?? 0;
-      if (status != 1) return null;
+      if ((data['status'] as int?) != 1) return null;
 
       final Map<String, dynamic>? product =
           data['product'] as Map<String, dynamic>?;
@@ -82,9 +92,7 @@ class OpenFoodFactsService {
   }
 
   List<String>? _asStringList(dynamic raw) {
-    if (raw is List) {
-      return raw.whereType<String>().toList(growable: false);
-    }
+    if (raw is List) return raw.whereType<String>().toList(growable: false);
     return null;
   }
 

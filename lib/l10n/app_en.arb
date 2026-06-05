@@ -1,7 +1,7 @@
 {
   "@@locale": "en",
 
-  "appName": "PantryScanner",
+  "appName": "Foodly",
   "appTagline": "Your pantry, under control",
   "offlineBanner": "No internet connection",
 
@@ -299,7 +299,7 @@
 
   "profileDeleteAccount": "Delete account",
   "profileDeleteAccountTitle": "Delete your account?",
-  "profileDeleteAccountBody": "All your PantryScanner data will be permanently deleted. This action cannot be undone.",
+  "profileDeleteAccountBody": "All your Foodly data will be permanently deleted. This action cannot be undone.",
   "profileDeleteAccountConfirmBtn": "Yes, delete my account",
   "profileDeletePasswordHint": "Enter your password to confirm",
   "profileDeleteReauthGoogle": "Your Google identity will be verified before deleting your account.",
@@ -314,9 +314,9 @@
   "languageSavedSnack": "Language updated",
 
   "legalTermsTitle": "Terms and conditions",
-  "legalTermsBody": "Welcome to PantryScanner. By using this app you accept the following terms: the app is provided as is, without guarantees of absolute accuracy on expiry dates or inventory. The user is responsible for verifying information before making consumption or purchase decisions. PantryScanner does not store sensitive data outside your device and your Firebase account. The team reserves the right to modify features in future versions.",
+  "legalTermsBody": "Welcome to Foodly. By using this app you accept the following terms: the app is provided as is, without guarantees of absolute accuracy on expiry dates or inventory. The user is responsible for verifying information before making consumption or purchase decisions. Foodly does not store sensitive data outside your device and your Firebase account. The team reserves the right to modify features in future versions.",
   "legalPrivacyTitle": "Privacy policy",
-  "legalPrivacyBody": "PantryScanner respects your privacy. We collect only: your email (for authentication), the products you register (stored locally on your device and synced with Firebase tied to your account), and app settings (language, preferences). We do not share your information with third parties for advertising purposes. You can delete your account and all related data by contacting the team. Product images are stored locally on your device.",
+  "legalPrivacyBody": "Foodly respects your privacy. We collect only: your email (for authentication), the products you register (stored locally on your device and synced with Firebase tied to your account), and app settings (language, preferences). We do not share your information with third parties for advertising purposes. You can delete your account and all related data by contacting the team. Product images are stored locally on your device.",
 
   "productFormHeroTitleAdd": "Add product",
   "productFormHeroTitleEdit": "Edit product",
@@ -373,6 +373,8 @@
   "@productFormImagePickerError": {
     "placeholders": { "error": { "type": "String" } }
   },
+  "productFormImageUploading": "Uploading image…",
+  "productFormImageUploadError": "Could not upload the image. Please try again.",
   "productLookupLoadingTitle": "Looking up product…",
   "productLookupLoadingSubtitle": "Querying global food database.",
   "productLookupFoundTitle": "Product found",

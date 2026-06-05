@@ -9,7 +9,7 @@ class AppLocalizationsEn extends AppLocalizations {
   AppLocalizationsEn([String locale = 'en']) : super(locale);
 
   @override
-  String get appName => 'PantryScanner';
+  String get appName => 'Foodly';
 
   @override
   String get appTagline => 'Your pantry, under control';
@@ -696,7 +696,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get profileDeleteAccountBody =>
-      'All your PantryScanner data will be permanently deleted. This action cannot be undone.';
+      'All your Foodly data will be permanently deleted. This action cannot be undone.';
 
   @override
   String get profileDeleteAccountConfirmBtn => 'Yes, delete my account';
@@ -736,14 +736,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get legalTermsBody =>
-      'Welcome to PantryScanner. By using this app you accept the following terms: the app is provided as is, without guarantees of absolute accuracy on expiry dates or inventory. The user is responsible for verifying information before making consumption or purchase decisions. PantryScanner does not store sensitive data outside your device and your Firebase account. The team reserves the right to modify features in future versions.';
+      'Welcome to Foodly. By using this app you accept the following terms: the app is provided as is, without guarantees of absolute accuracy on expiry dates or inventory. The user is responsible for verifying information before making consumption or purchase decisions. Foodly does not store sensitive data outside your device and your Firebase account. The team reserves the right to modify features in future versions.';
 
   @override
   String get legalPrivacyTitle => 'Privacy policy';
 
   @override
   String get legalPrivacyBody =>
-      'PantryScanner respects your privacy. We collect only: your email (for authentication), the products you register (stored locally on your device and synced with Firebase tied to your account), and app settings (language, preferences). We do not share your information with third parties for advertising purposes. You can delete your account and all related data by contacting the team. Product images are stored locally on your device.';
+      'Foodly respects your privacy. We collect only: your email (for authentication), the products you register (stored locally on your device and synced with Firebase tied to your account), and app settings (language, preferences). We do not share your information with third parties for advertising purposes. You can delete your account and all related data by contacting the team. Product images are stored locally on your device.';
 
   @override
   String get productFormHeroTitleAdd => 'Add product';
@@ -885,6 +885,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String productFormImagePickerError(String error) {
     return 'Camera/gallery error: $error';
   }
+
+  @override
+  String get productFormImageUploading => 'Uploading image…';
+
+  @override
+  String get productFormImageUploadError =>
+      'Could not upload the image. Please try again.';
 
   @override
   String get productLookupLoadingTitle => 'Looking up product…';

@@ -41,8 +41,11 @@ class RecipeDetailScreen extends ConsumerWidget {
     }
 
     final RecipeMatch? match = async.whenOrNull(
-      data: (List<RecipeMatch> all) =>
-          all.firstWhere((RecipeMatch m) => m.recipe.id == recipeId),
+      data: (List<RecipeMatch> all) {
+        final List<RecipeMatch> found =
+            all.where((RecipeMatch m) => m.recipe.id == recipeId).toList();
+        return found.isEmpty ? null : found.first;
+      },
     );
 
     return Scaffold(

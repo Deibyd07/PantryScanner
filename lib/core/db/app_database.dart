@@ -19,7 +19,7 @@ class AppDatabase {
 
     _db = await openDatabase(
       dbPath,
-      version: 7,
+      version: 8,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -31,6 +31,7 @@ class AppDatabase {
       CREATE TABLE inventory_items (
         id          INTEGER PRIMARY KEY AUTOINCREMENT,
         sync_id     TEXT    UNIQUE NOT NULL,
+        user_id     TEXT    NOT NULL DEFAULT '',
         barcode     TEXT    NOT NULL DEFAULT '',
         name        TEXT    NOT NULL,
         brand       TEXT,
@@ -116,19 +117,42 @@ class AppDatabase {
     }
 
     if (oldVersion < 7) {
-      await db.execute(
-        'ALTER TABLE shopping_list_items ADD COLUMN sync_id TEXT',
-      );
-      final List<Map<String, dynamic>> rows =
-          await db.query('shopping_list_items');
-      for (final Map<String, dynamic> row in rows) {
-        await db.update(
-          'shopping_list_items',
-          <String, dynamic>{'sync_id': const Uuid().v4()},
-          where: 'id = ?',
-          whereArgs: <dynamic>[row['id']],
+      // Only users upgrading from exactly v6 need the ALTER TABLE — those who
+      // came from v5 or below already went through the v6 migration, which calls
+      // _createShoppingListTable (current schema already includes sync_id).
+      if (oldVersion >= 6) {
+        await db.execute(
+          'ALTER TABLE shopping_list_items ADD COLUMN sync_id TEXT',
         );
+        final List<Map<String, dynamic>> rows =
+            await db.query('shopping_list_items');
+        for (final Map<String, dynamic> row in rows) {
+          await db.update(
+            'shopping_list_items',
+            <String, dynamic>{'sync_id': const Uuid().v4()},
+            where: 'id = ?',
+            whereArgs: <dynamic>[row['id']],
+          );
+        }
       }
+    }
+
+    if (oldVersion < 8) {
+      // Add user_id for proper per-account data isolation.
+      // Existing rows (user_id = '') become invisible to any logged-in user
+      // and will be re-populated via Firestore sync.
+      await db.execute(
+        "ALTER TABLE inventory_items ADD COLUMN user_id TEXT NOT NULL DEFAULT ''",
+      );
+      await db.execute(
+        "ALTER TABLE shopping_list_items ADD COLUMN user_id TEXT NOT NULL DEFAULT ''",
+      );
+      await db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_inventory_user ON inventory_items (user_id)',
+      );
+      await db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_shopping_list_user ON shopping_list_items (user_id)',
+      );
     }
   }
 
@@ -137,6 +161,7 @@ class AppDatabase {
       CREATE TABLE IF NOT EXISTS shopping_list_items (
         id              INTEGER PRIMARY KEY AUTOINCREMENT,
         sync_id         TEXT,
+        user_id         TEXT    NOT NULL DEFAULT '',
         name            TEXT    NOT NULL,
         normalized_name TEXT    NOT NULL,
         quantity        TEXT,
@@ -165,6 +190,14 @@ class AppDatabase {
         updated_at INTEGER NOT NULL
       )
     ''');
+  }
+
+  /// Elimina todos los registros locales del [uid] dado.
+  /// Llamar al cerrar sesión para no acumular datos de cuentas inactivas.
+  Future<void> clearUserData(String uid) async {
+    final Database db = await database;
+    await db.delete('inventory_items', where: 'user_id = ?', whereArgs: [uid]);
+    await db.delete('shopping_list_items', where: 'user_id = ?', whereArgs: [uid]);
   }
 
   Future<void> _seedNotificationSettings(Database db) async {

@@ -1,5 +1,5 @@
 class AppConstants {
-  static const String appName = 'PantryScanner';
+  static const String appName = 'Foodly';
 
   // Sprint 1 baseline business defaults.
   static const int defaultQuantity = 1;

@@ -8,6 +8,7 @@ import 'package:intl/date_symbol_data_local.dart';
 import '../core/design/design_system.dart';
 import '../features/inventory/presentation/providers/inventory_providers.dart';
 import '../features/notifications/presentation/providers/notification_settings_providers.dart';
+import '../features/shopping_list/presentation/providers/shopping_list_providers.dart';
 import '../features/settings/domain/entities/app_language.dart';
 import '../features/settings/presentation/providers/settings_providers.dart';
 import '../l10n/generated/app_localizations.dart';
@@ -29,24 +30,31 @@ class _PantryScannerAppState extends ConsumerState<PantryScannerApp> {
   @override
   void initState() {
     super.initState();
-    // Initialize both locales for DateFormat usage.
     initializeDateFormatting('es', null);
     initializeDateFormatting('en', null);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Escuchar cambios de idioma para sincronizar Firebase Auth
+    // fuera de build() — los side effects no van en build.
+    ref.listenManual<AppLanguage>(languageProvider, (_, lang) {
+      FirebaseAuth.instance.setLanguageCode(lang.code);
+    }, fireImmediately: true);
   }
 
   @override
   Widget build(BuildContext context) {
     ref.watch(inventorySyncServiceProvider);
     ref.watch(notificationSettingsSyncProvider);
+    ref.watch(shoppingListSyncProvider);
 
     final AppLanguage language = ref.watch(languageProvider);
-    // Mantener Firebase Auth sincronizado con el idioma elegido.
-    FirebaseAuth.instance.setLanguageCode(language.code);
-
     final GoRouter router = ref.watch(routerProvider);
 
     return MaterialApp.router(
-      title: 'PantryScanner',
+      title: 'Foodly',
       debugShowCheckedModeBanner: false,
       // Bloqueado en tema claro por requisito de producto (solo blanco).
       theme: AppThemeLight.theme,

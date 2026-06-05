@@ -302,9 +302,9 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
                     return SliverFillRemaining(
                       hasScrollBody: false,
                       child: Padding(
-                        padding: const EdgeInsets.only(top: AppSpacing.xxl),
+                        padding: const EdgeInsets.only(top: AppSpacing.lg, bottom: 140),
                         child: Column(
-                          mainAxisAlignment: MainAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.center,
                           children: <Widget>[
                             Icon(
                               Icons.inventory_2_outlined,
@@ -413,7 +413,7 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
                                 ..hideCurrentSnackBar()
                                 ..showSnackBar(
                                   SnackBar(
-                                    duration: const Duration(seconds: 5),
+                                    duration: const Duration(seconds: 3),
                                     behavior: SnackBarBehavior.floating,
                                     shape: const RoundedRectangleBorder(
                                       borderRadius: AppRadius.brMd,

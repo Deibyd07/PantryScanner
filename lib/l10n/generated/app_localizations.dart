@@ -101,7 +101,7 @@ abstract class AppLocalizations {
   /// No description provided for @appName.
   ///
   /// In es, this message translates to:
-  /// **'PantryScanner'**
+  /// **'Foodly'**
   String get appName;
 
   /// No description provided for @appTagline.
@@ -1289,7 +1289,7 @@ abstract class AppLocalizations {
   /// No description provided for @profileDeleteAccountBody.
   ///
   /// In es, this message translates to:
-  /// **'Todos tus datos de PantryScanner se eliminarán permanentemente. Esta acción no se puede deshacer.'**
+  /// **'Todos tus datos de Foodly se eliminarán permanentemente. Esta acción no se puede deshacer.'**
   String get profileDeleteAccountBody;
 
   /// No description provided for @profileDeleteAccountConfirmBtn.
@@ -1361,7 +1361,7 @@ abstract class AppLocalizations {
   /// No description provided for @legalTermsBody.
   ///
   /// In es, this message translates to:
-  /// **'Bienvenido a PantryScanner. Al usar esta aplicación aceptas los siguientes términos: la app se ofrece tal cual, sin garantías de exactitud absoluta en fechas de vencimiento o inventario. El usuario es responsable de verificar la información antes de tomar decisiones de consumo o compra. PantryScanner no almacena datos sensibles fuera de tu dispositivo y tu cuenta Firebase. El equipo se reserva el derecho de modificar funcionalidades en futuras versiones.'**
+  /// **'Bienvenido a Foodly. Al usar esta aplicación aceptas los siguientes términos: la app se ofrece tal cual, sin garantías de exactitud absoluta en fechas de vencimiento o inventario. El usuario es responsable de verificar la información antes de tomar decisiones de consumo o compra. Foodly no almacena datos sensibles fuera de tu dispositivo y tu cuenta Firebase. El equipo se reserva el derecho de modificar funcionalidades en futuras versiones.'**
   String get legalTermsBody;
 
   /// No description provided for @legalPrivacyTitle.
@@ -1373,7 +1373,7 @@ abstract class AppLocalizations {
   /// No description provided for @legalPrivacyBody.
   ///
   /// In es, this message translates to:
-  /// **'PantryScanner respeta tu privacidad. Recopilamos solo: tu correo electrónico (para autenticación), los productos que registras (almacenados localmente en tu dispositivo y sincronizados con Firebase asociados a tu cuenta), y configuraciones de la app (idioma, preferencias). No compartimos tu información con terceros con fines publicitarios. Puedes eliminar tu cuenta y todos los datos asociados contactando al equipo. Las imágenes de productos se almacenan localmente en tu dispositivo.'**
+  /// **'Foodly respeta tu privacidad. Recopilamos solo: tu correo electrónico (para autenticación), los productos que registras (almacenados localmente en tu dispositivo y sincronizados con Firebase asociados a tu cuenta), y configuraciones de la app (idioma, preferencias). No compartimos tu información con terceros con fines publicitarios. Puedes eliminar tu cuenta y todos los datos asociados contactando al equipo. Las imágenes de productos se almacenan localmente en tu dispositivo.'**
   String get legalPrivacyBody;
 
   /// No description provided for @productFormHeroTitleAdd.
@@ -1633,6 +1633,18 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Error al abrir cámara/galería: {error}'**
   String productFormImagePickerError(String error);
+
+  /// No description provided for @productFormImageUploading.
+  ///
+  /// In es, this message translates to:
+  /// **'Subiendo imagen…'**
+  String get productFormImageUploading;
+
+  /// No description provided for @productFormImageUploadError.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo subir la imagen. Intenta de nuevo.'**
+  String get productFormImageUploadError;
 
   /// No description provided for @productLookupLoadingTitle.
   ///
