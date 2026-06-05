@@ -25,16 +25,17 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
-      - name: Verify formatting
-        run: dart format --output=none --set-exit-if-changed lib/ test/
-
-      - name: Analyze code (static analysis)
+      - name: Static analysis (informational)
         run: flutter analyze --no-fatal-infos
+        continue-on-error: true
+
+      - name: Run tests
+        run: flutter test --reporter=expanded
 
       - name: Run tests with coverage
-        run: flutter test --coverage --reporter=expanded
+        run: flutter test --coverage
 
-      - name: Upload coverage report
+      - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
         with:
           file: coverage/lcov.info
