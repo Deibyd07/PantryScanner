@@ -9,6 +9,8 @@ import '../../features/auth/presentation/providers/auth_providers.dart';
 import '../../features/auth/presentation/screens/forgot_password_screen.dart';
 import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/auth/presentation/screens/register_screen.dart';
+import '../../features/onboarding/presentation/screens/onboarding_screen.dart';
+import '../../features/settings/presentation/providers/settings_providers.dart';
 import '../../features/inventory/presentation/screens/inventory_screen.dart';
 import '../../features/inventory/presentation/screens/product_detail_screen.dart';
 import '../../features/notifications/presentation/screens/notification_settings_screen.dart';
@@ -38,6 +40,9 @@ class AppRoutes {
   static const String login = '/login';
   static const String register = '/register';
   static const String forgotPassword = '/forgot-password';
+
+  // Onboarding
+  static const String onboarding = '/onboarding';
 }
 
 /// Auth-aware router that redirects unauthenticated users to login.
@@ -48,6 +53,16 @@ GoRouter createAppRouter(Ref ref) {
     observers: <NavigatorObserver>[AppAnalytics.observer],
     refreshListenable: _AuthRefreshNotifier(ref),
     redirect: (BuildContext context, GoRouterState state) {
+      final bool onboardingSeen =
+          ref.read(sharedPreferencesProvider).getBool('onboarding.seen') ??
+              false;
+
+      // First-time user → onboarding (unless already there).
+      if (!onboardingSeen) {
+        if (state.matchedLocation == AppRoutes.onboarding) return null;
+        return AppRoutes.onboarding;
+      }
+
       final authState = ref.read(authStateProvider);
 
       final bool isAuthenticated = authState.valueOrNull != null;
@@ -71,6 +86,15 @@ GoRouter createAppRouter(Ref ref) {
       return null;
     },
     routes: <RouteBase>[
+      // ── Onboarding ─────────────────────────────────────────────────────────
+      GoRoute(
+        path: AppRoutes.onboarding,
+        name: 'onboarding',
+        builder: (BuildContext context, GoRouterState state) {
+          return const OnboardingScreen();
+        },
+      ),
+
       // ── Auth routes ────────────────────────────────────────────────────────
       GoRoute(
         path: AppRoutes.login,
