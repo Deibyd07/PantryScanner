@@ -194,7 +194,8 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen>
                 ),
                 const SizedBox(height: AppSpacing.lg),
 
-                _animatedItem(
+                Center(
+                  child: _animatedItem(
                   index: 2,
                   child: Wrap(
                     alignment: WrapAlignment.center,
@@ -229,6 +230,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen>
                       ),
                     ],
                   ),
+                ),
                 ),
               ],
             ),
@@ -325,17 +327,28 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen>
   }
 
   Widget _buildFormTitle(PaletteSpec p, AppLocalizations t) {
-    return Column(
+    return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        Text(
-          t.authRecoverTitle,
-          style: AppTypography.displayMd.copyWith(color: p.textBody),
-        ),
-        const SizedBox(height: AppSpacing.xs),
-        Text(
-          t.authRecoverSub,
-          style: AppTypography.bodySm.copyWith(color: p.textMuted),
+        _BackButton(isLoading: _isLoading, palette: p),
+        const SizedBox(width: AppSpacing.ms),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              Text(
+                t.authRecoverTitle,
+                style: AppTypography.displayMd.copyWith(
+                  color: p.textBody,
+                  fontSize: 22,
+                ),
+              ),
+              Text(
+                t.authRecoverSub,
+                style: AppTypography.bodyXs.copyWith(color: p.textMuted),
+              ),
+            ],
+          ),
         ),
       ],
     );
@@ -409,5 +422,33 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen>
       return t.authEmailInvalid;
     }
     return null;
+  }
+}
+
+class _BackButton extends StatelessWidget {
+  const _BackButton({required this.isLoading, required this.palette});
+  final bool isLoading;
+  final PaletteSpec palette;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: isLoading
+          ? null
+          : () {
+              AppHaptics.tap();
+              context.pop();
+            },
+      child: Container(
+        width: 40,
+        height: 40,
+        decoration: BoxDecoration(
+          color: palette.bgMuted,
+          borderRadius: AppRadius.brMd,
+          border: Border.all(color: palette.outline),
+        ),
+        child: Icon(Icons.arrow_back_rounded, color: palette.textBody, size: 20),
+      ),
+    );
   }
 }

@@ -631,6 +631,7 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen>
         children: <Widget>[
           AnimatedContainer(
         duration: const Duration(milliseconds: 250),
+        width: double.infinity,
         height: 180,
         decoration: BoxDecoration(
           color: hasImage
